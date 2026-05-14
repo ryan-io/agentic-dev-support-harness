@@ -213,7 +213,11 @@ print("\n[6] Skills validation")
 
 if os.path.isdir(SKILLS_DIR):
     for skill_dir in sorted(os.listdir(SKILLS_DIR)):
-        skill_path = os.path.join(SKILLS_DIR, skill_dir, "SKILL.md")
+        skill_full = os.path.join(SKILLS_DIR, skill_dir)
+        # Skip non-directory entries (e.g. README.md, .DS_Store)
+        if not os.path.isdir(skill_full):
+            continue
+        skill_path = os.path.join(skill_full, "SKILL.md")
         if not os.path.isfile(skill_path):
             result("FAIL", f"{skill_dir} -- no SKILL.md")
             continue
