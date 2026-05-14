@@ -104,13 +104,16 @@ else:
 # 3. Size limits
 # ============================================================
 
-print("\n[3] Size limits (all .md <= 4000 chars)")
+print("\n[3] Size limits (agent-loaded .md <= 4000 chars; README.md exempt)")
 
 md_files = set(glob.glob("**/*.md", recursive=True))
 md_files.update(glob.glob(".github/**/*.md", recursive=True))
 md_files.update(glob.glob(".claude/**/*.md", recursive=True))
 for md in sorted(md_files):
     if ".git/" in md or "node_modules/" in md:
+        continue
+    # README.md files are human-facing, not loaded by agents -- exempt from char limit
+    if os.path.basename(md).lower() == "readme.md":
         continue
     with open(md, "r", encoding="utf-8") as f:
         size = len(f.read())
