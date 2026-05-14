@@ -33,7 +33,7 @@ jobs:
           echo "count=$COMMIT_COUNT" >> "$GITHUB_OUTPUT"
           if [ "$COMMIT_COUNT" -lt 50 ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Only $COMMIT_COUNT commits — skipping (need 50+)."
+            echo "Only $COMMIT_COUNT commits, skipping (need 50+)."
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi

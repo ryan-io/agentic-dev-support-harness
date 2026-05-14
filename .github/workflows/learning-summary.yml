@@ -62,9 +62,9 @@ jobs:
               const entry = {
                 id: idMatch ? idMatch[1].trim() : file,
                 status: statusMatch ? statusMatch[1] : 'unknown',
-                target: targetMatch ? targetMatch[1].trim() : '—',
-                confidence: confMatch ? confMatch[1] : '—',
-                created: createdMatch ? createdMatch[1] : '—',
+                target: targetMatch ? targetMatch[1].trim() : ', ',
+                confidence: confMatch ? confMatch[1] : ', ',
+                created: createdMatch ? createdMatch[1] : ', ',
               };
 
               if (entry.status === 'pending') pending.push(entry);
@@ -77,7 +77,7 @@ jobs:
               return;
             }
 
-            let body = '## Continuous Learning — Weekly Summary\n\n';
+            let body = '## Continuous Learning, Weekly Summary\n\n';
             body += `Generated: ${new Date().toISOString().split('T')[0]}\n\n`;
 
             if (pending.length > 0) {
@@ -124,7 +124,7 @@ jobs:
               await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: 'Continuous Learning — Proposals Awaiting Review',
+                title: 'Continuous Learning, Proposals Awaiting Review',
                 body,
                 labels: ['learning-summary'],
               });
