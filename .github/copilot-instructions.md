@@ -16,6 +16,7 @@ Instruction files are loaded automatically based on file scope. All files are in
 - `patterns.instructions.md` — Adopted design pattern registry (all files)
 - `user-interface.instructions.md` — UI standards (all files)
 - `user-experience.instructions.md` — UX standards (all files)
+- `writing-voice.instructions.md` — Prose voice for human-readable deliverables (all files)
 - `adr-template.instructions.md` — ADR creation policy (`docs/adr/**`)
 - `adr-pr-review.instructions.md` — ADR review/validation (`docs/adr/**`)
 - `br-review.instructions.md` — Business rule review/validation (`docs/business-rules/**`)

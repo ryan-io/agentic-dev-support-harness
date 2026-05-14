@@ -31,6 +31,7 @@ ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat (V
 | `patterns.instructions.md` | `patterns.md` | `**` |
 | `user-interface.instructions.md` | `user-interface.md` | `**` |
 | `user-experience.instructions.md` | `user-experience.md` | `**` |
+| `writing-voice.instructions.md` | `writing-voice.md` | `**` |
 <!-- CUSTOMIZE: Add stack-specific rows for your project (e.g., csharp-code-standards.instructions.md) -->
 <!-- END CUSTOMIZE -->
 
@@ -69,8 +70,6 @@ ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat (V
 
 ## Cross-References
 - `copilot-instructions.md` is source of truth; `CLAUDE.md` is synced
-- `adr-template` refs: `adr-pr-review.instructions.md` for validation
-- `pr-review` refs: `adr-pr-review.instructions.md`, `code-standards`
 - ADR skill reads: `adr-template.md` (rules auto-load for `docs/adr/**`)
 - BR skill reads: `br-template.md` (rules auto-load for `docs/business-rules/**`)
 - Learning: `observe.json` → `observe.py` → `analyze.py` → `propose.py` → `continuous-learning` skill
