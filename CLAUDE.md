@@ -18,6 +18,7 @@ Instruction files are loaded automatically based on file scope. All files are in
 - `user-experience.instructions.md`: UX standards (all files)
 - `writing-voice.instructions.md`: Prose voice for human-readable deliverables (all files)
 - `research.instructions.md`: Research and sourcing practice (all files)
+- `agent-guardrails.instructions.md`: Agent behavioral constraints (all files)
 - `adr-template.instructions.md`: ADR creation policy (`docs/adr/**`)
 - `adr-pr-review.instructions.md`: ADR review/validation (`docs/adr/**`)
 - `br-review.instructions.md`: Business rule review/validation (`docs/business-rules/**`)
@@ -38,7 +39,7 @@ Stack-specific files (loaded by file extension match):
 - **PR review**: Use Severity/Category comment format. See `pr-review.instructions.md`.
 - **ADRs**: Use the template in `.github/docs/adr-template.md`. Status defaults to `Active`. See `adr-pr-review.instructions.md` for validation rules.
 - **Business rules**: Use the template in `.github/docs/br-template.md`. See `br-review.instructions.md` for validation rules.
-- **Commit messages**: Imperative, present tense.
+- **Commit messages**: Conventional commits, imperative, present tense. See `agent-guardrails.instructions.md`.
 - **ADR required**: When introducing new architectural patterns, cross-cutting concerns, or third-party dependencies.
 
 ## Continuous Learning
