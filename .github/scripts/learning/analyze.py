@@ -6,10 +6,10 @@ Reads .claude/learning/observations.jsonl, detects patterns, creates/updates
 instinct YAML files in .claude/learning/instincts/.
 
 Detectors:
-  1. Correction patterns — user rejects then redoes differently
-  2. Repeated sequences — same tool call sequences across sessions
-  3. Error recovery — failure followed by resolution pattern
-  4. File conventions — consistent file placement and naming
+  1. Correction patterns: user rejects then redoes differently
+  2. Repeated sequences: same tool call sequences across sessions
+  3. Error recovery: failure followed by resolution pattern
+  4. File conventions: consistent file placement and naming
 
 Run from repo root: python .github/scripts/analyze.py
 Called automatically by observe.py on Stop when threshold met.
@@ -111,7 +111,7 @@ def save_instinct(iid, trigger, action, confidence, domain, evidence,
     os.makedirs(INSTINCTS_DIR, exist_ok=True)
     path = os.path.join(INSTINCTS_DIR, f"{iid}.yaml")
 
-    # If exists, merge — increase confidence, append evidence
+    # If exists, merge: increase confidence, append evidence
     existing = load_instinct(path)
     if existing:
         old_conf = existing.get("confidence", 0.3)
@@ -148,7 +148,7 @@ last_seen: "{now}"
 def detect_corrections(observations):
     """
     Find sequences where a PreToolUse is followed by the same tool
-    targeting the same file within 60 seconds — suggests user corrected.
+    targeting the same file within 60 seconds, suggests user corrected.
     """
     instincts = []
     pre_events = [o for o in observations if o.get("event") == "PreToolUse"]
@@ -169,7 +169,7 @@ def detect_corrections(observations):
         if len(unique_summaries) > 1 and len(events) >= 3:
             instincts.append({
                 "trigger": f"when using {tool} on {file_ext or 'files'}",
-                "action": f"Consistent {tool} pattern on {file_ext or 'files'} — "
+                "action": f"Consistent {tool} pattern on {file_ext or 'files'}, "
                           f"user corrected approach {len(events)} times",
                 "confidence": 0.3,
                 "domain": events[0].get("domain_hint", "workflow"),

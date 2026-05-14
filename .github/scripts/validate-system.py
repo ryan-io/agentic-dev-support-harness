@@ -395,7 +395,7 @@ for search_dir in [SCRIPTS_DIR, LEARNING_SCRIPTS_DIR]:
 
 print("\n[11] Workflow YAML validation")
 
-# Use a lightweight YAML check — verify structure with basic parsing
+# Use a lightweight YAML check: verify structure with basic parsing
 # since PyYAML may not be installed. Check for common YAML errors.
 if os.path.isdir(WORKFLOWS_DIR):
     for ymlfile in sorted(glob.glob(os.path.join(WORKFLOWS_DIR, "*.yml"))):

@@ -253,7 +253,7 @@ def process_existing_proposals(config):
                 archive_path = os.path.join(ARCHIVE_DIR, fname)
                 shutil.move(path, archive_path)
                 print(
-                    f"  [archive] {fname} — {age_days}d old, moved to archive",
+                    f"  [archive] {fname}, {age_days}d old, moved to archive",
                     file=sys.stderr
                 )
                 continue
@@ -265,7 +265,7 @@ def process_existing_proposals(config):
                 with open(path, "w", encoding="utf-8") as f:
                     f.write(updated)
                 print(
-                    f"  [stale] {fname} — {age_days}d old, marked stale",
+                    f"  [stale] {fname}, {age_days}d old, marked stale",
                     file=sys.stderr
                 )
 
