@@ -32,6 +32,7 @@ ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat, a
 | `user-interface.instructions.md` | `user-interface.md` | `**` |
 | `user-experience.instructions.md` | `user-experience.md` | `**` |
 | `writing-voice.instructions.md` | `writing-voice.md` | `**` |
+| `research.instructions.md` | `research.md` | `**` |
 <!-- CUSTOMIZE: Add stack-specific rows for your project (e.g., csharp-code-standards.instructions.md) -->
 <!-- END CUSTOMIZE -->
 
@@ -73,6 +74,5 @@ ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat, a
 Each major directory has a `README.md` explaining its role (human-facing, size-limit exempt). Repo-root `README.md` is the entry point.
 
 ## Cross-References
-- `copilot-instructions.md` is source of truth; `CLAUDE.md` is synced
 - Skills read templates in `.github/docs/`; scoped rules auto-load by directory
 - Learning chain: `observe.json` → `observe.py` → `analyze.py` → `propose.py` → `continuous-learning`
