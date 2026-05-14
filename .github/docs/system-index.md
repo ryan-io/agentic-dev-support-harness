@@ -31,6 +31,7 @@ ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat (V
 | `patterns.instructions.md` | `patterns.md` | `**` |
 | `user-interface.instructions.md` | `user-interface.md` | `**` |
 | `user-experience.instructions.md` | `user-experience.md` | `**` |
+| `writing-voice.instructions.md` | `writing-voice.md` | `**` |
 <!-- CUSTOMIZE: Add stack-specific rows for your project (e.g., csharp-code-standards.instructions.md) -->
 <!-- END CUSTOMIZE -->
 
