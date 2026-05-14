@@ -12,7 +12,7 @@ PR-time guardrail. Confirms that the synced files are in sync (no manual edits t
 
 ## setup/
 
-The two repository-setup scripts (`.sh` and `.bat`) that initialize a new repository from this template. They git-init the target directory, copy the template files, install the hook path, and run an initial sync. The root-level `setup.sh` / `setup.bat` are thin shims that exec these.
+The two repository-setup scripts (`.sh` and `.bat`). They auto-detect two modes. Run from inside an already-populated repo (the GitHub template-feature case), they activate in place: configure the hook path, make the hook executable, run an initial sync, copy nothing. Run pointing at an empty directory, they git-init it, copy the template files, then activate the same way. The root-level `setup.sh` / `setup.bat` are thin shims that exec these.
 
 ## learning/
 

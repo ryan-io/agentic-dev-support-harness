@@ -67,10 +67,12 @@ ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat, a
 | `.github/workflows/learning-summary.yml` | Weekly proposal summary |
 | `.claude/learning/config.json` | Learning thresholds |
 | `.gitignore` | Ignores + learning data |
+| `.gitattributes` | Pins line endings to LF |
+
+### Documentation
+Each major directory has a `README.md` explaining its role (human-facing, size-limit exempt). Repo-root `README.md` is the entry point.
 
 ## Cross-References
 - `copilot-instructions.md` is source of truth; `CLAUDE.md` is synced
-- ADR skill reads: `adr-template.md` (rules auto-load for `docs/adr/**`)
-- BR skill reads: `br-template.md` (rules auto-load for `docs/business-rules/**`)
-- Learning: `observe.json` → `observe.py` → `analyze.py` → `propose.py` → `continuous-learning` skill
-- Learning data (gitignored): `observations.jsonl`, `instincts/`, `proposals/`
+- Skills read templates in `.github/docs/`; scoped rules auto-load by directory
+- Learning chain: `observe.json` → `observe.py` → `analyze.py` → `propose.py` → `continuous-learning`
