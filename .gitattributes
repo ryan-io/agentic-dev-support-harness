@@ -1,0 +1,11 @@
+# Normalize line endings. The repo stores everything as LF; this prevents
+# Windows editors and tools from drifting tracked files to CRLF, which
+# otherwise makes git report every file as modified.
+* text=auto eol=lf
+
+# Keep these binary so git never tries to normalize or diff them.
+*.png binary
+*.jpg binary
+*.gif binary
+*.pdf binary
+*.ico binary
