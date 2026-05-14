@@ -1,12 +1,12 @@
 # System Index
 
-Quick-reference map of all files in the project setup template.
+Quick-reference map of the project setup template's system files.
 
 ## Golden Rule
-ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat (VSCode/VS2026), and Claude Code chat (VSCode/VS2026). `.github/instructions/` files are the source of truth. `.claude/rules/` are synced copies with `paths` frontmatter.
+ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat, and Claude Code chat. `.github/instructions/` files are the source of truth. `.claude/rules/` are synced copies with `paths` frontmatter.
 
 ## Constraints
-- All `.md` files must be ≤ 4,000 characters including whitespace.
+- Agent-loaded `.md` files must be ≤ 4,000 characters; `README.md` files are exempt.
 - Instruction files must have correct frontmatter (`applyTo` for Copilot, `paths` for Claude).
 - No stack-specific content in agnostic files
 - Status values: `Active` (default) or `Archived`
@@ -53,10 +53,10 @@ ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat (V
 | `.github/pull_request_template.md` | PR template |
 | `.github/scripts/sync-claude-rules.py` | Syncs instructions → rules |
 | `.github/scripts/setup/sync.bat` | Sync runner |
-| `.github/scripts/setup/repository-setup.bat` | Init repo (Windows) |
-| `.github/scripts/setup/repository-setup.sh` | Init repo (Unix) |
+| `.github/scripts/setup/repository-setup.bat` | Init or activate repo (Windows) |
+| `.github/scripts/setup/repository-setup.sh` | Init or activate repo (Unix) |
 | `setup.bat` / `setup.sh` / `sync.bat` | Root shims |
-| `.github/hooks/pre-commit` | Runs sync on commit |
+| `.github/hooks/pre-commit` | Runs sync + validation on commit |
 | `.github/hooks/observe.json` | Hook config for learning |
 | `.github/scripts/learning/observe.py` | Records observations |
 | `.github/scripts/learning/analyze.py` | Creates instincts |
