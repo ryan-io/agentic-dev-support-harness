@@ -8,7 +8,7 @@ The copyable Architecture Decision Record template. The `adr-creation` skill rea
 
 ## br-template.md
 
-The copyable Business Rule template. Same relationship — the `create-business-rule` skill reads it; `../instructions/br-review.instructions.md` validates the output.
+The copyable Business Rule template. Same relationship, the `create-business-rule` skill reads it; `../instructions/br-review.instructions.md` validates the output.
 
 ## system-index.md
 

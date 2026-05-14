@@ -26,10 +26,10 @@ Filler transitions ("Moreover," "Furthermore," "It is worth noting that"). Hedge
 If you can delete a sentence and lose no information, delete it. If a paragraph opens with "I think" or "It is important to note," delete the opener and keep the rest.
 
 ## What's allowed
-Standard professional phrases are fine when they fit. "Valuable asset to the team," "strong leader and collaborator," "takes ownership of his work" — these are reasonable in their place. The goal is clarity and brevity, not novelty or austerity. Avoid them only when they replace a specific that would carry more weight.
+Standard professional phrases are fine when they fit. "Valuable asset to the team," "strong leader and collaborator," "takes ownership of his work" are reasonable in their place. The goal is clarity and brevity, not novelty or austerity. Avoid them only when they replace a specific that would carry more weight.
 
 ## Format
-Default to flowing paragraphs. Headers and bullets are tools of last resort, reached for only when the content is genuinely a parallel set of items — checklists, file maps, option enumerations.
+Default to flowing paragraphs. Headers and bullets are tools of last resort, reached for only when the content is genuinely a parallel set of items: checklists, file maps, option enumerations.
 
 ## How to apply it
 Draft the paragraph version first. On the second pass, cut adverbs and filler transitions. On the third pass, check whether any sentence could be deleted without information loss. If yes, delete it.

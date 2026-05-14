@@ -8,7 +8,7 @@ When introducing a new architectural pattern, a cross-cutting concern, or a thir
 
 ## How to write one
 
-Invoke the `adr-creation` skill — it walks you through the template at `../../.github/docs/adr-template.md` and validates against `../../.github/instructions/adr-pr-review.instructions.md`. Status defaults to `Active`; supersede an older ADR by setting its status to `Archived` and referencing the new one.
+Invoke the `adr-creation` skill, it walks you through the template at `../../.github/docs/adr-template.md` and validates against `../../.github/instructions/adr-pr-review.instructions.md`. Status defaults to `Active`; supersede an older ADR by setting its status to `Archived` and referencing the new one.
 
 ## Conventions
 

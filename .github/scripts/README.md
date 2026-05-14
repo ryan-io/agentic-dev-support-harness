@@ -4,7 +4,7 @@ Python and shell automation that keeps the harness coherent. Two scripts run on 
 
 ## sync-claude-rules.py
 
-The keystone. Copies `../copilot-instructions.md` to `CLAUDE.md` byte-for-byte and transforms each `../instructions/*.instructions.md` into a `.claude/rules/*.md` mirror — converting `applyTo` frontmatter to `paths`, stripping the suffix from the filename. Validates each file's frontmatter, body, and character count (≤ 4,000). Runs from the pre-commit hook (`../hooks/pre-commit`) and from `sync.bat` at the repo root.
+The keystone. Copies `../copilot-instructions.md` to `CLAUDE.md` byte-for-byte and transforms each `../instructions/*.instructions.md` into a `.claude/rules/*.md` mirror, converting `applyTo` frontmatter to `paths`, stripping the suffix from the filename. Validates each file's frontmatter, body, and character count (≤ 4,000). Runs from the pre-commit hook (`../hooks/pre-commit`) and from `sync.bat` at the repo root.
 
 ## validate-system.py
 
@@ -16,4 +16,4 @@ The two repository-setup scripts (`.sh` and `.bat`) that initialize a new reposi
 
 ## learning/
 
-The three-stage continuous-learning pipeline — `observe.py`, `analyze.py`, `propose.py`. See `learning/README.md` for the detail.
+The three-stage continuous-learning pipeline, `observe.py`, `analyze.py`, `propose.py`. See `learning/README.md` for the detail.

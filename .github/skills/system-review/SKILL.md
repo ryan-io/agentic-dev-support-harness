@@ -18,12 +18,12 @@ Read `.github/docs/system-index.md` for the complete file map and cross-referenc
 ### 1. File Existence
 Verify every file listed in the system index exists. Flag missing files.
 
-### 2. Golden Rule — Environment Compatibility
+### 2. Golden Rule: Environment Compatibility
 For each file, confirm it works in all three environments:
 - `.github/instructions/` files have `applyTo` frontmatter (Copilot)
 - `.claude/rules/` files have `paths` frontmatter (Claude Code)
 - `copilot-instructions.md` has NO frontmatter (always-on hub)
-- `CLAUDE.md` has NO `@` imports — all rules load via `.claude/rules/`
+- `CLAUDE.md` has NO `@` imports: all rules load via `.claude/rules/`
 
 ### 3. Sync State
 Compare each `.claude/rules/` file against its `.github/instructions/` source:
@@ -50,7 +50,7 @@ Every `.md` file must be ≤ 4,000 characters including whitespace. Flag any ove
 ## Output Format
 Report findings as:
 - **PASS**: Check passed
-- **FAIL**: Issue found — describe what and where
+- **FAIL**: Issue found: describe what and where
 - **WARN**: Not broken but worth attention
 
 End with a summary count: passes, fails, warnings.

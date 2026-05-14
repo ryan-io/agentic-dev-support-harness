@@ -17,4 +17,4 @@ See `code-standards.instructions.md` for universal principles and the project's 
 ```
 
 **References**
-- [Authoritative source — book, article, or documentation link]
+- [Authoritative source: book, article, or documentation link]

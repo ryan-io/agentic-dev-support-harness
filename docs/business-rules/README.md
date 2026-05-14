@@ -1,6 +1,6 @@
 # Business Rules
 
-The constraints the system must respect because the business says so — not because of an architectural choice. Tax thresholds, eligibility criteria, regulatory deadlines, pricing tiers. Things that change when the business changes, not when the code does.
+The constraints the system must respect because the business says so, not because of an architectural choice. Tax thresholds, eligibility criteria, regulatory deadlines, pricing tiers. Things that change when the business changes, not when the code does.
 
 ## When to write one
 
@@ -8,7 +8,7 @@ When a piece of logic exists only because a stakeholder said it must. When the s
 
 ## How to write one
 
-Invoke the `create-business-rule` skill — it uses the template at `../../.github/docs/br-template.md` and validates against `../../.github/instructions/br-review.instructions.md`. Each rule names its owner (the business stakeholder), its effective date, and the system surfaces it touches.
+Invoke the `create-business-rule` skill, it uses the template at `../../.github/docs/br-template.md` and validates against `../../.github/instructions/br-review.instructions.md`. Each rule names its owner (the business stakeholder), its effective date, and the system surfaces it touches.
 
 ## Difference from ADRs
 

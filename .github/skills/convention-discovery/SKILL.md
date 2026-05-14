@@ -18,13 +18,13 @@ Analyze git history to generate instruction files from actual team conventions.
 ## When to Use
 
 - Adopting this template in a repo with established patterns.
-- Periodic audit after milestones. Not for greenfield — use `project-setup`.
+- Periodic audit after milestones. Not for greenfield, use `project-setup`.
 
 ## Workflow
 
 ### Step 1: Gather Evidence
 
-Run git analyses and record findings. Do not infer rules — only collect data.
+Run git analyses and record findings. Do not infer rules, only collect data.
 
 | Area | Command |
 |---|---|
@@ -39,14 +39,14 @@ Run git analyses and record findings. Do not infer rules — only collect data.
 
 For each finding, classify as:
 
-- **Strong convention** — 80%+ consistent. Write as a rule.
-- **Emerging pattern** — 50-79% consistent. Write as a recommendation.
-- **Inconsistency** — conflicting patterns. Flag for team discussion.
-- **Absent** — no evidence. Skip — do not invent rules.
+- **Strong convention**: 80%+ consistent. Write as a rule.
+- **Emerging pattern**: 50-79% consistent. Write as a recommendation.
+- **Inconsistency**: conflicting patterns. Flag for team discussion.
+- **Absent**: no evidence. Skip: do not invent rules.
 
 ### Step 3: Generate or Update Instruction Files
 
-Map findings to instruction files. Only modify relevant sections — preserve existing content.
+Map findings to instruction files. Only modify relevant sections, preserve existing content.
 
 **Targets:** commits/file placement → `code-standards`. Naming/errors/DI → `{language}-code-standards`. Architecture → `patterns`. UI → `user-interface`.
 
@@ -56,10 +56,10 @@ Map findings to instruction files. Only modify relevant sections — preserve ex
 
 Before writing files, present a summary:
 
-1. **Strong conventions** — rules to codify (with evidence).
-2. **Emerging patterns** — recommendations to consider.
-3. **Inconsistencies** — conflicts needing team decision.
-4. **No evidence** — areas with no clear pattern.
+1. **Strong conventions**: rules to codify (with evidence).
+2. **Emerging patterns**: recommendations to consider.
+3. **Inconsistencies**: conflicts needing team decision.
+4. **No evidence**: areas with no clear pattern.
 
 Wait for user approval before modifying instruction files.
 
