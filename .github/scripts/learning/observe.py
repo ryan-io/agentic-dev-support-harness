@@ -6,7 +6,7 @@ Reads hook event JSON from stdin, extracts relevant fields,
 appends a single JSONL line to .claude/learning/observations.jsonl.
 
 Called by .github/hooks/observe.json on PreToolUse, PostToolUse, and Stop events.
-Never blocks — always exits 0.
+Never blocks, always exits 0.
 """
 
 import json
@@ -145,7 +145,7 @@ def build_observation(event_data):
     # Stop event: check stop_hook_active to avoid loops
     if event_name == "Stop":
         if event_data.get("stop_hook_active", False):
-            return None  # Skip — this is a recursive stop
+            return None  # Skip, this is a recursive stop
         obs["event"] = "Stop"
 
     return obs
@@ -250,7 +250,7 @@ def handle_stop_nudge(config, unanalyzed):
     if messages:
         summary = " and ".join(messages)
         print(
-            f"[learning] {summary} — consider running the continuous-learning skill.",
+            f"[learning] {summary}, consider running the continuous-learning skill.",
             file=sys.stderr,
         )
 
@@ -314,7 +314,7 @@ def main():
         # Nudge if counts are high
         handle_stop_nudge(config, unanalyzed)
 
-    # Always exit 0 — observation only, never block
+    # Always exit 0: observation only, never block
     sys.exit(0)
 
 
