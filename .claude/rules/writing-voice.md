@@ -4,9 +4,12 @@ paths: ["**"]
 
 
 # Writing Voice
-How to write prose deliverables in this project — READMEs, ADR narratives, business-rule descriptions, PR comments, commit messages, documentation. Code is governed by `code-standards`; this file governs words.
+How to write prose deliverables in this project: READMEs, ADR narratives, business-rule descriptions, PR comments, commit messages, documentation. Code is governed by `code-standards`; this file governs words.
 
 Reference: `personal/writing-voice.md` in the author's Obsidian vault.
+
+## No em dashes
+Do not use em dashes. They read as an AI tell and the author does not write with them. Use a comma, a colon, parentheses, or a separate sentence instead. A colon introduces a list or an explanation. A comma joins a closely related clause. A period is always available when two thoughts can stand apart. The same applies to the en dash used as sentence punctuation; reserve the en dash for numeric ranges.
 
 ## Shape of a paragraph
 Short. Three or four sentences, one topic each. Open with the claim, follow with one or two supporting specifics, close. If a paragraph runs past five sentences the next sentence is probably the start of a new paragraph.
