@@ -1,24 +1,71 @@
-#!/bin/sh
-# Pre-commit hook: auto-sync agent files
-# Install: git config core.hooksPath .github/hooks
+#!/bin/bash
+# Pre-commit hook: run sync and validation on every commit.
+# Output is formatted to be readable in both terminal output and the
+# GitKraken commit panel (which displays stdout/stderr from the hook).
+#
+# Installation:
+#   git config core.hooksPath .github/hooks
+# (handled automatically by setup.sh / setup.bat / .bootstrap scripts)
+#
+# Notes for GitKraken users:
+#   - GitKraken Desktop surfaces this hook's echo output in the commit dialog.
+#   - On macOS/Linux this file must be executable (chmod +x .github/hooks/pre-commit).
+#   - Any non-zero exit code blocks the commit; fix the reported issue and retry.
+#
+# Notes for CLI users:
+#   - Works the same way from any shell that runs POSIX scripts (Git Bash on
+#     Windows, zsh/bash on macOS/Linux).
+#   - To bypass intentionally: git commit --no-verify (or "Commit and skip
+#     hooks" in GitKraken's commit panel).
 
-# Check if any sync-relevant files are staged
-STAGED_INSTRUCTIONS=$(git diff --cached --name-only -- '.github/instructions/*.instructions.md')
-STAGED_HUB=$(git diff --cached --name-only -- '.github/copilot-instructions.md')
+set -e
 
-if [ -z "$STAGED_INSTRUCTIONS" ] && [ -z "$STAGED_HUB" ]; then
-    exit 0
-fi
+# Resolve repo root so the hook works regardless of where git invokes it from.
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
 
-echo "[pre-commit] Sync-relevant files changed — running sync..."
-python .github/scripts/sync-claude-rules.py
-RESULT=$?
-
-if [ $RESULT -ne 0 ]; then
-    echo "[pre-commit] Sync failed. Fix errors and retry."
+# Pick the python executable that's available. Git Bash on Windows usually
+# only has 'python'; macOS/Linux usually have 'python3'.
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON=python3
+elif command -v python >/dev/null 2>&1; then
+    PYTHON=python
+else
+    echo "[pre-commit] ERROR: python not found on PATH. Install Python 3 and retry." >&2
     exit 1
 fi
 
-# Stage the synced files
-git add .claude/rules/ CLAUDE.md
-echo "[pre-commit] Sync complete. Synced files staged."
+echo ""
+echo "===================================================="
+echo " [pre-commit] sync + validate"
+echo "===================================================="
+
+# --- 1. Sync ---
+echo ""
+echo "[1/2] Syncing copilot-instructions.md and .github/instructions/ -> CLAUDE.md and .claude/rules/"
+echo "----------------------------------------------------"
+if ! $PYTHON .github/scripts/sync-claude-rules.py; then
+    echo ""
+    echo "[pre-commit] FAILED: sync errored. Fix the reported issue and retry." >&2
+    exit 1
+fi
+
+# Stage any files the sync just regenerated so the commit captures them.
+git add CLAUDE.md .claude/rules/ 2>/dev/null || true
+
+# --- 2. Validate ---
+echo ""
+echo "[2/2] Validating system invariants (frontmatter, sizes, cross-refs, sync state)"
+echo "----------------------------------------------------"
+if ! $PYTHON .github/scripts/validate-system.py; then
+    echo ""
+    echo "[pre-commit] FAILED: validation reported issues above. Fix them and retry." >&2
+    echo "             To bypass intentionally: git commit --no-verify" >&2
+    exit 1
+fi
+
+echo ""
+echo "===================================================="
+echo " [pre-commit] OK -- proceeding with commit"
+echo "===================================================="
+echo ""
