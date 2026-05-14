@@ -6,31 +6,30 @@ paths: ["**"]
 # Writing Voice
 How to write prose deliverables in this project — READMEs, ADR narratives, business-rule descriptions, PR comments, commit messages, documentation. Code is governed by `code-standards`; this file governs words.
 
-Reference: `personal/writing-voice.md` in the author's Obsidian vault (derived from a recommendation letter Ryan authored).
+Reference: `personal/writing-voice.md` in the author's Obsidian vault.
 
-## What the voice does
-- **Direct and substantive.** Every sentence earns its place. No throat-clearing intros, no hedging qualifiers, no "in conclusion" wrap-ups. If a sentence could be deleted without losing information, delete it.
-- **Specifics over abstractions.** Name the concrete thing rather than its label. "The pre-commit hook regenerates the mirror" beats "Synchronization is automatically managed."
-- **Warm but not effusive.** Regard comes through in what is observed, not in stacked adjectives. Avoid "incredible," "amazing," "phenomenal."
-- **Professional plain speech.** First person when appropriate. Contractions are fine. Sentences vary in length but lean medium-short. Paragraphs are dense, not bullet-listed.
+## Shape of a paragraph
+Short. Three or four sentences, one topic each. Open with the claim, follow with one or two supporting specifics, close. If a paragraph runs past five sentences the next sentence is probably the start of a new paragraph.
 
-## What the voice avoids
-- Fluff transitions ("Moreover," "Furthermore," "It is worth noting that").
-- Marketing-speak and superlatives without evidence.
-- Heavy formatting. Headers and bullets are tools of last resort, not the default. Prefer paragraphs.
-- Hedge-adverbs ("very," "really," "quite") that try to do work a concrete example should be doing.
-- Sentences that exist to make the writer sound thoughtful rather than to convey thought.
+## Sentence structure
+Plain declarative. Subject, verb, object. Vary length but lean medium-short. Stacked subordinate clauses are a sign to break the sentence in two. First person is normal when writing on the author's behalf. Contractions are fine.
+
+## Specifics
+Name things by what they actually are. "C# and C++", not "modern programming languages". "MATLAB scripts to determine root cause failures for testing fixtures", not "analytical scripts". A concrete noun and a date will usually carry more conviction than three adjectives.
+
+## What to cut
+Filler transitions ("Moreover," "Furthermore," "It is worth noting that"). Hedge-adverbs ("very," "really," "quite") doing work a specific example would do better. Sentences that exist to show the writer is thinking rather than to communicate the thought.
+
+If you can delete a sentence and lose no information, delete it. If a paragraph opens with "I think" or "It is important to note," delete the opener and keep the rest.
+
+## What's allowed
+Standard professional phrases are fine when they fit. "Valuable asset to the team," "strong leader and collaborator," "takes ownership of his work" — these are reasonable in their place. The goal is clarity and brevity, not novelty or austerity. Avoid them only when they replace a specific that would carry more weight.
+
+## Format
+Default to flowing paragraphs. Headers and bullets are tools of last resort, reached for only when the content is genuinely a parallel set of items — checklists, file maps, option enumerations.
 
 ## How to apply it
-Default to flowing paragraphs. Reach for a header or a list only when the content is genuinely a parallel set of items. Cut adverbs aggressively on the second pass. If a sentence opens with "I think" or "It is important to note," delete the opener and keep the rest.
-
-Read each paragraph and ask: would I lose information by deleting this? If not, delete it.
+Draft the paragraph version first. On the second pass, cut adverbs and filler transitions. On the third pass, check whether any sentence could be deleted without information loss. If yes, delete it.
 
 ## Scope and exceptions
-This applies to human-readable prose. It does not apply to:
-- Code comments (terse and technical is fine).
-- Generated structured output (JSON, YAML, CSV).
-- Lists where the content is genuinely a parallel set — checklists, file maps, option enumerations.
-- Frontmatter and metadata blocks.
-
-When in doubt, write the paragraph version first and convert to a list only if the result reads worse.
+Applies to human-readable prose. Does not apply to: code comments (terse and technical is fine); generated structured output (JSON, YAML, CSV); lists where the content is genuinely a parallel set; frontmatter and metadata blocks.
