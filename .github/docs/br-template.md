@@ -1,4 +1,4 @@
-# BR-PROJECT: [Short Title — Imperative Phrase]
+# BR-PROJECT: [Short Title: Imperative Phrase]
 
 ---
 

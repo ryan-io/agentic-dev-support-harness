@@ -1,4 +1,4 @@
-# ADR-PROJECT: [Short Title — Imperative Phrase]
+# ADR-PROJECT: [Short Title: Imperative Phrase]
 
 ---
 
