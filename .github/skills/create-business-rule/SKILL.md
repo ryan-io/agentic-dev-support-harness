@@ -39,23 +39,23 @@ Use these to derive the filename: `br-{project}-{kebab-case-title}.md`
 
 Walk the user through these questions to surface the rule's intent:
 
-1. **What business outcome does this rule protect?** — Revenue, compliance, data integrity, user safety, etc.
-2. **What triggers this rule?** — A user action, a system event, a time condition, a data state.
-3. **What happens if this rule is violated?** — Identify the business impact of non-compliance.
+1. **What business outcome does this rule protect?**: Revenue, compliance, data integrity, user safety, etc.
+2. **What triggers this rule?**: A user action, a system event, a time condition, a data state.
+3. **What happens if this rule is violated?**: Identify the business impact of non-compliance.
 
 ### Step 3: Walk Through Sections
 
 Present each section one at a time. After the user provides input, draft that section and confirm before moving on.
 
-**Metadata** — Auto-fill Date as today. Ask for Authors, Status (`Active` or `Archived`, default `Active`), Domain, and Related ADRs (default "None").
+**Metadata**: Auto-fill Date as today. Ask for Authors, Status (`Active` or `Archived`, default `Active`), Domain, and Related ADRs (default "None").
 
-**Description** — Plain language statement of the rule. Must be specific and unambiguous. One rule per document.
+**Description**: Plain language statement of the rule. Must be specific and unambiguous. One rule per document.
 
-**Conditions** — When does this rule apply? Define the triggering context, inputs, and any preconditions.
+**Conditions**: When does this rule apply? Define the triggering context, inputs, and any preconditions.
 
-**Expected Behavior** — What must happen when the rule is triggered? Define the outcome precisely.
+**Expected Behavior**: What must happen when the rule is triggered? Define the outcome precisely.
 
-**Exceptions** — Are there cases where this rule does not apply? If none, write "None".
+**Exceptions**: Are there cases where this rule does not apply? If none, write "None".
 
 ### Step 4: Validate and Save
 

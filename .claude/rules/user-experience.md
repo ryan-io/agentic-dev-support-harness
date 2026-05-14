@@ -15,13 +15,13 @@ These standards define UX expectations for the project. They complement `user-in
 
 ## Error Presentation
 <!-- CUSTOMIZE: Define how errors, warnings, and validation messages are surfaced to the user. -->
-- Display errors inline and contextually — near the element that triggered the error.
+- Display errors inline and contextually: near the element that triggered the error.
 - Error messages must be written in plain language and suggest a corrective action when possible.
 - Never expose raw exception text, stack traces, or internal identifiers to the user.
 
 ## Navigation and Layout
 <!-- CUSTOMIZE: Define navigation patterns, breadcrumbs, routing rules, and layout constraints. -->
-- Navigation must be predictable — the user should always know where they are and how to go back.
+- Navigation must be predictable: the user should always know where they are and how to go back.
 - Maintain consistent layout and component placement across views.
 
 ## Accessibility
@@ -33,7 +33,7 @@ These standards define UX expectations for the project. They complement `user-in
 ## Input Validation
 <!-- CUSTOMIZE: Define when and how validation runs (e.g., on blur, on submit, real-time). -->
 - Validate user input as early as practical and surface errors before submission.
-- Preserve user input on validation failure — do not clear fields.
+- Preserve user input on validation failure: do not clear fields.
 - Mark required fields visually before the user interacts with them.
 
 ## Defaults and State Preservation

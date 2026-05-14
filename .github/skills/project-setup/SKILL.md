@@ -31,7 +31,7 @@ Ask the user:
 For each language identified, create the following in `.github/instructions/`:
 
 **Required:**
-- `{language}-code-standards.instructions.md` — Language-specific coding standards.
+- `{language}-code-standards.instructions.md`: Language-specific coding standards.
   - Must use `applyTo: "**/*.{ext}"` frontmatter matching the language's file extension.
   - First line of body: `These standards extend code-standards.instructions.md with {language}-specific rules.`
   - Sections to include: null safety, async conventions, dependency injection, naming conventions, error handling, testing (framework, mocking library, naming pattern).
@@ -39,19 +39,19 @@ For each language identified, create the following in `.github/instructions/`:
 ### Step 3: Populate Agnostic Template Files
 
 Review all files with `CUSTOMIZE` comments and fill in stack-appropriate content:
-- `patterns.instructions.md` — Replace the example pattern with the project's adopted patterns and code examples. Optionally narrow `applyTo` scope.
-- `user-interface.instructions.md` — Fill in UI architecture, naming, binding, and performance sections for the chosen framework. Optionally narrow `applyTo` scope.
-- `user-experience.instructions.md` — Fill in UX rules for feedback, errors, navigation, accessibility, and input validation.
-- `code-standards.instructions.md` — Replace any customize markers with language-specific conventions.
-- `copilot-instructions.md` — Fill in the Project Overview section.
-- `.gitignore` — Replace `# CUSTOMIZE` sections with stack-specific build outputs, packages, test results, and config patterns.
+- `patterns.instructions.md`: Replace the example pattern with the project's adopted patterns and code examples. Optionally narrow `applyTo` scope.
+- `user-interface.instructions.md`: Fill in UI architecture, naming, binding, and performance sections for the chosen framework. Optionally narrow `applyTo` scope.
+- `user-experience.instructions.md`: Fill in UX rules for feedback, errors, navigation, accessibility, and input validation.
+- `code-standards.instructions.md`: Replace any customize markers with language-specific conventions.
+- `copilot-instructions.md`: Fill in the Project Overview section.
+- `.gitignore`: Replace `# CUSTOMIZE` sections with stack-specific build outputs, packages, test results, and config patterns.
 
 ### Step 4: Update Hub and Index Files
 
-After creating instruction files, update these files — look for `<!-- CUSTOMIZE -->` markers:
+After creating instruction files, update these files, look for `<!-- CUSTOMIZE -->` markers:
 
-1. **`.github/copilot-instructions.md`** — Add stack-specific files to the Instruction Files section. (`CLAUDE.md` is synced automatically by the sync script.)
-2. **`.github/docs/system-index.md`** — Add rows to the Instruction Files table between the CUSTOMIZE markers.
+1. **`.github/copilot-instructions.md`**: Add stack-specific files to the Instruction Files section. (`CLAUDE.md` is synced automatically by the sync script.)
+2. **`.github/docs/system-index.md`**: Add rows to the Instruction Files table between the CUSTOMIZE markers.
 
 ### Step 5: Run Sync and Validate
 

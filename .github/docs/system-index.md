@@ -13,10 +13,10 @@ ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat (V
 
 ## File Map
 
-### Entry Points (identical — synced by script)
+### Entry Points (identical, synced by script)
 | File | Purpose |
 |------|---------|
-| `.github/copilot-instructions.md` | Source of truth — agent entry point |
+| `.github/copilot-instructions.md` | Source of truth, agent entry point |
 | `CLAUDE.md` | Synced copy for Claude Code |
 
 ### Instruction Files (synced to .claude/rules/)

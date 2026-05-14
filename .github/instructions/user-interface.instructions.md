@@ -10,7 +10,7 @@ These standards extend `code-standards.instructions.md` with UI-specific rules. 
 <!-- CUSTOMIZE: Define your UI architectural pattern (e.g., MVVM, MVC, MVP, component-based). -->
 - Presentation logic must not reference view implementation details directly.
 - Business logic belongs in dedicated service layers, not in the presentation layer.
-- Use the framework's binding or reactivity system — avoid imperative UI updates for state-driven changes.
+- Use the framework's binding or reactivity system, avoid imperative UI updates for state-driven changes.
 - Presentation-only logic (animations, focus management) may live in view code if scoped to a single component.
 
 ## Naming Conventions
@@ -21,7 +21,7 @@ These standards extend `code-standards.instructions.md` with UI-specific rules. 
 ## Data Binding / State Management
 <!-- CUSTOMIZE: Define your framework's preferred data flow (e.g., one-way binding, two-way binding, reactive stores). -->
 - Prefer declarative binding over imperative property access.
-- Use converters or computed properties for display transformations — do not embed formatting logic in the presentation layer.
+- Use converters or computed properties for display transformations, do not embed formatting logic in the presentation layer.
 
 ## Commands / Event Handling
 <!-- CUSTOMIZE: Define how user actions are wired to logic (e.g., ICommand, event handlers, action dispatchers). -->
@@ -36,4 +36,4 @@ These standards extend `code-standards.instructions.md` with UI-specific rules. 
 ## Performance
 <!-- CUSTOMIZE: Define UI-specific performance rules (e.g., virtualization, lazy loading, debouncing). -->
 - Virtualize large collections to minimize rendering overhead.
-- Avoid binding to properties that trigger expensive computation on every change — use throttling or batching where appropriate.
+- Avoid binding to properties that trigger expensive computation on every change, use throttling or batching where appropriate.
