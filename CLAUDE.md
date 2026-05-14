@@ -47,4 +47,4 @@ The project includes an automated learning pipeline that observes developer sess
 - **Pipeline**: `observe.py` (record) → `analyze.py` (detect patterns) → `propose.py` (promote high-confidence patterns)
 - **Data**: `.claude/learning/` holds observations, instincts, proposals, and config (all local per developer except `config.json`)
 - **Review**: Run the `continuous-learning` skill to review and apply pending proposals
-- **Automation**: Session-start and session-end nudges when proposals await review; weekly GitHub Issue summary via `learning-summary.yml`
+- **Automation**: Session-start and session-end nudges when propos
