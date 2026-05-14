@@ -1,0 +1,13 @@
+{
+  "thresholds": {
+    "min_observations_before_analysis": 20,
+    "proposal_confidence_threshold": 0.7,
+    "commit_nudge_observation_count": 50,
+    "commit_nudge_proposal_count": 3
+  },
+  "staleness": {
+    "proposal_decay_days": 30,
+    "proposal_archive_days": 60,
+    "instinct_decay_per_month": 0.05
+  }
+}

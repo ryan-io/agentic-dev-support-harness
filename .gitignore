@@ -1,0 +1,44 @@
+# === Build outputs ===
+# CUSTOMIZE: Replace with your stack's build output directories and extensions
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+build/
+dist/
+publish/
+
+# === Packages ===
+# CUSTOMIZE: Replace with your stack's package manager directories and artifacts
+node_modules/
+packages/
+
+# === IDE and editor ===
+.vs/
+.vscode/.history/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.idea/
+*.swp
+*~
+
+# === OS files ===
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# === Logs and generated files ===
+*.log
+.claude/sync_log.txt
+__pycache__/
+
+# === Continuous learning (local per developer) ===
+.claude/learning/observations.jsonl
+.claude/learning/observations.archive/
+.claude/learning/instincts/
+.claude/learning/proposals/
+.claude/learning/.session-notices/
+
+# === Test results =

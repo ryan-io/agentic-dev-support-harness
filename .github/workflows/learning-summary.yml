@@ -1,0 +1,132 @@
+name: Learning Summary
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"  # Weekly, Monday 9:00 UTC
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Check for proposals
+        id: check
+        run: |
+          PROPOSALS_DIR=".claude/learning/proposals"
+          if [ ! -d "$PROPOSALS_DIR" ] || [ -z "$(ls -A "$PROPOSALS_DIR" 2>/dev/null)" ]; then
+            echo "has_proposals=false" >> "$GITHUB_OUTPUT"
+          else
+            count=$(find "$PROPOSALS_DIR" -name "*.md" | wc -l)
+            echo "has_proposals=true" >> "$GITHUB_OUTPUT"
+            echo "count=$count" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate summary issue
+        if: steps.check.outputs.has_proposals == 'true'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = await import('fs');
+            const path = await import('path');
+
+            const proposalsDir = '.claude/learning/proposals';
+            const files = fs.readdirSync(proposalsDir).filter(f => f.endsWith('.md'));
+
+            const pending = [];
+            const stale = [];
+            const other = [];
+
+            for (const file of files) {
+              const content = fs.readFileSync(path.join(proposalsDir, file), 'utf-8');
+              const idMatch = content.match(/^id:\s*(.+)$/m);
+              const statusMatch = content.match(/^status:\s*(\w+)$/m);
+              const targetMatch = content.match(/^target:\s*(.+)$/m);
+              const confMatch = content.match(/^instinct_confidence:\s*([\d.]+)$/m);
+              const createdMatch = content.match(/^created:\s*"?(\d{4}-\d{2}-\d{2})"?$/m);
+
+              const entry = {
+                id: idMatch ? idMatch[1].trim() : file,
+                status: statusMatch ? statusMatch[1] : 'unknown',
+                target: targetMatch ? targetMatch[1].trim() : '—',
+                confidence: confMatch ? confMatch[1] : '—',
+                created: createdMatch ? createdMatch[1] : '—',
+              };
+
+              if (entry.status === 'pending') pending.push(entry);
+              else if (entry.status === 'stale') stale.push(entry);
+              else other.push(entry);
+            }
+
+            if (pending.length === 0 && stale.length === 0) {
+              console.log('No pending or stale proposals. Skipping issue.');
+              return;
+            }
+
+            let body = '## Continuous Learning — Weekly Summary\n\n';
+            body += `Generated: ${new Date().toISOString().split('T')[0]}\n\n`;
+
+            if (pending.length > 0) {
+              body += '### Pending Proposals\n\n';
+              body += '| ID | Target | Confidence | Created |\n';
+              body += '|----|--------|------------|--------|\n';
+              for (const p of pending) {
+                body += `| ${p.id} | \`${p.target}\` | ${p.confidence} | ${p.created} |\n`;
+              }
+              body += '\n';
+            }
+
+            if (stale.length > 0) {
+              body += '### Stale Proposals (need attention)\n\n';
+              body += '| ID | Target | Confidence | Created |\n';
+              body += '|----|--------|------------|--------|\n';
+              for (const s of stale) {
+                body += `| ${s.id} | \`${s.target}\` | ${s.confidence} | ${s.created} |\n`;
+              }
+              body += '\n';
+            }
+
+            body += '---\n';
+            body += 'Run the **continuous-learning** skill in your IDE to review and apply these proposals.\n';
+
+            // Find existing open issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'learning-summary',
+              state: 'open',
+              per_page: 1,
+            });
+
+            if (issues.length > 0) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body,
+              });
+              console.log(`Updated issue #${issues[0].number}`);
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'Continuous Learning — Proposals Awaiting Review',
+                body,
+                labels: ['learning-summary'],
+              });
+              console.log('Created new summary issue');
+            }

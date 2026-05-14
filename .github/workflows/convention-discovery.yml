@@ -1,0 +1,146 @@
+name: Convention Discovery
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  discover:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Check commit threshold
+        id: threshold
+        run: |
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          echo "count=$COMMIT_COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$COMMIT_COUNT" -lt 50 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Only $COMMIT_COUNT commits — skipping (need 50+)."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Gather evidence
+        if: steps.threshold.outputs.skip == 'false'
+        id: evidence
+        run: |
+          delimiter="$(openssl rand -hex 16)"
+          echo "report<<$delimiter" >> "$GITHUB_OUTPUT"
+
+          echo "## Convention Discovery Report" >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+          echo "Generated after merging #${{ github.event.pull_request.number }}." >> "$GITHUB_OUTPUT"
+          echo "Commit count: ${{ steps.threshold.outputs.count }}" >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+
+          echo "### Commit Conventions" >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          git log --format="%s" -100 | head -30 >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+
+          echo "### File Placement (most-added paths)" >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          git log --diff-filter=A --name-only --format="" | \
+            sed 's|/[^/]*$||' | sort | uniq -c | sort -rn | head -20 >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+
+          echo "### Change Hotspots" >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          git log --format="" --name-only | sort | uniq -c | sort -rn | head -20 >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+
+          echo "### File Extensions" >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          find . -type f -not -path "./.git/*" | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -15 >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+
+          echo "### Naming Samples (top 30 source files)" >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          find . -type f -not -path "./.git/*" -not -path "./node_modules/*" \
+            -not -path "./.github/*" -not -name "*.md" -not -name "*.json" \
+            -not -name "*.yml" -not -name "*.yaml" -not -name "*.lock" \
+            | head -30 >> "$GITHUB_OUTPUT"
+          echo '```' >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+
+          echo "---" >> "$GITHUB_OUTPUT"
+          echo "*This is raw evidence. Run the \`convention-discovery\` skill to classify findings and generate instruction file updates.*" >> "$GITHUB_OUTPUT"
+
+          echo "$delimiter" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update issue
+        if: steps.threshold.outputs.skip == 'false'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const title = 'Convention Discovery: Review Findings';
+            const label = 'convention-discovery';
+
+            // Ensure label exists
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+              });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: '6f42c1',
+                description: 'Auto-generated convention discovery report',
+              });
+            }
+
+            // Find existing open issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: label,
+              state: 'open',
+              per_page: 1,
+            });
+
+            const body = `${{ steps.evidence.outputs.report }}`;
+
+            if (issues.length > 0) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body: body,
+              });
+              console.log(`Updated issue #${issues[0].number}`);
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: [label],
+              });
+              console.log('Created new convention discovery issue');
+            }

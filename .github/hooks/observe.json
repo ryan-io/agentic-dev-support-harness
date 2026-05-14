@@ -1,0 +1,42 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"",
+            "windows": "python \"%CLAUDE_PROJECT_DIR%\\.github\\scripts\\learning\\observe.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"",
+            "windows": "python \"%CLAUDE_PROJECT_DIR%\\.github\\scripts\\learning\\observe.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"",
+            "windows": "python \"%CLAUDE_PROJECT_DIR%\\.github\\scripts\\learning\\observe.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

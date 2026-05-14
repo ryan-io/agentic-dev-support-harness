@@ -1,0 +1,24 @@
+#!/bin/sh
+# Pre-commit hook: auto-sync agent files
+# Install: git config core.hooksPath .github/hooks
+
+# Check if any sync-relevant files are staged
+STAGED_INSTRUCTIONS=$(git diff --cached --name-only -- '.github/instructions/*.instructions.md')
+STAGED_HUB=$(git diff --cached --name-only -- '.github/copilot-instructions.md')
+
+if [ -z "$STAGED_INSTRUCTIONS" ] && [ -z "$STAGED_HUB" ]; then
+    exit 0
+fi
+
+echo "[pre-commit] Sync-relevant files changed — running sync..."
+python .github/scripts/sync-claude-rules.py
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+    echo "[pre-commit] Sync failed. Fix errors and retry."
+    exit 1
+fi
+
+# Stage the synced files
+git add .claude/rules/ CLAUDE.md
+echo "[pre-commit] Sync complete. Synced files staged."

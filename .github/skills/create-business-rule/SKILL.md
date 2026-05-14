@@ -1,0 +1,67 @@
+---
+name: create-business-rule
+description: >
+  Interactively create a Business Rule document. Walks through each section to capture
+  the rule's intent, conditions, and exceptions, then saves to
+  docs/business-rules/. Use this skill whenever the user wants to create a business rule,
+  document a domain constraint, capture a business requirement, or mentions "new business rule".
+---
+
+# Business Rule Creation Skill
+
+Create a complete business rule document by walking the user through each section interactively.
+
+## Prerequisites
+
+Before starting, read the template to populate:
+- `.github/docs/br-template.md`
+
+Note: validation rules (`br-review`) auto-load when working in `docs/business-rules/`.
+
+## File Conventions
+
+- Filename must be lowercase: `br-{project}-{kebab-case-title}.md`
+- Heading inside the file uses uppercase: `# BR-PROJECT: [Short Title]`
+- Save to `docs/business-rules/`
+
+## Workflow
+
+### Step 1: Identify the Rule
+
+Ask the user:
+- What is the business rule? (short title, imperative phrase)
+- What is the project prefix? (e.g., `SOC`, `GRID`, `APP`)
+- What domain or feature area does this rule belong to?
+
+Use these to derive the filename: `br-{project}-{kebab-case-title}.md`
+
+### Step 2: Discovery
+
+Walk the user through these questions to surface the rule's intent:
+
+1. **What business outcome does this rule protect?** — Revenue, compliance, data integrity, user safety, etc.
+2. **What triggers this rule?** — A user action, a system event, a time condition, a data state.
+3. **What happens if this rule is violated?** — Identify the business impact of non-compliance.
+
+### Step 3: Walk Through Sections
+
+Present each section one at a time. After the user provides input, draft that section and confirm before moving on.
+
+**Metadata** — Auto-fill Date as today. Ask for Authors, Status (`Active` or `Archived`, default `Active`), Domain, and Related ADRs (default "None").
+
+**Description** — Plain language statement of the rule. Must be specific and unambiguous. One rule per document.
+
+**Conditions** — When does this rule apply? Define the triggering context, inputs, and any preconditions.
+
+**Expected Behavior** — What must happen when the rule is triggered? Define the outcome precisely.
+
+**Exceptions** — Are there cases where this rule does not apply? If none, write "None".
+
+### Step 4: Validate and Save
+
+Before saving, validate:
+- All required sections present with substantive content
+- No placeholder text remains
+- Filename is lowercase and matches `br-{project}-{kebab-case-title}.md`
+
+Save to `docs/business-rules/` and confirm the file path to the user.
