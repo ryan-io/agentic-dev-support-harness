@@ -12,26 +12,26 @@ On top of that scaffolding sits a small body of opinions about how a project sho
 
 Each subsystem has its own README with the detail. The high-level map:
 
-- `.github/instructions/` — canonical rule files, scoped by frontmatter
-- `.github/skills/` — on-demand procedures the agent invokes by name
-- `.github/scripts/` — sync, validation, setup, and the learning pipeline
-- `.github/docs/` — copyable templates and the system index
-- `docs/adr/` — Architecture Decision Records
-- `docs/business-rules/` — business-owned constraints
-- `.claude/rules/` — synced mirror of the instructions (do not edit by hand)
-- `.claude/learning/` — local per-developer learning data
+- `.github/instructions/`: canonical rule files, scoped by frontmatter
+- `.github/skills/`: on-demand procedures the agent invokes by name
+- `.github/scripts/`: sync, validation, setup, and the learning pipeline
+- `.github/docs/`: copyable templates and the system index
+- `docs/adr/`: Architecture Decision Records
+- `docs/business-rules/`: business-owned constraints
+- `.claude/rules/`: synced mirror of the instructions (do not edit by hand)
+- `.claude/learning/`: local per-developer learning data
 
-`.github/copilot-instructions.md` and `CLAUDE.md` are the agent entry points — identical content, kept in sync by `.github/scripts/sync-claude-rules.py` on every commit.
+`.github/copilot-instructions.md` and `CLAUDE.md` are the agent entry points, identical content, kept in sync by `.github/scripts/sync-claude-rules.py` on every commit.
 
 ## Setup
 
-Three ways to start a new project from this harness, pick whichever fits.
+Every path requires one activation step. The template feature copies files but cannot set git config, so `core.hooksPath` has to be configured per clone, that is what `setup.sh` / `setup.bat` does. The GitHub Actions workflows run on their own; only the local pre-commit hook needs activation.
 
-The repository is configured as a GitHub **template repository** — click "Use this template" on the GitHub UI to create a new repo with the files already in place. After cloning your new repo, run the `project-setup` skill to fill in the stack-specific blanks.
+The recommended path is the GitHub **template repository**. Click "Use this template", clone the new repo, and from inside it run `setup.sh` (or `setup.bat` on Windows) with no arguments. The script detects that the files are already in place, configures the hook path, makes the hook executable, and runs an initial sync. Nothing is copied.
 
-Alternatively, **clone this repo manually** and run `setup.sh` (or `setup.bat` on Windows) pointing at an empty target directory. The script initializes git in the target, copies the template, installs the hook path, and runs the initial sync.
+To **clone this repo manually as a scaffold source**, run `setup.sh` (or `setup.bat`) pointing at an empty target directory. The same script detects the empty target, initializes git there, copies the template files, then activates as above. One script, two modes, auto-detected.
 
-The third path uses the **bootstrap scripts** in `.bootstrap/`. Copy `harness-bootstrap.sh` or `harness-bootstrap.bat` into an empty directory, run it, and it pulls the template from your local checkout (the path is hard-coded near the top of each script — update it once for your machine). Designed for the case where you create new projects often and do not want to remember where the template lives.
+The third path uses the **bootstrap scripts** in `.bootstrap/`. Copy `harness-bootstrap.sh` or `harness-bootstrap.bat` into an empty directory, run it, and it pulls the template from your local checkout (the path is hard-coded near the top of each script, update it once for your machine). Designed for the case where you create new projects often and do not want to remember where the template lives.
 
 Whichever path you choose, the next step is the `project-setup` skill: it tailors the CUSTOMIZE markers, generates a `{language}-code-standards.instructions.md` file, and removes anything not relevant to your stack.
 
@@ -41,10 +41,10 @@ A three-stage pipeline runs from hooks defined in `.github/hooks/observe.json`. 
 
 ## Constraints worth knowing
 
-Every markdown file must stay at or below 4,000 characters — both Copilot and Claude have context limits the harness respects. All instruction files must carry valid frontmatter or the validation workflow (`validate-system.yml`) will fail the PR. Stack-specific content does not belong in the agnostic files; that is what the `{language}-code-standards` file is for.
+Every agent-loaded markdown file must stay at or below 4,000 characters, both Copilot and Claude have context limits the harness respects. README files are exempt; they are for humans, not loaded into agent context. All instruction files must carry valid frontmatter or the validation workflow (`validate-system.yml`) will fail the PR. Stack-specific content does not belong in the agnostic files; that is what the `{language}-code-standards` file is for.
 
 ## Current state
 
-The template is initialized but unconfigured. The `<!-- CUSTOMIZE -->` markers in `copilot-instructions.md`, `system-index.md`, and `.gitignore` are placeholders waiting for stack details. `docs/adr/` and `docs/business-rules/` contain only `.gitkeep` files — no decisions or rules have been authored yet. No language-specific code-standards file exists. The learning pipeline is wired and will start collecting observations on the first agent session, but has no instincts or proposals to act on yet.
+The template is initialized but unconfigured. The `<!-- CUSTOMIZE -->` markers in `copilot-instructions.md`, `system-index.md`, and `.gitignore` are placeholders waiting for stack details. `docs/adr/` and `docs/business-rules/` contain only `.gitkeep` files, no decisions or rules have been authored yet. No language-specific code-standards file exists. The learning pipeline is wired and will start collecting observations on the first agent session, but has no instincts or proposals to act on yet.
 
 Run the `project-setup` skill to take it from template to project.
