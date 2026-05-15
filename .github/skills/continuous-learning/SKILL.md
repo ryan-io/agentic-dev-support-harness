@@ -23,7 +23,9 @@ Summarize the current state of the learning system:
 Present as a compact table per category. Flag instincts above the promotion threshold (0.7) that lack proposals.
 
 ## Step 2: Review Proposals
-For each proposal with `status: pending`:
+If there are 4+ pending proposals, offer **batch mode** first: present a summary table (id, target, confidence, priority, one-line description) and let the developer batch-accept, batch-reject, or pick individual review. Offer a "Skip all stale" shortcut if any proposals have `status: stale`.
+
+For individual review (default when fewer than 4 proposals), for each proposal with `status: pending` or `status: stale`, sorted by `priority` descending:
 1. Read the proposal file and display the suggested change.
 2. Read the target instruction file to show where the change would go.
 3. Ask the developer: **Accept**, **Reject**, or **Defer**.
