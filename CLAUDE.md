@@ -3,35 +3,24 @@
 This file is the agent entry point. It is loaded automatically by Copilot (as `copilot-instructions.md`) and synced to `CLAUDE.md` for Claude Code. Both files are identical, `.github/copilot-instructions.md` is the source of truth.
 
 ## Project Overview
-<!-- CUSTOMIZE: Fill in stack, architecture, testing framework, etc. -->
 - Architecture Decision Records (ADRs) are stored in `docs/adr/`.
 - Business Rules are stored in `docs/business-rules/`.
 - Design patterns adopted by the project are documented in `patterns.instructions.md`.
 
 ## Instruction Files
-Instruction files are loaded automatically based on file scope. All files are in `.github/instructions/`. Claude Code uses synced copies in `.claude/rules/` (managed by the sync script).
+Auto-loaded by file scope. Source: `.github/instructions/`, mirror: `.claude/rules/` (managed by sync script).
 
-- `code-standards.instructions.md`: Universal code standards (all files)
-- `pr-review.instructions.md`: PR review format and process (all files)
-- `patterns.instructions.md`: Adopted design pattern registry (all files)
-- `user-interface.instructions.md`: UI standards (all files)
-- `user-experience.instructions.md`: UX standards (all files)
-- `writing-voice.instructions.md`: Prose voice for human-readable deliverables (all files)
-- `research.instructions.md`: Research and sourcing practice (all files)
-- `agent-guardrails.instructions.md`: Agent behavioral constraints (all files)
-- `testing.instructions.md`: Testing standards (all files)
-- `adr-template.instructions.md`: ADR creation policy (`docs/adr/**`)
-- `adr-pr-review.instructions.md`: ADR review/validation (`docs/adr/**`)
-- `br-review.instructions.md`: Business rule review/validation (`docs/business-rules/**`)
+**Universal (all files):** code-standards, pr-review, patterns, writing-voice, research, agent-guardrails, testing
+**UI/UX (all files, narrow after project-setup):** user-interface, user-experience
+**ADR (`docs/adr/**`):** adr-template, adr-pr-review
+**Business rules (`docs/business-rules/**`):** br-review
+**Stack-specific:** csharp-code-standards (`*.cs`), lua-code-standards (`*.lua`)
 
-Stack-specific files (loaded by file extension match):
-- `csharp-code-standards.instructions.md`: C# standards (`**/*.cs`)
-- `lua-code-standards.instructions.md`: Lua standards (`**/*.lua`)
+Full file map and constraints: `.github/docs/system-index.md`
 
 ## On-Demand (not preloaded)
 - Templates: `.github/docs/adr-template.md`, `.github/docs/br-template.md`
-- Skills: `.github/skills/adr-creation/SKILL.md`, `.github/skills/create-business-rule/SKILL.md`, `.github/skills/system-review/SKILL.md`, `.github/skills/project-setup/SKILL.md`, `.github/skills/convention-discovery/SKILL.md`, `.github/skills/continuous-learning/SKILL.md`
-- Setup: `setup.bat` / `setup.sh` initializes a new repo from this template (run first, then use `project-setup` skill to tailor)
+- Skills: `adr-creation`, `create-business-rule`, `system-review`, `project-setup`, `convention-discovery`, `continuous-learning` (all in `.github/skills/{name}/SKILL.md`)
 - Reference: `.github/docs/system-index.md`
 
 ## Key Policies
