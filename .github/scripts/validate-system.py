@@ -116,6 +116,7 @@ print("\n[3] Size limits (agent-loaded .md <= 4000 chars; README.md exempt)")
 md_files = set(glob.glob("**/*.md", recursive=True))
 md_files.update(glob.glob(".github/**/*.md", recursive=True))
 md_files.update(glob.glob(".claude/**/*.md", recursive=True))
+size_records = []
 for md in sorted(md_files):
     if ".git/" in md or "node_modules/" in md:
         continue
@@ -124,10 +125,18 @@ for md in sorted(md_files):
         continue
     with open(md, "r", encoding="utf-8") as f:
         size = len(f.read())
+    size_records.append((md, size))
     if size > MAX_CHARS:
         result("FAIL", f"{md} -- {size} chars (limit {MAX_CHARS})")
     else:
         result("PASS", f"{md} -- {size} chars")
+
+# Headroom report: show the 3 tightest files
+size_records.sort(key=lambda x: x[1], reverse=True)
+tightest = [(f, s) for f, s in size_records if s <= MAX_CHARS][:3]
+if tightest:
+    parts = [f"{os.path.basename(f)} ({MAX_CHARS - s} free)" for f, s in tightest]
+    print(f"  Tightest: {', '.join(parts)}")
 
 
 # ============================================================
