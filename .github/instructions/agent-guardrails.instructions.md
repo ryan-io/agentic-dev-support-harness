@@ -4,7 +4,7 @@ applyTo: "**"
 
 # Agent Guardrails
 
-Behavioral constraints for any agent operating in this repository: Claude Code, Copilot, or subagents spawned during a session. This file does not duplicate rules defined elsewhere. It establishes the boundaries those rules assume.
+Behavioral constraints for any agent in this repository: Claude Code, Copilot, or subagents. This file does not duplicate rules defined elsewhere. It establishes the boundaries those rules assume.
 
 ## Ask, Do Not Guess
 
@@ -46,6 +46,7 @@ These are the project's sanctioned workflows. Agents should use the correspondin
 - **Convention discovery**: Use the `convention-discovery` skill to surface implicit patterns.
 - **Continuous learning**: Use the `continuous-learning` skill to review and apply pending proposals.
 - **Project setup**: Use the `project-setup` skill when tailoring the template for a new project.
+- **Session continuity**: On session end, `observe.py` writes a session delta and tracks instruction file changes. The next session's start notice includes what changed.
 
 ## Regeneration Policy
 
