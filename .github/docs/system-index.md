@@ -57,26 +57,21 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 |------|---------|
 | `.github/pull_request_template.md` | PR template |
 | `.github/scripts/sync-claude-rules.py` | Syncs instructions → rules |
-| `.github/scripts/setup/sync.bat` | Sync runner |
-| `.github/scripts/setup/repository-setup.bat` | Init or activate repo (Windows) |
-| `.github/scripts/setup/repository-setup.sh` | Init or activate repo (Unix) |
+| `.github/scripts/validate-system.py` | System validation |
+| `.github/scripts/setup/` | Sync runner, repo init (Windows + Unix) |
 | `setup.bat` / `setup.sh` / `sync.bat` | Root shims |
 | `.github/hooks/pre-commit` | Runs sync + validation on commit |
 | `.github/hooks/observe.json` | Hook config for learning |
-| `.github/scripts/learning/observe.py` | Records observations |
-| `.github/scripts/learning/analyze.py` | Creates instincts |
-| `.github/scripts/learning/propose.py` | Promotes to proposals |
-| `.github/scripts/validate-system.py` | System validation |
-| `.github/workflows/validate-system.yml` | Validation on PR |
-| `.github/workflows/convention-discovery.yml` | Git analysis on merge |
-| `.github/workflows/learning-summary.yml` | Weekly proposal summary |
+| `.github/scripts/learning/` | `observe.py` → `analyze.py` → `propose.py` |
+| `.github/workflows/` | `validate-system.yml`, `convention-discovery.yml`, `learning-summary.yml` |
 | `.claude/learning/config.json` | Learning thresholds |
-| `.gitignore` | Ignores + learning data |
-| `.gitattributes` | Pins line endings to LF |
+| `.gitignore` / `.gitattributes` | Ignores and line endings |
 
-### Documentation
-Each major directory has a `README.md` explaining its role (human-facing, size-limit exempt). Repo-root `README.md` is the entry point.
+Each major directory has a `README.md` (human-facing, size-limit exempt).
 
 ## Cross-References
 - Skills read templates in `.github/docs/`; scoped rules auto-load by directory
 - Learning chain: `observe.json` → `observe.py` → `analyze.py` → `propose.py` → `continuous-learning`
+
+## Size Management
+All agent-loaded files must stay under 4,000 characters. When a file passes 3,800: remove stale CUSTOMIZE markers, trim redundant cross-references, move examples to templates. When the hub passes 3,800: move detail here, keep the hub as a routing layer. When a learning proposal would push a file over 4,000: split into a new scoped instruction file.
