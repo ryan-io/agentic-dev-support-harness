@@ -53,4 +53,4 @@ All new logic must have corresponding tests. Bug fixes must include a regression
 
 ## Stack-Specific Hook
 
-Test placement, naming patterns, framework configuration, runner setup, and coverage tooling are stack-specific concerns. Define them in the project's `{language}-code-standards.instructions.md` file under a dedicated testing section. The `project-setup` skill will prompt for these during initial setup.
+Framework configuration, runner setup, coverage tooling, and E2E framework selection are stack-specific concerns. Define them in the project's `{language}-code-standards.instructions.md` file under a dedicated testing section. The `project-setup` skill will prompt for these during initial setup.
