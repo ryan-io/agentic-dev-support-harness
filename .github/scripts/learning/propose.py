@@ -12,6 +12,7 @@ Run from repo root: python .github/scripts/propose.py
 Called automatically by analyze.py after instinct creation/update.
 """
 
+import argparse
 import json
 import os
 import re
@@ -163,12 +164,30 @@ def map_target_file(instinct):
     return "code-standards.instructions.md"
 
 
+# --- Priority scoring ---
+
+def compute_priority(instinct):
+    """Return an integer 1-5 based on evidence count and confidence."""
+    evidence_count = instinct.get("evidence_count", 0)
+    confidence = instinct.get("confidence", 0.0)
+    if evidence_count >= 10 and confidence >= 0.8:
+        return 5
+    if evidence_count >= 5 and confidence >= 0.7:
+        return 4
+    if evidence_count >= 3:
+        return 3
+    if evidence_count >= 2:
+        return 2
+    return 1
+
+
 # --- Proposal generation ---
 
 def generate_proposal(instinct, target_file):
     """Generate a proposal markdown file from a high-confidence instinct."""
     iid = instinct.get("id", "unknown")
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    priority = compute_priority(instinct)
 
     content = f"""---
 id: {iid}
@@ -176,6 +195,7 @@ status: pending
 target: {target_file}
 instinct_confidence: {instinct.get('confidence', 0.0):.2f}
 evidence_count: {instinct.get('evidence_count', 0)}
+priority: {priority}
 created: "{now}"
 last_reviewed: "{now}"
 ---
@@ -273,6 +293,17 @@ def process_existing_proposals(config):
 # --- Main ---
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Promote high-confidence instincts to proposals."
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview promotion decisions without writing files."
+    )
+    args = parser.parse_args()
+    dry_run = args.dry_run
+
     config = load_config()
     threshold = config.get("thresholds", {}).get(
         "proposal_confidence_threshold", 0.7
@@ -295,16 +326,99 @@ def main():
         print("[propose] No instincts to evaluate.", file=sys.stderr)
         sys.exit(0)
 
-    print(f"[propose] Evaluating {len(instincts)} instincts...", file=sys.stderr)
+    if dry_run:
+        print(
+            f"[propose] DRY RUN: Evaluating {len(instincts)} instincts...",
+            file=sys.stderr
+        )
+    else:
+        print(
+            f"[propose] Evaluating {len(instincts)} instincts...",
+            file=sys.stderr
+        )
 
     # Step 1: Apply staleness decay to instincts
-    apply_instinct_decay(instincts, decay_per_month)
+    if dry_run:
+        now = datetime.now(timezone.utc)
+        for inst in instincts:
+            last_seen = inst.get("last_seen", "")
+            if not last_seen:
+                continue
+            try:
+                seen_date = datetime.strptime(last_seen, "%Y-%m-%d").replace(
+                    tzinfo=timezone.utc
+                )
+            except ValueError:
+                continue
+            months_stale = (now - seen_date).days / 30.0
+            if months_stale > 1.0:
+                decay = decay_per_month * months_stale
+                old_conf = inst.get("confidence", 0.0)
+                new_conf = max(0.1, round(old_conf - decay, 2))
+                if new_conf != old_conf:
+                    print(
+                        f"  [dry-run][decay] {inst.get('id', '?')}: "
+                        f"{old_conf:.2f} -> {new_conf:.2f} "
+                        f"({months_stale:.1f} months stale)",
+                        file=sys.stderr
+                    )
+                    inst["confidence"] = new_conf
+    else:
+        apply_instinct_decay(instincts, decay_per_month)
 
     # Step 2: Process existing proposals (decay + archive)
-    process_existing_proposals(config)
+    if dry_run:
+        if os.path.isdir(PROPOSALS_DIR):
+            now = datetime.now(timezone.utc)
+            decay_days = config.get("staleness", {}).get(
+                "proposal_decay_days", 30
+            )
+            archive_days = config.get("staleness", {}).get(
+                "proposal_archive_days", 60
+            )
+            for fname in os.listdir(PROPOSALS_DIR):
+                if not fname.endswith(".md"):
+                    continue
+                path = os.path.join(PROPOSALS_DIR, fname)
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                created_match = re.search(
+                    r'created:\s*"?(\d{4}-\d{2}-\d{2})"?', content
+                )
+                if not created_match:
+                    continue
+                try:
+                    created = datetime.strptime(
+                        created_match.group(1), "%Y-%m-%d"
+                    ).replace(tzinfo=timezone.utc)
+                except ValueError:
+                    continue
+                age_days = (now - created).days
+                if age_days >= archive_days:
+                    status_match = re.search(r'status:\s*(\w+)', content)
+                    status = (
+                        status_match.group(1) if status_match else "pending"
+                    )
+                    if status == "pending":
+                        print(
+                            f"  [dry-run][archive] {fname}, "
+                            f"{age_days}d old, would be archived",
+                            file=sys.stderr
+                        )
+                        continue
+                if age_days >= decay_days:
+                    if "status: pending" in content:
+                        print(
+                            f"  [dry-run][stale] {fname}, "
+                            f"{age_days}d old, would be marked stale",
+                            file=sys.stderr
+                        )
+    else:
+        process_existing_proposals(config)
 
     # Step 3: Promote high-confidence instincts to proposals
-    os.makedirs(PROPOSALS_DIR, exist_ok=True)
+    if not dry_run:
+        os.makedirs(PROPOSALS_DIR, exist_ok=True)
     promoted = 0
     for inst in instincts:
         conf = inst.get("confidence", 0.0)
@@ -315,18 +429,30 @@ def main():
             continue
 
         target = map_target_file(inst)
-        content = generate_proposal(inst, target)
-        proposal_path = os.path.join(PROPOSALS_DIR, f"{iid}.md")
-        with open(proposal_path, "w", encoding="utf-8") as f:
-            f.write(content)
-        promoted += 1
-        print(
-            f"  [promote] {iid} (conf={conf:.2f}) -> {target}",
-            file=sys.stderr
-        )
+        priority = compute_priority(inst)
 
+        if dry_run:
+            print(
+                f"  [dry-run][promote] {iid} (conf={conf:.2f}, "
+                f"priority={priority}) -> {target}",
+                file=sys.stderr
+            )
+            promoted += 1
+        else:
+            content = generate_proposal(inst, target)
+            proposal_path = os.path.join(PROPOSALS_DIR, f"{iid}.md")
+            with open(proposal_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            promoted += 1
+            print(
+                f"  [promote] {iid} (conf={conf:.2f}, "
+                f"priority={priority}) -> {target}",
+                file=sys.stderr
+            )
+
+    prefix = "[propose] DRY RUN:" if dry_run else "[propose]"
     print(
-        f"[propose] {promoted} new proposals from {len(instincts)} instincts.",
+        f"{prefix} {promoted} new proposals from {len(instincts)} instincts.",
         file=sys.stderr
     )
     sys.exit(0)
