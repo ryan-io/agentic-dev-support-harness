@@ -42,3 +42,6 @@ __pycache__/
 .claude/learning/.session-notices/
 
 # === Test results =
+.claude/worktrees/hopeful-shannon-9b46bf
+
+.claude/settings.local.json
