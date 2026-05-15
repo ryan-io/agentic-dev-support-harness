@@ -5,48 +5,71 @@ paths: ["**/*.cs"]
 
 # C# Code Standards
 
-These standards extend `code-standards.instructions.md` with C#-specific rules. Both files apply when writing or reviewing C# code.
+Extends `code-standards.instructions.md`. Draws from [ktaranov/naming-convention](https://github.com/ktaranov/naming-convention) and the [.NET runtime coding style](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/coding-style.md).
 
-## Language Version and Target
+## Language Version
 
-Target the latest stable C# language version supported by the project's SDK. Use file-scoped namespaces, global usings, and primary constructors where supported. Do not use preview features without an ADR.
-
-## Null Safety
-
-Enable nullable reference types project-wide (`<Nullable>enable</Nullable>`). Treat all nullable warnings as errors. Use the null-forgiving operator (`!`) only when the compiler cannot prove safety and add a comment explaining why.
-
-Prefer pattern matching (`is not null`, `is null`) over equality operators (`!= null`, `== null`) for null checks.
+Target the latest stable C# version supported by the project SDK. Use file-scoped namespaces, global usings, and primary constructors where supported. No preview features without an ADR.
 
 ## Naming
 
-Follow the .NET naming guidelines. Public members use PascalCase. Parameters and local variables use camelCase. Private fields use `_camelCase` with an underscore prefix. Constants use PascalCase, not UPPER_SNAKE_CASE. Interface names start with `I`. Type parameter names start with `T`.
+| Identifier | Convention | Example |
+|---|---|---|
+| Class, struct, record | PascalCase | `ClientActivity` |
+| Interface | `I` + PascalCase | `IGroupable` |
+| Method | PascalCase | `CalculateStatistics` |
+| Property | PascalCase | `DateOpened` |
+| Public field | PascalCase | `Reserves` |
+| Private field | `_camelCase` | `_registrationDate` |
+| Parameter, local | camelCase | `itemCount` |
+| Constant | PascalCase | `ShippingType` |
+| Enum type | PascalCase, singular | `Color` |
+| Enum flags | PascalCase, plural | `Dockings` |
+| Type parameter | `T` + PascalCase | `TResult` |
+| Namespace | `Company.Product.Module` | |
+
+No Hungarian notation. No `SCREAMING_CAPS`. No underscores except the private field prefix. Abbreviations of 3+ chars use PascalCase (`XmlDocument`). Two-char abbreviations stay uppercase (`UI`, `IO`).
+
+## Null Safety
+
+Enable nullable reference types project-wide (`<Nullable>enable</Nullable>`). Treat nullable warnings as errors. Use the null-forgiving operator (`!`) only when the compiler cannot prove safety, with a comment explaining why. Prefer `is not null` / `is null` over `!=` / `==` for null checks.
 
 ## Async
 
-Suffix all async methods with `Async`. Return `Task` or `ValueTask`, never `async void` (except event handlers). Pass `CancellationToken` through every async call chain. Use `ConfigureAwait(false)` in library code, omit it in application code that needs the synchronization context.
+Suffix async methods with `Async`. Return `Task` or `ValueTask`, never `async void` except event handlers. Pass `CancellationToken` through every async chain. Use `ConfigureAwait(false)` in library code.
 
 ## Dependency Injection
 
-Register services in a composition root. Prefer constructor injection. Do not resolve services from `IServiceProvider` inside business logic (service locator pattern). Scoped services must not be injected into singletons.
+Register services in a composition root. Constructor injection only. Do not resolve from `IServiceProvider` inside business logic. Scoped services must not be injected into singletons.
 
 ## Error Handling
 
-Throw specific exception types, not bare `Exception`. Use exception filters (`when`) to avoid catching exceptions you cannot handle. Let unrecoverable exceptions propagate. Use `ILogger<T>` for structured logging, not `Console.Write` or `Debug.Print`.
+Throw specific exception types, not bare `Exception`. Custom exceptions use the `Exception` suffix (`BarcodeReadException`). Use exception filters (`when`) to avoid catching what you cannot handle. Use `ILogger<T>` for structured logging.
+
+## Type Usage
+
+Use C# aliases (`int`, `string`, `bool`) for declarations. Use framework names (`Int32.TryParse`, `String.Join`) for static member access. Use `var` for locals when the type is obvious from the right side; use explicit types for primitives.
 
 ## LINQ
 
-Prefer method syntax for simple queries and query syntax when the expression involves multiple `from`, `let`, or `join` clauses. Do not use LINQ in hot paths where allocation pressure matters; measure first. Materialize queries (`.ToList()`, `.ToArray()`) at the boundary, not inside a loop.
+Method syntax for simple queries, query syntax for multiple `from`, `let`, or `join` clauses. Avoid LINQ in hot paths where allocation matters. Materialize (`.ToList()`, `.ToArray()`) at the boundary, not inside loops.
 
 ## Collections
 
-Use `IReadOnlyList<T>`, `IReadOnlyCollection<T>`, or `IEnumerable<T>` for public return types when mutation is not intended. Use concrete types (`List<T>`, `Dictionary<TKey, TValue>`) for internal implementation. Prefer collection expressions (`[1, 2, 3]`) where the language version supports them.
+Use `IReadOnlyList<T>`, `IReadOnlyCollection<T>`, or `IEnumerable<T>` for return types when mutation is not intended. Concrete types internally. Prefer collection expressions (`[1, 2, 3]`) where supported.
 
-## Testing
+## Enums
 
-Use MSTest as the test framework. Test projects follow the naming convention `{ProjectName}.Tests`. Test classes mirror the class under test: `FooServiceTests` for `FooService`. Test methods follow `Method_State_ExpectedBehavior` as defined in `testing.instructions.md`.
+Singular names for standard enums, plural for `[Flags]`. Do not suffix with `Enum` or `Flags`. Do not specify underlying type or explicit values unless required (bit fields).
 
-Use Moq or NSubstitute for mocking. Prefer `Verify` calls over `Setup` with `Returns` when testing interactions. Use `AutoFixture` or factory methods for test data construction.
+## Events
+
+Event args suffix with `EventArgs`, delegate types with `EventHandler`. Handlers take `object sender` and typed `e`.
 
 ## Code Organization
 
-One top-level type per file. File name matches the type name. Group members in this order: constants, fields, constructors, properties, public methods, private methods. Use `#region` sparingly and only for interface implementations that would otherwise clutter the file.
+One type per file, name matches type. Allman braces. Members top-down: static fields, instance fields, constructors, properties, public methods, private methods. Namespaces follow `Company.Product.Module`.
+
+## Testing
+
+NUnit as the test framework. Projects named `{ProjectName}.Tests`. Classes mirror the type under test (`FooServiceTests`). Methods follow `Method_State_ExpectedBehavior` per `testing.instructions.md`. Use Moq for mocking, factory methods for test data.
