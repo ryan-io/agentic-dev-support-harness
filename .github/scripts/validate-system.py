@@ -675,13 +675,23 @@ if os.path.isfile(SYSTEM_INDEX):
     for src in sorted(glob.glob(os.path.join(SRC_DIR, "*.instructions.md"))):
         fname = os.path.basename(src)
         with open(src, "r", encoding="utf-8") as f:
-            first = f.read(50)
-        if first.strip().startswith("<!-- DEPRECATED"):
+            src_content = f.read()
+        if src_content.strip().startswith("<!-- DEPRECATED"):
             continue
         if fname in index_content:
             result("PASS", f"index lists instruction: {fname}")
         else:
             result("FAIL", f"index missing instruction: {fname}")
+
+        # Verify scope in index matches actual applyTo
+        apply_match = re.search(r'applyTo:\s*["\']?([^"\'\n]+)["\']?', src_content)
+        if apply_match:
+            actual_scope = apply_match.group(1).strip()
+            # Index uses backtick-wrapped scopes in table cells: | fname | `scope` |
+            if actual_scope in index_content:
+                result("PASS", f"index scope matches: {fname} ({actual_scope})")
+            else:
+                result("WARN", f"index scope may be stale for {fname} (expected {actual_scope})")
 
     if os.path.isdir(SKILLS_DIR):
         for skill_dir in sorted(os.listdir(SKILLS_DIR)):
