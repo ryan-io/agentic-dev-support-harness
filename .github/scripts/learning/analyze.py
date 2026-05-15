@@ -10,11 +10,17 @@ Detectors:
   2. Repeated sequences: same tool call sequences across sessions
   3. Error recovery: failure followed by resolution pattern
   4. File conventions: consistent file placement and naming
+  5. Rule consultation: instruction files never consulted for in-scope edits
 
 Run from repo root: python .github/scripts/analyze.py
 Called automatically by observe.py on Stop when threshold met.
+
+Flags:
+  --dry-run   Run detectors and print results without writing files or
+              invoking propose.py.
 """
 
+import argparse
 import json
 import os
 import re
@@ -309,9 +315,100 @@ def detect_file_conventions(observations):
     return instincts
 
 
+# --- Detector 5: Rule Consultation Patterns ---
+
+def detect_rule_consultation(observations):
+    """
+    Find instruction files that are in scope for edited file types but were
+    never consulted during those sessions. A rule file that no one reads
+    despite active edits in its scope may be poorly discoverable or irrelevant.
+    """
+    instincts = []
+
+    # Count consultations per instruction file
+    rule_consult_counts = Counter()
+    for o in observations:
+        rule = o.get("rule_consulted")
+        if rule:
+            rule_consult_counts[rule] += 1
+
+    # Count edits per file extension
+    ext_edit_counts = Counter()
+    for o in observations:
+        if o.get("tool") in ("Edit", "Write") and o.get("file_ext"):
+            ext_edit_counts[o["file_ext"]] += 1
+
+    # Build a mapping of instruction files to their extension scopes.
+    # Convention: files named {language}-code-standards.instructions.md scope
+    # to that language extension. Generic instruction files (no language prefix)
+    # are skoped to all files and are excluded from this detector.
+    rule_ext_scope = {}
+    ext_map = {
+        "python": ".py", "py": ".py",
+        "javascript": ".js", "js": ".js",
+        "typescript": ".ts", "ts": ".ts",
+        "csharp": ".cs", "cs": ".cs",
+        "cpp": ".cpp", "c++": ".cpp",
+        "c": ".c",
+        "java": ".java",
+        "ruby": ".rb", "rb": ".rb",
+        "go": ".go",
+        "rust": ".rs", "rs": ".rs",
+        "lua": ".lua",
+        "swift": ".swift",
+        "kotlin": ".kt", "kt": ".kt",
+    }
+
+    for rule_file in rule_consult_counts:
+        basename = os.path.basename(rule_file).lower()
+        for lang, ext in ext_map.items():
+            if basename.startswith(f"{lang}-"):
+                rule_ext_scope[rule_file] = ext
+                break
+
+    # Also check rule files that were never consulted but exist in observations
+    # as rule_consulted values from other observations. We already have those.
+    # Additionally, scan for any rule files referenced anywhere.
+    all_rule_files = set(rule_consult_counts.keys())
+
+    for rule_file in all_rule_files:
+        ext = rule_ext_scope.get(rule_file)
+        if not ext:
+            continue
+        edit_count = ext_edit_counts.get(ext, 0)
+        if edit_count == 0:
+            continue
+        consult_count = rule_consult_counts.get(rule_file, 0)
+        if consult_count == 0:
+            instincts.append({
+                "trigger": f"when editing {ext} files",
+                "action": f"{rule_file} rarely consulted despite "
+                          f"{edit_count} edits in scope",
+                "confidence": 0.3,
+                "domain": "meta",
+                "file_scope": "**",
+                "evidence": f"- {edit_count} edits on {ext} files, "
+                            f"0 consultations of {rule_file}",
+                "evidence_count": edit_count,
+            })
+
+    return instincts
+
+
 # --- Main ---
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Pattern detection engine for continuous learning."
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run detectors and print results without writing files or "
+             "invoking propose.py.",
+    )
+    args = parser.parse_args()
+
     observations = load_observations()
     if not observations:
         print("[analyze] No observations to analyze.", file=sys.stderr)
@@ -325,6 +422,7 @@ def main():
     all_instincts.extend(detect_repeated_sequences(observations))
     all_instincts.extend(detect_error_recovery(observations))
     all_instincts.extend(detect_file_conventions(observations))
+    all_instincts.extend(detect_rule_consultation(observations))
 
     if not all_instincts:
         print("[analyze] No patterns detected yet.", file=sys.stderr)
@@ -337,18 +435,36 @@ def main():
             if iid in seen_ids:
                 continue
             seen_ids.add(iid)
-            save_instinct(
-                iid=iid,
-                trigger=inst["trigger"],
-                action=inst["action"],
-                confidence=inst["confidence"],
-                domain=inst["domain"],
-                file_scope=inst.get("file_scope", "**"),
-                evidence=inst["evidence"],
-                evidence_count=inst.get("evidence_count", 1),
-            )
+            if args.dry_run:
+                print(
+                    f"[dry-run] Would save instinct '{iid}': "
+                    f"trigger=\"{inst['trigger']}\" "
+                    f"action=\"{inst['action']}\" "
+                    f"confidence={inst['confidence']:.2f} "
+                    f"domain={inst['domain']}",
+                    file=sys.stderr,
+                )
+            else:
+                save_instinct(
+                    iid=iid,
+                    trigger=inst["trigger"],
+                    action=inst["action"],
+                    confidence=inst["confidence"],
+                    domain=inst["domain"],
+                    file_scope=inst.get("file_scope", "**"),
+                    evidence=inst["evidence"],
+                    evidence_count=inst.get("evidence_count", 1),
+                )
             saved += 1
-        print(f"[analyze] Created/updated {saved} instincts.", file=sys.stderr)
+        if args.dry_run:
+            print(f"[dry-run] {saved} instincts would be created/updated.",
+                  file=sys.stderr)
+        else:
+            print(f"[analyze] Created/updated {saved} instincts.",
+                  file=sys.stderr)
+
+    if args.dry_run:
+        sys.exit(0)
 
     # Write analysis marker so observe.py can reset its count
     os.makedirs(LEARNING_DIR, exist_ok=True)
