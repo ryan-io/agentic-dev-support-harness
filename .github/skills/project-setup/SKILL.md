@@ -40,8 +40,8 @@ For each language identified, create the following in `.github/instructions/`:
 
 Review all files with `CUSTOMIZE` comments and fill in stack-appropriate content:
 - `patterns.instructions.md`: Replace the example pattern with the project's adopted patterns and code examples. Optionally narrow `applyTo` scope.
-- `user-interface.instructions.md`: Fill in UI architecture, naming, binding, and performance sections for the chosen framework. Optionally narrow `applyTo` scope.
-- `user-experience.instructions.md`: Fill in UX rules for feedback, errors, navigation, accessibility, and input validation.
+- `user-interface.instructions.md`: If the project has a UI layer, narrow `applyTo` to the framework's file extensions (e.g., `**/*.xaml`, `**/*.tsx`) and fill in the CUSTOMIZE sections. If no UI layer, mark the file `<!-- DEPRECATED -->` so the sync script skips it.
+- `user-experience.instructions.md`: Same rule as user-interface: scope to UI extensions or mark deprecated.
 - `code-standards.instructions.md`: Replace any customize markers with language-specific conventions.
 - `copilot-instructions.md`: Fill in the Project Overview section.
 - `.gitignore`: Replace `# CUSTOMIZE` sections with stack-specific build outputs, packages, test results, and config patterns.
