@@ -25,9 +25,8 @@ Instruction files are loaded automatically based on file scope. All files are in
 - `br-review.instructions.md`: Business rule review/validation (`docs/business-rules/**`)
 
 Stack-specific files (loaded by file extension match):
-<!-- CUSTOMIZE: Add or remove lines below to match the stacks used in this project -->
-- `{language}-code-standards.instructions.md`: Language-specific standards
-<!-- END CUSTOMIZE -->
+- `csharp-code-standards.instructions.md`: C# standards (`**/*.cs`)
+- `lua-code-standards.instructions.md`: Lua standards (`**/*.lua`)
 
 ## On-Demand (not preloaded)
 - Templates: `.github/docs/adr-template.md`, `.github/docs/br-template.md`
