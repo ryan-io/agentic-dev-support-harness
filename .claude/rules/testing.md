@@ -5,13 +5,38 @@ paths: ["**"]
 
 # Testing Standards
 
-These standards extend `code-standards.instructions.md` with testing-specific rules. Both files apply when writing or reviewing tests. This file defines universal testing principles. Stack-specific testing conventions (framework, runner, directory layout, naming patterns) belong in the project's stack-specific code standards file and should cross-reference this file.
+These standards extend `code-standards.instructions.md` with testing-specific rules. Both files apply when writing or reviewing tests. This file defines universal testing principles. Stack-specific testing conventions (framework, runner, directory layout) belong in the project's stack-specific code standards file and should cross-reference this file.
 
-## Unit vs Integration
+## Test Tiers
 
-Unit tests verify a single unit of logic in isolation. They must not depend on the network, filesystem, database, or external services. Use mocks, stubs, or fakes for external dependencies.
+Unit tests verify individual functions, utilities, and components in isolation. They must not depend on the network, filesystem, database, or external services. Use mocks, stubs, or fakes for external dependencies.
 
-Integration tests verify that units work together or that the system interacts correctly with real external dependencies. They run in a controlled environment and are clearly separated from unit tests by directory, naming convention, or test runner configuration.
+Integration tests verify interactions across boundaries: API endpoints, database operations, service-to-service calls. They run in a controlled environment and are clearly separated from unit tests by directory, naming convention, or test runner configuration.
+
+End-to-end tests exercise critical user flows through the full stack. Framework choice is language- and project-specific; define it in the stack-specific code standards file. E2E tests cover the paths where a failure would block users, not every permutation.
+
+## Test Structure
+
+Every test follows Arrange-Act-Assert. Arrange sets up preconditions and inputs. Act executes the behavior under test. Assert verifies the outcome. Keep each section short. If Arrange dominates the test, extract a factory or builder.
+
+```csharp
+[TestMethod]
+public void Withdraw_ValidAmount_ChangesBalance()
+{
+    // arrange
+    var account = new CheckingAccount("JohnDoe", currentBalance: 10.0);
+
+    // act
+    account.Withdraw(1.0);
+
+    // assert
+    Assert.AreEqual(9.0, account.Balance);
+}
+```
+
+## Naming
+
+Test names follow the pattern `Method_State_ExpectedBehavior`. The method under test comes first, then the scenario or input state, then the expected outcome. Names read as a sentence: `Withdraw_InsufficientFunds_ThrowsException`, `Parse_EmptyString_ReturnsNull`, `Login_ValidCredentials_RedirectsToDashboard`.
 
 ## Mocking and Stubbing
 
