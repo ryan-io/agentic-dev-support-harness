@@ -36,11 +36,11 @@ When a limitation or gap exists, name it directly and pivot to what compensates.
 ## Format
 Default to flowing paragraphs. Headers and bullets are tools of last resort, reached for only when the content is genuinely a parallel set of items: checklists, file maps, option enumerations.
 
+## Agent responses
+Agent output follows these same rules. Be direct. If the answer is uncertain, say so and ask rather than guess. Do not pad responses with filler, qualifications, or restated context the developer already knows.
+
 ## Conversational style
 In informal contexts (chat, casual notes, PR comments) the voice drops formality. Functional, not decorative. Don't replicate typos in formal output, but match the directness. Short, lowercase sentence openers are fine in chat. In formal deliverables, standard capitalization applies.
-
-## How to apply it
-Draft the paragraph version first. On the second pass, cut adverbs and filler transitions. On the third pass, ask of each sentence whether it could be deleted without losing information. If yes, delete it. The pattern is brevity through deletion, not through compression.
 
 ## Scope and exceptions
 Applies to human-readable prose. Does not apply to: code comments (terse and technical is fine); generated structured output (JSON, YAML, CSV); lists where the content is genuinely a parallel set; frontmatter and metadata blocks.
