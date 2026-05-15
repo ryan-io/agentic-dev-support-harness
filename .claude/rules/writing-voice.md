@@ -4,7 +4,9 @@ paths: ["**"]
 
 
 # Writing Voice
-How to write prose deliverables in this project: READMEs, ADR narratives, business-rule descriptions, PR comments, commit messages, documentation. Code is governed by `code-standards`; this file governs words.
+How to write in this project: documentation, agent responses, READMEs, ADR narratives, business-rule descriptions, PR comments, commit messages. Code is governed by `code-standards`; this file governs words. Agent output follows the same rules as human-authored prose.
+
+Use as few words as possible without leaving out critical details. Natural language, not bureaucratic language. Every sentence should earn its place.
 
 ## No em dashes
 Do not use em dashes. This is a hard rule, not a preference. They read as an AI tell and the author does not write with them. Use a comma, a colon, parentheses, or a separate sentence instead. A colon introduces a list or an explanation. A comma joins a closely related clause. A period is always available when two thoughts can stand apart. The same applies to the en dash used as sentence punctuation; reserve the en dash for numeric ranges.
