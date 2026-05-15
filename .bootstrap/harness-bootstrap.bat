@@ -1,11 +1,22 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: llm-sw-setup.bat
+:: harness-bootstrap.bat
 :: Drop into any directory and double-click to initialize it as a new project
 :: from the template repo. Sets up git, copies files, installs hooks, runs sync.
+::
+:: Usage: harness-bootstrap.bat <template-source-path>
+::   e.g. harness-bootstrap.bat Z:\source\projects\claude-workflows\agentic-dev-support-harness
 
-set "SRC=Z:\source\projects\claude-workflows\agentic-dev-support-harness"
+if "%~1"=="" (
+    echo Usage: %~nx0 ^<template-source-path^>
+    echo.
+    echo   Provide the absolute path to the agentic-dev-support-harness template repo.
+    echo   Example: %~nx0 Z:\source\projects\claude-workflows\agentic-dev-support-harness
+    goto :done
+)
+
+set "SRC=%~1"
 set "TARGET_DIR=%CD%"
 
 echo ============================================
@@ -20,6 +31,7 @@ echo.
 
 if not exist "%SRC%\.github" (
     echo ERROR: Template source not found at %SRC%
+    echo        Verify the path exists and contains the .github directory.
     goto :done
 )
 

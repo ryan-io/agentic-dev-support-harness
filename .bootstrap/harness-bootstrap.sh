@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
-# llm-sw-setup.sh
+# harness-bootstrap.sh
 # Drop into any directory and run to initialize it as a new project
 # from the template repo. Sets up git, copies files, installs hooks, runs sync.
+#
+# Usage: harness-bootstrap.sh <template-source-path>
+#   e.g. harness-bootstrap.sh ~/source/projects/claude-workflows/agentic-dev-support-harness
 
 set -euo pipefail
 
-SRC="$HOME/source/projects/claude-workflows/agentic-dev-support-harness"
+if [ -z "${1:-}" ]; then
+    echo "Usage: $(basename "$0") <template-source-path>"
+    echo
+    echo "  Provide the absolute path to the agentic-dev-support-harness template repo."
+    echo "  Example: $(basename "$0") ~/source/projects/claude-workflows/agentic-dev-support-harness"
+    exit 1
+fi
+
+SRC="$1"
 TARGET_DIR="$(pwd)"
 
 echo "============================================"
@@ -20,7 +31,7 @@ echo
 
 if [ ! -d "$SRC/.github" ]; then
     echo "ERROR: Template source not found at $SRC"
-    echo "       Update the SRC variable in this script to match your template location."
+    echo "       Verify the path exists and contains the .github directory."
     exit 1
 fi
 
