@@ -707,6 +707,60 @@ else:
 
 
 # ============================================================
+# 19. Content overlap detection
+# ============================================================
+
+current_check = "[19] Content overlap detection"
+print("\n[19] Content overlap detection")
+
+
+def normalize_sentences(text):
+    """Extract normalized sentences from markdown body (skip frontmatter)."""
+    parts = text.split("---", 2)
+    body = parts[2] if len(parts) >= 3 else text
+    body = re.sub(r'```[\s\S]*?```', '', body)
+    body = re.sub(r'<!--[\s\S]*?-->', '', body)
+    body = re.sub(r'\|[^\n]+\|', '', body)
+    body = re.sub(r'#+\s+', '', body)
+    body = re.sub(r'[*_`\[\]()]', '', body)
+    sentences = set()
+    for line in body.split('\n'):
+        line = line.strip().strip('-').strip()
+        if len(line) > 20:
+            sentences.add(line.lower())
+    return sentences
+
+
+instruction_bodies = {}
+for src in sorted(glob.glob(os.path.join(SRC_DIR, "*.instructions.md"))):
+    fname = os.path.basename(src)
+    with open(src, "r", encoding="utf-8") as f:
+        content = f.read()
+    if content.strip().startswith("<!-- DEPRECATED"):
+        continue
+    instruction_bodies[fname] = normalize_sentences(content)
+
+checked_pairs = set()
+for a, sents_a in instruction_bodies.items():
+    for b, sents_b in instruction_bodies.items():
+        if a >= b:
+            continue
+        pair = (a, b)
+        if pair in checked_pairs:
+            continue
+        checked_pairs.add(pair)
+        if not sents_a or not sents_b:
+            continue
+        overlap = sents_a & sents_b
+        union = sents_a | sents_b
+        jaccard = len(overlap) / len(union) if union else 0
+        if jaccard > 0.30:
+            result("WARN", f"{a} <-> {b}: {jaccard:.0%} overlap ({len(overlap)} shared sentences)")
+        else:
+            result("PASS", f"{a} <-> {b}: {jaccard:.0%} overlap")
+
+
+# ============================================================
 # Summary
 # ============================================================
 
