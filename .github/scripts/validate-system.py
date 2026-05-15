@@ -34,6 +34,8 @@ CONFIG_FILE = os.path.join(LEARNING_DIR, "config.json")
 passes = 0
 fails = 0
 warns = 0
+issues = []
+current_check = ""
 
 
 def result(status, msg):
@@ -42,8 +44,10 @@ def result(status, msg):
         passes += 1
     elif status == "FAIL":
         fails += 1
+        issues.append(("FAIL", current_check, msg))
     else:
         warns += 1
+        issues.append(("WARN", current_check, msg))
     print(f"  {status}: {msg}")
 
 
@@ -51,6 +55,7 @@ def result(status, msg):
 # 1. File existence
 # ============================================================
 
+current_check = "[1] File existence"
 print("\n[1] File existence")
 
 LEARNING_SCRIPTS_DIR = os.path.join(SCRIPTS_DIR, "learning")
@@ -85,6 +90,7 @@ for f in REQUIRED_FILES:
 # 2. Hub file sync
 # ============================================================
 
+current_check = "[2] Hub file sync"
 print("\n[2] Hub file sync")
 
 if os.path.isfile(HUB_SRC) and os.path.isfile(HUB_DEST):
@@ -104,6 +110,7 @@ else:
 # 3. Size limits
 # ============================================================
 
+current_check = "[3] Size limits (agent-loaded .md <= 4000 chars; README.md exempt)"
 print("\n[3] Size limits (agent-loaded .md <= 4000 chars; README.md exempt)")
 
 md_files = set(glob.glob("**/*.md", recursive=True))
@@ -127,6 +134,7 @@ for md in sorted(md_files):
 # 4. Instruction file sync state
 # ============================================================
 
+current_check = "[4] Instruction sync state"
 print("\n[4] Instruction sync state")
 
 src_files = sorted(glob.glob(os.path.join(SRC_DIR, "*.instructions.md")))
@@ -176,6 +184,7 @@ if os.path.isdir(DEST_DIR):
 # 5. Cross-references (hub + index)
 # ============================================================
 
+current_check = "[5] Cross-references"
 print("\n[5] Cross-references")
 
 
@@ -209,6 +218,7 @@ if os.path.isfile(SYSTEM_INDEX):
 # 6. Skills validation
 # ============================================================
 
+current_check = "[6] Skills validation"
 print("\n[6] Skills validation")
 
 if os.path.isdir(SKILLS_DIR):
@@ -235,6 +245,7 @@ if os.path.isdir(SKILLS_DIR):
 # 7. Cross-platform script parity
 # ============================================================
 
+current_check = "[7] Cross-platform script parity"
 print("\n[7] Cross-platform script parity")
 
 BAT_FILE = os.path.join(SETUP_SCRIPTS_DIR, "repository-setup.bat")
@@ -276,6 +287,7 @@ else:
 # 8. Hook config validation
 # ============================================================
 
+current_check = "[8] Hook config validation"
 print("\n[8] Hook config validation")
 
 HOOK_FILE = os.path.join(HOOKS_DIR, "observe.json")
@@ -326,6 +338,7 @@ if os.path.isfile(HOOK_FILE):
 # 9. Learning config schema validation
 # ============================================================
 
+current_check = "[9] Learning config schema"
 print("\n[9] Learning config schema")
 
 REQUIRED_THRESHOLDS = [
@@ -377,6 +390,7 @@ else:
 # 10. Python syntax check
 # ============================================================
 
+current_check = "[10] Python syntax check"
 print("\n[10] Python syntax check")
 
 for search_dir in [SCRIPTS_DIR, LEARNING_SCRIPTS_DIR]:
@@ -393,6 +407,7 @@ for search_dir in [SCRIPTS_DIR, LEARNING_SCRIPTS_DIR]:
 # 11. Workflow YAML validation
 # ============================================================
 
+current_check = "[11] Workflow YAML validation"
 print("\n[11] Workflow YAML validation")
 
 # Use a lightweight YAML check: verify structure with basic parsing
@@ -433,6 +448,7 @@ if os.path.isdir(WORKFLOWS_DIR):
 # 12. Pipeline chain validation
 # ============================================================
 
+current_check = "[12] Pipeline chain validation"
 print("\n[12] Pipeline chain validation")
 
 PIPELINE = [
@@ -465,6 +481,7 @@ for caller, expected_target in PIPELINE:
 # 13. Gitignore coverage
 # ============================================================
 
+current_check = "[13] Gitignore coverage"
 print("\n[13] Gitignore coverage")
 
 REQUIRED_IGNORES = [
@@ -491,6 +508,7 @@ else:
 # 14. Agent discoverability (Copilot + Claude completeness)
 # ============================================================
 
+current_check = "[14] Agent discoverability"
 print("\n[14] Agent discoverability")
 
 # Read hub content once
@@ -550,12 +568,141 @@ else:
 
 
 # ============================================================
+# 15. CUSTOMIZE marker audit
+# ============================================================
+
+current_check = "[15] CUSTOMIZE marker audit"
+print("\n[15] CUSTOMIZE marker audit")
+
+SETUP_COMPLETE = os.path.join(".claude", "setup-complete")
+setup_done = os.path.isfile(SETUP_COMPLETE)
+customize_count = 0
+customize_files = set()
+
+scan_dirs = [SRC_DIR, os.path.join(".github", "docs"), "."]
+scan_patterns = []
+for d in scan_dirs:
+    scan_patterns.extend(glob.glob(os.path.join(d, "*.md")))
+scan_patterns.extend(glob.glob(os.path.join(SRC_DIR, "*.instructions.md")))
+
+seen_scan = set()
+for md in sorted(scan_patterns):
+    if md in seen_scan or ".git/" in md or "node_modules/" in md:
+        continue
+    seen_scan.add(md)
+    if not os.path.isfile(md):
+        continue
+    with open(md, "r", encoding="utf-8") as f:
+        content = f.read()
+    matches = [m.start() for m in re.finditer(r"<!--\s*CUSTOMIZE", content)]
+    if matches:
+        customize_count += len(matches)
+        customize_files.add(md)
+
+if customize_count == 0:
+    result("PASS", "no CUSTOMIZE markers remaining")
+elif setup_done:
+    result("WARN", f"{customize_count} CUSTOMIZE marker(s) in {len(customize_files)} file(s) after setup")
+    for cf in sorted(customize_files):
+        result("WARN", f"  {cf}")
+else:
+    result("PASS", f"{customize_count} CUSTOMIZE marker(s) in {len(customize_files)} file(s) (pre-setup, expected)")
+
+
+# ============================================================
+# 16. Stack-specific code standards check
+# ============================================================
+
+current_check = "[16] Stack-specific code standards"
+print("\n[16] Stack-specific code standards")
+
+stack_files = glob.glob(os.path.join(SRC_DIR, "*-code-standards.instructions.md"))
+if stack_files:
+    for sf in stack_files:
+        result("PASS", f"stack standards: {os.path.basename(sf)}")
+elif setup_done:
+    result("WARN", "no stack-specific code standards file found (expected after project-setup)")
+else:
+    result("PASS", "no stack-specific code standards (pre-setup, expected)")
+
+
+# ============================================================
+# 17. Patterns registry content check
+# ============================================================
+
+current_check = "[17] Patterns registry content"
+print("\n[17] Patterns registry content")
+
+PATTERNS_FILE = os.path.join(SRC_DIR, "patterns.instructions.md")
+if os.path.isfile(PATTERNS_FILE):
+    with open(PATTERNS_FILE, "r", encoding="utf-8") as f:
+        patterns_content = f.read()
+    headings = re.findall(r"^## (.+)$", patterns_content, re.MULTILINE)
+    real_headings = [h for h in headings if "[Pattern Name]" not in h]
+    if real_headings:
+        result("PASS", f"patterns registry has {len(real_headings)} pattern(s)")
+    elif setup_done:
+        result("WARN", "patterns registry is empty (consider running convention-discovery)")
+    else:
+        result("PASS", "patterns registry is placeholder (pre-setup, expected)")
+else:
+    result("FAIL", "patterns.instructions.md -- missing")
+
+
+# ============================================================
+# 18. System-index completeness
+# ============================================================
+
+current_check = "[18] System-index completeness"
+print("\n[18] System-index completeness")
+
+if os.path.isfile(SYSTEM_INDEX):
+    with open(SYSTEM_INDEX, "r", encoding="utf-8") as f:
+        index_content = f.read()
+
+    for src in sorted(glob.glob(os.path.join(SRC_DIR, "*.instructions.md"))):
+        fname = os.path.basename(src)
+        with open(src, "r", encoding="utf-8") as f:
+            first = f.read(50)
+        if first.strip().startswith("<!-- DEPRECATED"):
+            continue
+        if fname in index_content:
+            result("PASS", f"index lists instruction: {fname}")
+        else:
+            result("FAIL", f"index missing instruction: {fname}")
+
+    if os.path.isdir(SKILLS_DIR):
+        for skill_dir in sorted(os.listdir(SKILLS_DIR)):
+            skill_path = os.path.join(SKILLS_DIR, skill_dir, "SKILL.md")
+            if not os.path.isfile(skill_path):
+                continue
+            if skill_dir in index_content:
+                result("PASS", f"index lists skill: {skill_dir}")
+            else:
+                result("FAIL", f"index missing skill: {skill_dir}")
+else:
+    result("FAIL", "system-index.md -- missing, cannot check completeness")
+
+
+# ============================================================
 # Summary
 # ============================================================
 
 print("")
-print("=" * 50)
+print("=" * 70)
 print(f"  PASS: {passes}  FAIL: {fails}  WARN: {warns}")
-print("=" * 50)
+print("=" * 70)
+
+if issues:
+    print("")
+    sev_w = max(len(s) for s, _, _ in issues)
+    chk_w = max(len(c) for _, c, _ in issues)
+    msg_w = max(len(m) for _, _, m in issues)
+    header = f"  {'SEV':<{sev_w}}  {'CHECK':<{chk_w}}  {'DETAIL':<{msg_w}}"
+    print(header)
+    print(f"  {'-' * sev_w}  {'-' * chk_w}  {'-' * msg_w}")
+    for sev, chk, msg in issues:
+        print(f"  {sev:<{sev_w}}  {chk:<{chk_w}}  {msg}")
+    print("")
 
 sys.exit(1 if fails > 0 else 0)
