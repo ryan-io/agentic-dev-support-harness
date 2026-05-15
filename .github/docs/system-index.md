@@ -37,7 +37,8 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 | `adr-template.instructions.md` | `docs/adr/**` |
 | `adr-pr-review.instructions.md` | `docs/adr/**` |
 | `br-review.instructions.md` | `docs/business-rules/**` |
-<!-- CUSTOMIZE: Add stack-specific rows -->
+| `csharp-code-standards.instructions.md` | `**/*.cs` |
+| `lua-code-standards.instructions.md` | `**/*.lua` |
 
 ### On-Demand (read by skills at runtime)
 | File | Purpose |
