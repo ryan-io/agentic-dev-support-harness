@@ -23,6 +23,9 @@ OBS_FILE = os.path.join(LEARNING_DIR, "observations.jsonl")
 CONFIG_FILE = os.path.join(LEARNING_DIR, "config.json")
 PROPOSALS_DIR = os.path.join(LEARNING_DIR, "proposals")
 SESSION_NOTICE_DIR = os.path.join(LEARNING_DIR, ".session-notices")
+SESSION_DELTA_FILE = os.path.join(LEARNING_DIR, "session-delta.md")
+LAST_MODIFIED_FILE = os.path.join(LEARNING_DIR, "last-modified.json")
+INSTRUCTIONS_DIR = os.path.join(PROJECT_DIR, ".github", "instructions")
 
 # --- Defaults ---
 
@@ -136,6 +139,18 @@ def build_observation(event_data):
         obs["file_ext"] = extract_file_ext(tool_input)
         obs["domain_hint"] = classify_domain(tool_name, tool_input)
 
+        # Track rule/instruction file consultations
+        file_path = (tool_input or {}).get("file_path", "")
+        if tool_name == "Read" and file_path:
+            if ".github/instructions/" in file_path or ".claude/rules/" in file_path:
+                obs["rule_consulted"] = os.path.basename(file_path)
+
+        # Track file extension for edit/write operations
+        if tool_name in ("Edit", "Write") and file_path:
+            _, ext = os.path.splitext(file_path)
+            if ext:
+                obs["edit_ext"] = ext
+
     # PostToolUse includes outcome
     if event_name == "PostToolUse":
         obs["outcome"] = "success"
@@ -222,16 +237,30 @@ def session_already_notified(session_id):
 
 
 def handle_session_start_notice(session_id):
-    """On first PreToolUse of a session, notify about pending proposals."""
+    """On first PreToolUse of a session, notify about pending proposals and changes."""
     if session_already_notified(session_id):
         return
+
+    messages = []
+
+    delta = get_session_delta_summary()
+    if delta:
+        messages.append(f"Last session: {delta}")
+
+    changed = get_instruction_changes()
+    if changed:
+        names = ", ".join(sorted(changed))
+        messages.append(f"Instruction files updated since last session: {names}")
+
     pending = count_pending_proposals()
     if pending > 0:
-        print(
-            f"[learning] {pending} pending proposal(s) waiting for review. "
-            f"Run the continuous-learning skill to review.",
-            file=sys.stderr,
+        messages.append(
+            f"{pending} pending proposal(s) waiting for review. "
+            f"Run the continuous-learning skill to review."
         )
+
+    for msg in messages:
+        print(f"[learning] {msg}", file=sys.stderr)
 
 
 def handle_stop_nudge(config, unanalyzed):
@@ -253,6 +282,147 @@ def handle_stop_nudge(config, unanalyzed):
             f"[learning] {summary}, consider running the continuous-learning skill.",
             file=sys.stderr,
         )
+
+
+# --- Session continuity ---
+
+
+def get_session_observations(session_id):
+    """Read observations for the given session from the JSONL file."""
+    if not session_id or not os.path.isfile(OBS_FILE):
+        return []
+    prefix = session_id[:12]
+    obs = []
+    try:
+        with open(OBS_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                    if rec.get("session_id") == prefix:
+                        obs.append(rec)
+                except json.JSONDecodeError:
+                    continue
+    except OSError:
+        pass
+    return obs
+
+
+def classify_complexity(observations):
+    """Classify session as 'simple' or 'complex' based on tool usage."""
+    edited_files = set()
+    skill_invoked = False
+    for obs in observations:
+        tool = obs.get("tool", "")
+        if tool in ("Edit", "Write"):
+            summary = obs.get("input_summary", "")
+            if summary:
+                edited_files.add(summary)
+        if tool == "Skill":
+            skill_invoked = True
+    if skill_invoked or len(edited_files) > 1:
+        return "complex"
+    return "simple"
+
+
+def generate_session_delta(session_id):
+    """Write session-delta.md summarizing the completed session."""
+    observations = get_session_observations(session_id)
+    if not observations:
+        return
+
+    edited_files = set()
+    domains = set()
+    rules_consulted = set()
+    for obs in observations:
+        tool = obs.get("tool", "")
+        if tool in ("Edit", "Write"):
+            summary = obs.get("input_summary", "")
+            if summary:
+                edited_files.add(os.path.basename(summary))
+        domain = obs.get("domain_hint", "")
+        if domain:
+            domains.add(domain)
+        rule = obs.get("rule_consulted", "")
+        if rule:
+            rules_consulted.add(rule)
+
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    lines = [f"# Session Delta ({ts} UTC)", ""]
+    if edited_files:
+        lines.append(f"Files modified: {', '.join(sorted(edited_files))}")
+    if domains:
+        lines.append(f"Domains: {', '.join(sorted(domains))}")
+    if rules_consulted:
+        lines.append(f"Rules consulted: {', '.join(sorted(rules_consulted))}")
+    lines.append(f"Tool calls: {len(observations)}")
+    lines.append("")
+
+    try:
+        with open(SESSION_DELTA_FILE, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+    except OSError:
+        pass
+
+
+def update_last_modified():
+    """Record current modification times of instruction files."""
+    if not os.path.isdir(INSTRUCTIONS_DIR):
+        return
+    records = {}
+    for fname in os.listdir(INSTRUCTIONS_DIR):
+        if not fname.endswith(".instructions.md"):
+            continue
+        fpath = os.path.join(INSTRUCTIONS_DIR, fname)
+        try:
+            records[fname] = os.path.getmtime(fpath)
+        except OSError:
+            continue
+    try:
+        with open(LAST_MODIFIED_FILE, "w", encoding="utf-8") as f:
+            json.dump(records, f, indent=2)
+    except OSError:
+        pass
+
+
+def get_instruction_changes():
+    """Compare current instruction file mtimes against last-modified.json."""
+    if not os.path.isfile(LAST_MODIFIED_FILE) or not os.path.isdir(INSTRUCTIONS_DIR):
+        return []
+    try:
+        with open(LAST_MODIFIED_FILE, "r", encoding="utf-8") as f:
+            recorded = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+    changed = []
+    for fname in os.listdir(INSTRUCTIONS_DIR):
+        if not fname.endswith(".instructions.md"):
+            continue
+        fpath = os.path.join(INSTRUCTIONS_DIR, fname)
+        try:
+            current_mtime = os.path.getmtime(fpath)
+        except OSError:
+            continue
+        if fname not in recorded or current_mtime > recorded[fname]:
+            changed.append(fname)
+    return changed
+
+
+def get_session_delta_summary():
+    """Read session-delta.md and return a one-line summary."""
+    if not os.path.isfile(SESSION_DELTA_FILE):
+        return ""
+    try:
+        with open(SESSION_DELTA_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("Files modified:"):
+                    return line
+        return ""
+    except OSError:
+        return ""
 
 
 def main():
@@ -287,8 +457,11 @@ def main():
     except OSError:
         sys.exit(0)  # Never block on write errors
 
-    # On Stop events: check thresholds
+    # On Stop events: generate delta, update last-modified, check thresholds
     if obs.get("event") == "Stop":
+        generate_session_delta(session_id)
+        update_last_modified()
+
         config = load_config()
         threshold = config.get("thresholds", {}).get(
             "min_observations_before_analysis", 20
@@ -311,8 +484,10 @@ def main():
                 except OSError:
                     pass
 
-        # Nudge if counts are high
-        handle_stop_nudge(config, unanalyzed)
+        # Nudge only for complex sessions (multi-file or skill-invoking)
+        session_obs = get_session_observations(session_id)
+        if classify_complexity(session_obs) == "complex":
+            handle_stop_nudge(config, unanalyzed)
 
     # Always exit 0: observation only, never block
     sys.exit(0)
