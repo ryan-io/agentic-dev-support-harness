@@ -7,6 +7,10 @@ paths: ["**"]
 
 Behavioral constraints for any agent operating in this repository: Claude Code, Copilot, or subagents spawned during a session. This file does not duplicate rules defined elsewhere. It establishes the boundaries those rules assume.
 
+## Ask, Do Not Guess
+
+When an agent is uncertain about intent, scope, implementation approach, or the correct answer, it must ask the developer. Do not infer, assume, or fabricate. A wrong guess costs more than a clarifying question. This applies to code generation, architectural decisions, business logic interpretation, and any situation where the agent is not confident in the outcome. Accuracy and precision are non-negotiable.
+
 ## Commit Workflow
 
 Use conventional commit prefixes: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `style`, `perf`, `build`. Subject line is imperative, present tense, max 72 characters. Body wraps at 80 characters. Scope is optional but encouraged when the change is confined to a single module or directory (e.g., `fix(adr): correct status field validation`).
