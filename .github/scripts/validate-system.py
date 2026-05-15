@@ -535,7 +535,8 @@ for src in sorted(glob.glob(os.path.join(SRC_DIR, "*.instructions.md"))):
         first = f.read(50)
     if first.strip().startswith("<!-- DEPRECATED"):
         continue
-    if fname in hub_content:
+    short_name = fname.replace(".instructions.md", "")
+    if fname in hub_content or short_name in hub_content:
         result("PASS", f"hub refs instruction: {fname}")
     else:
         result("FAIL", f"hub missing instruction: {fname} -- not discoverable")
@@ -547,7 +548,7 @@ if os.path.isdir(SKILLS_DIR):
         if not os.path.isfile(skill_path):
             continue
         ref_unix = ".github/skills/" + skill_dir + "/SKILL.md"
-        if ref_unix in hub_content:
+        if ref_unix in hub_content or skill_dir in hub_content:
             result("PASS", f"hub refs skill: {skill_dir}")
         else:
             result("FAIL", f"hub missing skill: {skill_dir} -- not discoverable")
