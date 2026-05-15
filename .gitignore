@@ -34,6 +34,9 @@ Desktop.ini
 .claude/sync_log.txt
 __pycache__/
 
+# === Claude Code worktrees ===
+.claude/worktrees/
+
 # === Continuous learning (local per developer) ===
 .claude/learning/observations.jsonl
 .claude/learning/observations.archive/
@@ -42,3 +45,4 @@ __pycache__/
 .claude/learning/.session-notices/
 
 # === Test results =
+.claude/settings.local.json
