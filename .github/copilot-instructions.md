@@ -19,6 +19,7 @@ Instruction files are loaded automatically based on file scope. All files are in
 - `writing-voice.instructions.md`: Prose voice for human-readable deliverables (all files)
 - `research.instructions.md`: Research and sourcing practice (all files)
 - `agent-guardrails.instructions.md`: Agent behavioral constraints (all files)
+- `testing.instructions.md`: Testing standards (all files)
 - `adr-template.instructions.md`: ADR creation policy (`docs/adr/**`)
 - `adr-pr-review.instructions.md`: ADR review/validation (`docs/adr/**`)
 - `br-review.instructions.md`: Business rule review/validation (`docs/business-rules/**`)

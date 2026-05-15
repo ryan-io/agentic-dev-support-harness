@@ -3,7 +3,7 @@
 Quick-reference map of the project setup template's system files.
 
 ## Golden Rule
-ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat, and Claude Code chat. `.github/instructions/` files are the source of truth. `.claude/rules/` are synced copies with `paths` frontmatter.
+`.github/instructions/` is the source of truth. `.claude/rules/` are synced copies with `paths` frontmatter.
 
 ## Constraints
 - Agent-loaded `.md` files must be ≤ 4,000 characters; `README.md` files are exempt.
@@ -21,20 +21,23 @@ ALL files must work in: GitHub website Copilot PR review, GitHub Copilot chat, a
 
 ### Instruction Files (synced to .claude/rules/)
 
-| Source (Copilot) | Copy (Claude) | Scope |
-|------------------|---------------|-------|
-| `code-standards.instructions.md` | `code-standards.md` | `**` |
-| `pr-review.instructions.md` | `pr-review.md` | `**` |
-| `adr-template.instructions.md` | `adr-template.md` | `docs/adr/**` |
-| `adr-pr-review.instructions.md` | `adr-pr-review.md` | `docs/adr/**` |
-| `br-review.instructions.md` | `br-review.md` | `docs/business-rules/**` |
-| `patterns.instructions.md` | `patterns.md` | `**` |
-| `user-interface.instructions.md` | `user-interface.md` | `**` |
-| `user-experience.instructions.md` | `user-experience.md` | `**` |
-| `writing-voice.instructions.md` | `writing-voice.md` | `**` |
-| `research.instructions.md` | `research.md` | `**` |
-<!-- CUSTOMIZE: Add stack-specific rows for your project (e.g., csharp-code-standards.instructions.md) -->
-<!-- END CUSTOMIZE -->
+Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standards.instructions.md` becomes `code-standards.md`).
+
+| Source | Scope |
+|--------|-------|
+| `code-standards.instructions.md` | `**` |
+| `pr-review.instructions.md` | `**` |
+| `patterns.instructions.md` | `**` |
+| `writing-voice.instructions.md` | `**` |
+| `research.instructions.md` | `**` |
+| `agent-guardrails.instructions.md` | `**` |
+| `testing.instructions.md` | `**` |
+| `user-interface.instructions.md` | `**` |
+| `user-experience.instructions.md` | `**` |
+| `adr-template.instructions.md` | `docs/adr/**` |
+| `adr-pr-review.instructions.md` | `docs/adr/**` |
+| `br-review.instructions.md` | `docs/business-rules/**` |
+<!-- CUSTOMIZE: Add stack-specific rows -->
 
 ### On-Demand (read by skills at runtime)
 | File | Purpose |
