@@ -490,6 +490,8 @@ REQUIRED_IGNORES = [
     "instincts/",
     "proposals/",
     ".session-notices/",
+    "session-delta.md",
+    "last-modified.json",
 ]
 
 if os.path.isfile(".gitignore"):

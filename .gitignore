@@ -43,10 +43,8 @@ __pycache__/
 .claude/learning/instincts/
 .claude/learning/proposals/
 .claude/learning/.session-notices/
+.claude/learning/session-delta.md
+.claude/learning/last-modified.json
 
-# === Test results =
-.claude/worktrees/hopeful-shannon-9b46bf
-
-.claude/settings.local.json
-
+# === Local settings ===
 .claude/settings.local.json
