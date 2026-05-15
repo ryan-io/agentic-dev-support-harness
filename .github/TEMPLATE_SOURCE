@@ -1,0 +1,10 @@
+This file marks the upstream agentic-dev-support-harness template repository.
+
+Its presence means: this is the template source, not a project built from it.
+
+harness-eject hard-refuses to run while this file exists, so the template
+source can never be stripped of its setup machinery. The project-setup skill
+removes this file as its final step when tailoring a downstream clone, which is
+the only sanctioned way it leaves. Do not delete it from the source.
+
+See docs/adr/adr-setup-introduce-harness-eject.md.

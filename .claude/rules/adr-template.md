@@ -10,6 +10,7 @@ When creating a new ADR, copy `.github/docs/adr-template.md` and fill in all sec
 - Status: `Active`
 - Date: today's date
 - Authors: GitHub handle(s)
+- Valid statuses: `Active`, `Proposed`, `Archived`
 
 ## Writing Context
 Before drafting the Context section, identify the forces driving the decision:

@@ -1,0 +1,64 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; elif command -v python >/dev/null 2>&1; then python \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; elif command -v python >/dev/null 2>&1; then python \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; elif command -v python >/dev/null 2>&1; then python \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; elif command -v python >/dev/null 2>&1; then python \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; elif command -v python >/dev/null 2>&1; then python \"$CLAUDE_PROJECT_DIR/.github/scripts/learning/observe.py\"; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

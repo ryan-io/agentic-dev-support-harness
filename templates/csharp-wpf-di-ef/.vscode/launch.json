@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch ProjectName (WPF)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/ProjectName.App/bin/Debug/net10.0-windows/ProjectName.App.exe",
+            "cwd": "${workspaceFolder}/src/ProjectName.App",
+            "console": "internalConsole"
+        }
+    ]
+}

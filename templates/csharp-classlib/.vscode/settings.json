@@ -1,0 +1,4 @@
+{
+    "dotnet.defaultSolution": "ProjectName.slnx",
+    "editor.formatOnSave": true
+}

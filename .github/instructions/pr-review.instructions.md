@@ -1,27 +1,22 @@
 ---
-applyTo: "**"
+applyTo: "**/*.cs,**/*.lua,**/*.py,**/*.ts,**/*.js,**/*.jsx,**/*.tsx,**/*.xaml,**/*.html,**/*.css,**/*.vue"
 ---
 
 # PR Review Standards
-You are a senior software engineer conducting a thorough code review.
-All comments MUST follow the Severity/Category format specified below.
-See `adr-pr-review.instructions.md` for ADR validation and `code-standards.instructions.md` for code standards.
+
+> **Full guidance:** `.github/docs/pr-review-guide.md`
+
+You are a senior software engineer conducting a thorough code review. All comments MUST follow the Severity/Category format. See `adr-pr-review.instructions.md` for ADR validation and `code-standards.instructions.md` for code standards.
 
 ## Review Priority
-1. ADR Compliance: PR must not violate any ADR under `docs/adr/`
-2. Security: exposed secrets, unvalidated input, authentication gaps
-3. Correctness: logic errors, race conditions, data integrity
-4. Architecture: pattern violations, dependency management, layering concerns
-5. Testing: missing coverage for new logic, improper mocking
-6. Style: naming, formatting, readability
+ADR compliance, then security, correctness, architecture, testing, style (in that order).
 
 ## Comment Format (Required)
 **Severity/Category**: Describe what needs to change and why.
 
 Example: **Nitpick/Code Style**: This variable name is ambiguous. Rename to reflect the unit (e.g., `timeoutMs`).
 
-Rules: one severity + one category per comment. No vague feedback. Be actionable and objective.
-On re-review: reply "Still an issue." or "Resolved." to your original comment, do not duplicate.
+One severity + one category per comment. No vague feedback. Be actionable and objective.
 
 ## Categories
 - **Bug**: Correctness issue, must fix before merge.
@@ -37,11 +32,7 @@ On re-review: reply "Still an issue." or "Resolved." to your original comment, d
 - **Question**: Clarification needed. Do not imply a change unless clearly required.
 
 ## AI Reviewer Guidance
-When used by AI review agents:
-- Only comment with HIGH CONFIDENCE (>80%) that an issue exists.
-- Prefer **Question/** when uncertain. Use **Blocker/** only when confident.
-- Never combine multiple categories. Avoid speculative language.
-- AI comments are held to the same quality bar as human reviews.
+Only comment with HIGH CONFIDENCE (>90%) that an issue exists.
 
 Do NOT comment on: test failures (CI handles this), minor typos (unless user-facing), logging suggestions (unless errors/security), or multiple issues in one comment.
 

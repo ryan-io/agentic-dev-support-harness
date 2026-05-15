@@ -18,12 +18,32 @@ Read the system index for the current file map:
 
 ## Workflow
 
+### Step 0: Scaffold the Solution (ah-ide)
+
+If the repository has no solution or project files yet, offer to scaffold one
+before tailoring instruction files. Ask which stack and layout, then run the
+ah-ide scaffolder from the repo root through Python:
+
+- `python .github/scripts/scaffold.py csharp --type classlib|wpf|wpf-ef --name <Name> [--ide vscode|vs2026|both] [--test-framework NUnit|xUnit|MSTest]`
+- `python .github/scripts/scaffold.py lua --name <Name>` (WoW addon)
+
+For C# templates, `--test-framework` selects the test project's framework
+(NUnit, xUnit, or MSTest; default NUnit). Ask the developer their preference
+before scaffolding so the test project is right the first time. See
+`docs/adr/adr-scaffold-add-test-framework-dimension.md`.
+
+The scaffold lands in the current directory; `python .github/scripts/scaffold.py undo`
+reverses the most recent scaffold if the user picked the wrong layout. See `templates/README.md`
+and `docs/adr/adr-scaffold-introduce-ah-ide-cli.md`. Skip this step when a
+solution already exists.
+
 ### Step 1: Identify the Stack
 
 Ask the user:
 - What language(s) will this project use? (e.g., C#, Lua, C++, Python, TypeScript)
 - What frameworks or UI toolkits? (e.g., WPF, raylib, Qt, React, Flask)
-- What test framework? (e.g., NUnit, busted, GoogleTest, pytest, Jest)
+- What test framework(s)? Ask per test type if they differ (e.g., NUnit, Unity Test Framework, busted, GoogleTest, pytest, Jest)
+  - For C#, this should already be set by Step 0's `--test-framework` choice; confirm the scaffolded test project matches.
 - What architectural pattern? (e.g., MVVM, MVC, ECS, layered)
 
 ### Step 2: Create Stack-Specific Instruction Files
@@ -34,14 +54,15 @@ For each language identified, create the following in `.github/instructions/`:
 - `{language}-code-standards.instructions.md`: Language-specific coding standards.
   - Must use `applyTo: "**/*.{ext}"` frontmatter matching the language's file extension.
   - First line of body: `These standards extend code-standards.instructions.md with {language}-specific rules.`
-  - Sections to include: null safety, async conventions, dependency injection, naming conventions, error handling, testing (framework, mocking library, naming pattern).
+  - Sections to include: null safety, async conventions, dependency injection, naming conventions, error handling, testing (framework(s) from Step 1 per test type, mocking library, naming pattern, run command).
 
 ### Step 3: Populate Agnostic Template Files
 
 Review all files with `CUSTOMIZE` comments and fill in stack-appropriate content:
 - `patterns.instructions.md`: Replace the example pattern with the project's adopted patterns and code examples. Optionally narrow `applyTo` scope.
-- `user-interface.instructions.md`: Fill in UI architecture, naming, binding, and performance sections for the chosen framework. Optionally narrow `applyTo` scope.
-- `user-experience.instructions.md`: Fill in UX rules for feedback, errors, navigation, accessibility, and input validation.
+- `user-interface.instructions.md`: If the project has a UI layer, narrow `applyTo` to the framework's file extensions (e.g., `**/*.xaml`, `**/*.tsx`) and fill in the CUSTOMIZE sections. If no UI layer, mark the file `<!-- DEPRECATED -->` so the sync script skips it.
+- `user-experience.instructions.md`: Same rule as user-interface: scope to UI extensions or mark deprecated.
+- `research.instructions.md`: Fill in the Repo Signals section (primary language, framework, build/test commands for each test framework chosen in Step 1).
 - `code-standards.instructions.md`: Replace any customize markers with language-specific conventions.
 - `copilot-instructions.md`: Fill in the Project Overview section.
 - `.gitignore`: Replace `# CUSTOMIZE` sections with stack-specific build outputs, packages, test results, and config patterns.
@@ -55,7 +76,7 @@ After creating instruction files, update these files, look for `<!-- CUSTOMIZE -
 
 ### Step 5: Run Sync and Validate
 
-1. Run `sync.bat` (or `python .github/scripts/sync-claude-rules.py`).
+1. Run `python .github/scripts/sync-claude-rules.py`.
 2. Verify the sync log shows all new files synced.
 3. Confirm `.claude/rules/` contains matching copies with `paths` frontmatter.
 
@@ -64,8 +85,25 @@ After creating instruction files, update these files, look for `<!-- CUSTOMIZE -
 Before finishing, verify:
 - [ ] All new instruction files have correct `applyTo` frontmatter
 - [ ] Each language has at least a `{language}-code-standards.instructions.md`
+- [ ] Each standards file's testing section names the confirmed test framework(s) and run commands
 - [ ] `copilot-instructions.md` references all new instruction files (`CLAUDE.md` syncs automatically)
 - [ ] `system-index.md` table includes all new files with correct scopes
 - [ ] Sync script ran successfully with no warnings
-- [ ] All `.md` files are under 4,000 characters
+- [ ] All instruction files (`.github/instructions/` and `.claude/rules/`) are under 4,000 characters; other `.md` files are exempt
 - [ ] `.claude/learning/config.json` exists (continuous learning is active from first session)
+
+### Step 7: Mark Setup Complete
+
+This is the last step, and it runs only after every checklist item above passes.
+It flips the two guards that tell `harness-eject` this clone is a real project,
+not the template source.
+
+1. Write `.claude/setup-complete`. Put today's date on the first line and a short
+   note that `project-setup` completed (for example: `2026-06-07 project-setup completed`).
+   This marker is gitignored, so it stays local and never commits back upstream.
+2. Remove `.github/TEMPLATE_SOURCE`. This committed sentinel ships in the template
+   to protect the upstream source; deleting it here marks this clone as a consuming
+   project. Removing it is a tracked change, so it appears in the next commit.
+
+Do not run this step in the template source repository itself. The source never
+completes `project-setup`; both guards must stay in place there.

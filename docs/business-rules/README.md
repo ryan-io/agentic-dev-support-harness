@@ -13,3 +13,9 @@ Invoke the `create-business-rule` skill, it uses the template at `../../.github/
 ## Difference from ADRs
 
 ADRs are decisions the engineering team owns and revisits when technology changes. Business rules are decisions the business owns and revisits when policy changes. If you would call the CTO to discuss it, it is an ADR; if you would call the head of finance, it is a business rule.
+
+## Related
+
+- [ADRs](../adr/README.md): the engineering-owned counterpart to business rules.
+- [Skills](../../.github/skills/README.md): the `create-business-rule` skill.
+- [Reference docs](../../.github/docs/README.md): the business-rule template and validation rules.

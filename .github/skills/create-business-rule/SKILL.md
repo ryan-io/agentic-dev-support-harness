@@ -65,3 +65,13 @@ Before saving, validate:
 - Filename is lowercase and matches `br-{project}-{kebab-case-title}.md`
 
 Save to `docs/business-rules/` and confirm the file path to the user.
+
+### Step 5: Revise an Existing Business Rule
+
+Use this step when the user wants to change a business rule that is already saved.
+
+Read the existing file from `docs/business-rules/br-{project}-{kebab-case-title}.md` first. Work from its current contents, not from memory.
+
+Apply the requested change. Keep every other section and the metadata intact. One rule per document still holds: if the change introduces a second rule, create a separate file instead.
+
+Re-validate against the Step 4 criteria. Confirm before overwriting. Save to the same path, unless the title changes, in which case derive a new lowercase filename and tell the user the old file is now orphaned.

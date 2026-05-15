@@ -13,8 +13,11 @@ Create a complete, policy-compliant ADR by walking the user through each section
 
 ## Prerequisites
 
-Before starting, read the template to populate:
-- `.github/docs/adr-template.md`
+Before starting, read:
+- `.github/docs/adr-template.md`: section structure and placeholder guidance
+- `.github/instructions/writing-voice.instructions.md`: applies to all prose drafted in this skill
+
+Apply writing-voice throughout: short paragraphs, plain declarative sentences, no em dashes, no filler. Every sentence must earn its place.
 
 Note: validation rules (`adr-pr-review`) and template policy (`adr-template`) auto-load when working in `docs/adr/`.
 
@@ -44,20 +47,33 @@ Present each section one at a time. After the user provides input, draft that se
 
 **Metadata**: Auto-fill Status as `Active`, Date as today. Ask for Authors (GitHub handle).
 
-**Context**: Draft from the forces discovered in Step 2. Must describe the problem space, constraints, and relevant quality attributes. Reject vague or generic descriptions, ask follow-up questions if needed.
+**Context**: Draft from the forces discovered in Step 2. Must describe the problem space, constraints, and relevant quality attributes. Reject vague or generic descriptions; ask follow-up questions if needed. Write in short paragraphs, one force per paragraph.
 
-**Decision**: Must be active voice with explicit rationale referencing quality attribute tradeoffs identified in Context.
+**Decision**: Active voice, explicit rationale referencing quality attribute tradeoffs from Context. State what was chosen and why, not just what was chosen.
 
-**Consequences**: Ask the user about pros, cons, and any technical debt introduced. If no tech debt, write "None". Every force from Context should be addressed here.
+**Other Considerations**: Document each alternative evaluated. For each: what problem it solves, why it was not chosen or how it complements the decision, whether it may be revisited. If only one option was viable, say so and explain why. Write each alternative as its own paragraph with a bold lead.
 
-**Enforcement / Guidance**: Must be concrete and actionable. Ask: "How will the team verify conformance?" Examples: linter rules, CI checks, code review criteria, naming conventions, automated tests.
+**Consequences**: Ask the user about pros, cons, and any technical debt. If no tech debt, write "None". Every force from Context should appear here. Use bullets only for the pros/cons lists; write technical debt as prose.
+
+**Enforcement / Guidance**: Concrete and actionable. Ask: "How will the team verify conformance?" Examples: linter rules, CI checks, code review criteria, naming conventions, automated tests. Bullets are appropriate here.
 
 ### Step 4: Validate and Save
 
 Before saving, validate the completed ADR against the rejection criteria in `adr-pr-review.instructions.md`:
 - All required sections present with substantive content
 - No placeholder text remains
-- Status is `Active`
+- Status is `Active`, `Proposed`, or `Archived`
 - Filename matches `adr-{project}-{kebab-case-title}.md`
+- Prose conforms to writing-voice: no em dashes, no filler, paragraphs are short and direct
 
 Save to `docs/adr/` and confirm the file path to the user.
+
+### Step 5: Revise an Existing ADR
+
+Use this step when the user wants to change an ADR that is already saved.
+
+Read the existing file from `docs/adr/adr-{project}-{kebab-case-title}.md` first. Work from its current contents, not from memory.
+
+Apply the requested change. Keep every other section, the metadata, and the writing-voice conventions intact. If the change alters the decision itself rather than wording, consider whether Status should move to `Archived` and a new ADR should supersede it; raise this with the user rather than silently rewriting history.
+
+Re-validate against the Step 4 rejection criteria. Confirm before overwriting. Save to the same path, unless the title changes, in which case derive a new filename and tell the user the old file is now orphaned.

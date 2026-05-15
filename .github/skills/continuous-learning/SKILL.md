@@ -15,18 +15,22 @@ Read `.claude/learning/config.json` for threshold and staleness settings.
 
 ## Step 1: Status Overview
 Summarize the current state of the learning system:
-1. Count observations in `.claude/learning/observations.jsonl` (total and unanalyzed since last `_analysis_marker`).
-2. List instincts in `.claude/learning/instincts/*.yaml` with id, confidence, domain, last_seen.
-3. List proposals in `.claude/learning/proposals/*.md` with id, status, target, confidence.
+1. Count observations in `.claude/learning/observations.jsonl` (total and unanalyzed since last `_analysis_marker`), noting `correction` observations separately.
+2. List instincts in `.claude/learning/instincts/*.yaml` with id, confidence, domain, provenance, last_seen.
+3. List proposals in `.claude/learning/proposals/*.md` with id, status, target, confidence, provenance.
 4. Note any stale proposals or low-confidence instincts that may need attention.
 
-Present as a compact table per category. Flag instincts above the promotion threshold (0.7) that lack proposals.
+Present as a compact table per category. Flag instincts above the promotion threshold (0.7) that lack proposals. Provenance values: `user-correction` and `developer-flagged` (real corrections, seeded high), `self-correction` (failed-retry proxy), `frequency` (repetition proxy). Never conflate them.
 
 ## Step 2: Review Proposals
-For each proposal with `status: pending`:
-1. Read the proposal file and display the suggested change.
+If there are 4+ pending proposals, offer **batch mode** first: present a summary table (id, target, confidence, priority, one-line description) and let the developer batch-accept, batch-reject, or pick individual review. Offer a "Skip all stale" shortcut if any proposals have `status: stale`.
+
+For individual review (default when fewer than 4 proposals), for each proposal with `status: pending` or `status: stale`, sorted by `priority` descending:
+1. Read the proposal file and display the suggested change, its provenance, and (for correction-derived proposals) the derived change descriptions from the evidence section.
 2. Read the target instruction file to show where the change would go.
 3. Ask the developer: **Accept**, **Reject**, or **Defer**.
+
+Correction-derived proposals (`provenance: user-correction` or `developer-flagged`) carry templated change descriptions, not the rule text itself; the developer writes the actual rule at accept time. Per the corrections ADR, review the first batches of correction proposals with extra care: their classifier precision is unproven until validated against real sessions.
 
 Actions:
 - **Accept**: Mark `status: accepted` in the proposal. Proceed to Step 3 for this proposal.
@@ -40,17 +44,28 @@ For each accepted proposal:
 3. Add the rule text in the file's existing style and format.
 4. Verify the file stays under 4,000 characters. If it would exceed the limit, warn and ask the developer how to proceed.
 5. Mark the proposal `status: applied`.
-6. Run the sync script: `python3 .github/scripts/sync-claude-rules.py`.
+6. Run the sync script: `python .github/scripts/sync-claude-rules.py`.
 
 ## Step 4: Manual Analysis (Optional)
 If the developer requests it, or if there are 20+ unanalyzed observations:
-1. Run `python3 .github/scripts/learning/analyze.py` and display results.
-2. Run `python3 .github/scripts/learning/propose.py` and display any new proposals.
+1. Run `python .github/scripts/learning/analyze.py` and display results.
+2. Run `python .github/scripts/learning/propose.py` and display any new proposals.
 3. Return to Step 2 if new proposals were created.
 
-## Step 5: Cleanup
+## Step 5: Curate Project Memory
+Promote durable facts from the local session log into committed project memory so future sessions start oriented.
+
+1. Read the accumulated session log at `.claude/learning/session-delta.md` (local, gitignored). Each block is one past session: files touched, domains, rules consulted.
+2. Read current memory at `.github/instructions/memory.instructions.md`.
+3. Identify durable additions or edits: a stable file-map entry, a confirmed convention, a decision or constraint, an open thread worth resuming. Correction-derived facts are digest candidates too: a repeated user correction that became an applied rule is exactly the kind of confirmed convention memory exists to carry. Skip transient detail such as one-off edits or routine navigation.
+4. Present each proposed change and ask the developer: **Accept**, **Reject**, or **Defer**. Do not write without approval; this is an instruction file under the integrity guardrail.
+5. On accept, edit `.github/instructions/memory.instructions.md` only, never the `.claude/rules/` mirror. Keep the file under 4,000 characters; if a change would exceed it, prune the least useful existing entry and name which.
+6. Run the sync script: `python .github/scripts/sync-claude-rules.py`.
+7. After curation, truncate `.claude/learning/session-delta.md` (it is local and its durable content now lives in memory). This resets the session-start curation nudge, which fires when the log exceeds `thresholds.memory_curation_nudge_blocks`.
+
+## Step 6: Cleanup
 1. List any instincts with confidence below 0.2, suggest removal.
-2. List any archived proposals in `.claude/learning/observations.archive/`, summarize count.
+2. List any archived proposals in `.claude/learning/proposals.archive/`, summarize count.
 3. Confirm the developer is satisfied with the current state.
 
 <!-- REAL-WORLD WORKFLOW

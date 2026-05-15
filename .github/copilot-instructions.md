@@ -3,35 +3,25 @@
 This file is the agent entry point. It is loaded automatically by Copilot (as `copilot-instructions.md`) and synced to `CLAUDE.md` for Claude Code. Both files are identical, `.github/copilot-instructions.md` is the source of truth.
 
 ## Project Overview
-<!-- CUSTOMIZE: Fill in stack, architecture, testing framework, etc. -->
 - Architecture Decision Records (ADRs) are stored in `docs/adr/`.
 - Business Rules are stored in `docs/business-rules/`.
-- Design patterns adopted by the project are documented in `patterns.instructions.md`.
+- Design patterns adopted by the project are documented in `patterns.instructions.md` (deprecated placeholder; reinstated and auto-loaded once patterns are documented).
 
 ## Instruction Files
-Instruction files are loaded automatically based on file scope. All files are in `.github/instructions/`. Claude Code uses synced copies in `.claude/rules/` (managed by the sync script).
+Auto-loaded by file scope. Source: `.github/instructions/`, mirror: `.claude/rules/` (managed by sync script).
 
-- `code-standards.instructions.md`: Universal code standards (all files)
-- `pr-review.instructions.md`: PR review format and process (all files)
-- `patterns.instructions.md`: Adopted design pattern registry (all files)
-- `user-interface.instructions.md`: UI standards (all files)
-- `user-experience.instructions.md`: UX standards (all files)
-- `writing-voice.instructions.md`: Prose voice for human-readable deliverables (all files)
-- `research.instructions.md`: Research and sourcing practice (all files)
-- `agent-guardrails.instructions.md`: Agent behavioral constraints (all files)
-- `testing.instructions.md`: Testing standards (all files)
-- `adr-template.instructions.md`: ADR creation policy (`docs/adr/**`)
-- `adr-pr-review.instructions.md`: ADR review/validation (`docs/adr/**`)
-- `br-review.instructions.md`: Business rule review/validation (`docs/business-rules/**`)
+**Universal (all files):** code-standards, writing-voice, research, agent-guardrails, pattern-fidelity, memory
+**Code files:** testing, pr-review
+**UI files:** user-interface, user-experience
+**ADR (`docs/adr/**`):** adr-template, adr-pr-review
+**Business rules (`docs/business-rules/**`):** br-review
+**Stack-specific:** csharp-code-standards (`*.cs`), lua-code-standards (`*.lua`)
 
-Stack-specific files (loaded by file extension match):
-- `csharp-code-standards.instructions.md`: C# standards (`**/*.cs`)
-- `lua-code-standards.instructions.md`: Lua standards (`**/*.lua`)
+Full file map and constraints: `.github/docs/system-index.md`
 
 ## On-Demand (not preloaded)
 - Templates: `.github/docs/adr-template.md`, `.github/docs/br-template.md`
-- Skills: `.github/skills/adr-creation/SKILL.md`, `.github/skills/create-business-rule/SKILL.md`, `.github/skills/system-review/SKILL.md`, `.github/skills/project-setup/SKILL.md`, `.github/skills/convention-discovery/SKILL.md`, `.github/skills/continuous-learning/SKILL.md`
-- Setup: `setup.bat` / `setup.sh` initializes a new repo from this template (run first, then use `project-setup` skill to tailor)
+- Skills: `adr-creation`, `create-business-rule`, `system-review`, `project-setup`, `convention-discovery`, `continuous-learning`, `behavioral-requirements`, `volatility-decomposition`, `architecture-layering`, `architecture-design-pipeline`, `implementation`, `sequence-diagram` (all in `.github/skills/{name}/SKILL.md`)
 - Reference: `.github/docs/system-index.md`
 
 ## Key Policies
@@ -43,9 +33,4 @@ Stack-specific files (loaded by file extension match):
 - **ADR required**: When introducing new architectural patterns, cross-cutting concerns, or third-party dependencies.
 
 ## Continuous Learning
-The project includes an automated learning pipeline that observes developer sessions and surfaces patterns as proposals for instruction file updates. No action is needed to enable it, hooks in `.github/hooks/observe.json` activate automatically.
-
-- **Pipeline**: `observe.py` (record) → `analyze.py` (detect patterns) → `propose.py` (promote high-confidence patterns)
-- **Data**: `.claude/learning/` holds observations, instincts, proposals, and config (all local per developer except `config.json`)
-- **Review**: Run the `continuous-learning` skill to review and apply pending proposals
-- **Automation**: Session-start and session-end nudges when proposals await review; weekly GitHub Issue summary via `learning-summary.yml`
+Automated learning pipeline; details in `agent-guardrails.instructions.md`. Run `continuous-learning` skill to review pending proposals.

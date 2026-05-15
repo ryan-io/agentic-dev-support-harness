@@ -3,11 +3,16 @@
     "min_observations_before_analysis": 20,
     "proposal_confidence_threshold": 0.7,
     "commit_nudge_observation_count": 50,
-    "commit_nudge_proposal_count": 3
+    "commit_nudge_proposal_count": 3,
+    "pending_proposal_soft_cap": 10,
+    "correction_seed_confidence": 0.45,
+    "memory_curation_nudge_blocks": 5
   },
   "staleness": {
-    "proposal_decay_days": 30,
-    "proposal_archive_days": 60,
-    "instinct_decay_per_month": 0.05
+    "proposal_decay_sessions": 15,
+    "proposal_archive_sessions": 30,
+    "instinct_decay_per_sessions": 0.05,
+    "instinct_decay_session_window": 15,
+    "contradiction_penalty": 0.1
   }
 }

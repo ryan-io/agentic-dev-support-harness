@@ -1,3 +1,4 @@
+<!-- DEPRECATED: No project-specific patterns populated. Reinstating when patterns are documented. See docs/process/backlog/2026-05-30-validation-hallucination-optimization.md for context. -->
 ---
 applyTo: "**"
 ---

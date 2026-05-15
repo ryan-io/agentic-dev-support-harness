@@ -6,23 +6,23 @@ Git hooks that fire on local repository events. Two configurations live here, go
 
 Runs the sync script and the system validator on every commit. If sync fails, validation fails, or any invariant is violated, the commit is rejected with the failure reason printed. The hook is POSIX shell and works on macOS, Linux, and Windows (Git Bash) without modification.
 
-The hook is installed automatically by `setup.sh` / `setup.bat` (run from inside the repo with no arguments) and the `.bootstrap/` scripts, via `git config core.hooksPath .github/hooks`. This applies to repos created from the GitHub template too, the template feature copies files but cannot set git config, so the activation step is required per clone. If you skipped setup, run that one command from the repo root and the hook becomes active.
+The hook is installed automatically by setup (`python .github/scripts/setup/repository-setup.py`, run from inside the repo), via `git config core.hooksPath .github/hooks`. This applies to repos created from the GitHub template too, the template feature copies files but cannot set git config, so the activation step is required per clone. If you skipped setup, run that one command from the repo root and the hook becomes active.
 
-## observe.json
+## Claude Code learning hooks
 
-Configuration for Claude Code's PreToolUse / PostToolUse / Stop hooks, used by the continuous-learning pipeline, not by git. Read by Claude on session start; not invoked by git. See `../scripts/learning/README.md`.
+The continuous-learning hooks (PreToolUse / PostToolUse / SessionStart / SessionEnd / UserPromptSubmit) are not git hooks and do not live here. Claude Code loads them from `.claude/settings.json`, the only place it reads hook config. See `../scripts/learning/README.md`.
 
 ## Using the pre-commit hook with GitKraken
 
 GitKraken Desktop surfaces hook output directly in the commit dialog. When the hook prints, you'll see the same `[1/2] Syncing...` and `[2/2] Validating...` sections you'd see in a terminal. On failure, GitKraken displays the error and refuses the commit until the issue is fixed or you click **Commit and skip hooks** in the commit panel.
 
-Two GitKraken-specific things to know. First, on macOS and Linux the hook file must be marked executable (`chmod +x .github/hooks/pre-commit`), without that, GitKraken errors with exit code 126. Second, GitKraken honors `core.hooksPath`, so the `.github/hooks/` location works correctly; you do not need to symlink anything into `.git/hooks/`.
+Two GitKraken-specific things to know. First, on macOS and Linux the hook file must be marked executable (`chmod +x .github/hooks/pre-commit`), without that, GitKraken errors with exit code 126. Second, GitKraken does not honor `core.hooksPath`, so setup also symlinks the hook into `.git/hooks/pre-commit`. If you skipped setup and use GitKraken, create that symlink yourself.
 
 GitKraken's official documentation on hooks: https://help.gitkraken.com/gitkraken-desktop/githooks/
 
 ## Using the pre-commit hook from the CLI
 
-No special configuration needed beyond `setup.sh` having run. To bypass for one commit (emergency hotfix, work-in-progress save):
+No special configuration needed beyond setup having run (`python .github/scripts/setup/repository-setup.py`). To bypass for one commit (emergency hotfix, work-in-progress save):
 
     git commit --no-verify
 
@@ -44,3 +44,9 @@ To re-enable:
 6. Exits 0 on success, 1 on any failure.
 
 Total runtime is typically under two seconds.
+
+## Related
+
+- [Scripts](../scripts/README.md): the sync and validate scripts the pre-commit hook runs.
+- [Learning pipeline](../scripts/learning/README.md): the Claude Code hooks loaded from `.claude/settings.json`.
+- [Instruction files](../instructions/README.md): what the validator checks.

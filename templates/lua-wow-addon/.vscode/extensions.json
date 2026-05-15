@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "anthropic.claude-code",
+        "sumneko.lua",
+        "septh.wow-bundle",
+        "ketho.wow-api"
+    ]
+}

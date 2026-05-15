@@ -1,0 +1,10 @@
+# UPDATE: bump Interface to the current WoW client build each game patch.
+## Interface: 120000
+## Title: ProjectName
+## Notes: ProjectName addon.
+## Author: ryan-io
+## Version: @project-version@
+## SavedVariables: ProjectNameDB
+
+embeds.xml
+Core.lua

@@ -5,7 +5,7 @@
 #
 # Installation:
 #   git config core.hooksPath .github/hooks
-# (handled automatically by setup.sh / setup.bat / .bootstrap scripts)
+# (handled automatically by python .github/scripts/setup/repository-setup.py)
 #
 # Notes for GitKraken users:
 #   - GitKraken Desktop surfaces this hook's echo output in the commit dialog.
@@ -40,28 +40,74 @@ echo "===================================================="
 echo " [pre-commit] sync + validate"
 echo "===================================================="
 
-# --- 1. Sync ---
-echo ""
-echo "[1/2] Syncing copilot-instructions.md and .github/instructions/ -> CLAUDE.md and .claude/rules/"
-echo "----------------------------------------------------"
-if ! $PYTHON .github/scripts/sync-claude-rules.py; then
-    echo ""
-    echo "[pre-commit] FAILED: sync errored. Fix the reported issue and retry." >&2
-    exit 1
+# --- 1. Sync (skipped when instruction sources are unchanged) ---
+HASH_FILE=".claude/.sync-hash"
+CURRENT_HASH=""
+if command -v md5sum >/dev/null 2>&1; then
+    CURRENT_HASH=$(find .github/instructions -name "*.instructions.md" -exec md5sum {} + 2>/dev/null | sort | md5sum | cut -d' ' -f1)
+    HUB_HASH=$(md5sum .github/copilot-instructions.md 2>/dev/null | cut -d' ' -f1)
+    CURRENT_HASH="${CURRENT_HASH}-${HUB_HASH}"
+elif command -v md5 >/dev/null 2>&1; then
+    CURRENT_HASH=$(find .github/instructions -name "*.instructions.md" -exec md5 -q {} + 2>/dev/null | sort | md5 -q)
+    HUB_HASH=$(md5 -q .github/copilot-instructions.md 2>/dev/null)
+    CURRENT_HASH="${CURRENT_HASH}-${HUB_HASH}"
 fi
 
-# Stage any files the sync just regenerated so the commit captures them.
-git add CLAUDE.md .claude/rules/ 2>/dev/null || true
+STORED_HASH=""
+if [ -f "$HASH_FILE" ]; then
+    STORED_HASH=$(cat "$HASH_FILE" 2>/dev/null)
+fi
 
-# --- 2. Validate ---
-echo ""
-echo "[2/2] Validating system invariants (frontmatter, sizes, cross-refs, sync state)"
-echo "----------------------------------------------------"
-if ! $PYTHON .github/scripts/validate-system.py; then
+if [ -n "$CURRENT_HASH" ] && [ "$CURRENT_HASH" = "$STORED_HASH" ]; then
     echo ""
-    echo "[pre-commit] FAILED: validation reported issues above. Fix them and retry." >&2
-    echo "             To bypass intentionally: git commit --no-verify" >&2
-    exit 1
+    echo "[1/2] Sync skipped (instruction sources unchanged)"
+else
+    echo ""
+    echo "[1/2] Syncing copilot-instructions.md and .github/instructions/ -> CLAUDE.md and .claude/rules/"
+    echo "----------------------------------------------------"
+    if ! $PYTHON .github/scripts/sync-claude-rules.py; then
+        echo ""
+        echo "[pre-commit] FAILED: sync errored. Fix the reported issue and retry." >&2
+        exit 1
+    fi
+
+    # Stage any files the sync just regenerated so the commit captures them.
+    git add CLAUDE.md .claude/rules/ 2>/dev/null || true
+
+    # Store hash for next run
+    if [ -n "$CURRENT_HASH" ]; then
+        mkdir -p "$(dirname "$HASH_FILE")"
+        echo "$CURRENT_HASH" > "$HASH_FILE"
+    fi
+fi
+
+# --- 2. Validate (incremental when possible) ---
+CHANGED_FILES=$(git diff --cached --name-only 2>/dev/null)
+echo ""
+if [ -n "$CHANGED_FILES" ]; then
+    echo "[2/2] Validating (incremental -- only sections affected by staged files)"
+    echo "----------------------------------------------------"
+    # Split on newlines only and disable globbing so paths with spaces or
+    # glob characters pass through intact; subshell keeps IFS/set local.
+    if ! (
+        IFS=$'\n'; set -f
+        # shellcheck disable=SC2086
+        $PYTHON .github/scripts/validate-system.py --changed $CHANGED_FILES
+    ); then
+        echo ""
+        echo "[pre-commit] FAILED: validation reported issues above. Fix them and retry." >&2
+        echo "             To bypass intentionally: git commit --no-verify" >&2
+        exit 1
+    fi
+else
+    echo "[2/2] Validating system invariants (full)"
+    echo "----------------------------------------------------"
+    if ! $PYTHON .github/scripts/validate-system.py; then
+        echo ""
+        echo "[pre-commit] FAILED: validation reported issues above. Fix them and retry." >&2
+        echo "             To bypass intentionally: git commit --no-verify" >&2
+        exit 1
+    fi
 fi
 
 echo ""

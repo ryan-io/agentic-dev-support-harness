@@ -1,0 +1,25 @@
+{
+    "stack": "csharp",
+    "summary": "C# class library with tests (.slnx); NUnit, xUnit, or MSTest",
+    "type": "classlib",
+    "description": "C#/.NET 10 solution: class library with tests (NUnit default; xUnit/MSTest selectable). .slnx only.",
+    "token": "ProjectName",
+    "ide_assets": {
+        "vscode": [
+            ".vscode"
+        ],
+        "vs2026": []
+    },
+    "test_frameworks": {
+        "default": "NUnit",
+        "options": [
+            "NUnit",
+            "xUnit",
+            "MSTest"
+        ]
+    },
+    "post_scaffold_notes": [
+        "Run 'dotnet build {name}.slnx' to verify.",
+        "Run the project-setup skill to tailor csharp instruction files."
+    ]
+}

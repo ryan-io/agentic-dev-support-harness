@@ -8,8 +8,30 @@ The copyable Architecture Decision Record template. The `adr-creation` skill rea
 
 ## br-template.md
 
-The copyable Business Rule template. Same relationship, the `create-business-rule` skill reads it; `../instructions/br-review.instructions.md` validates the output.
+The copyable Business Rule template. Same relationship: the `create-business-rule` skill reads it, and `../instructions/br-review.instructions.md` validates the output.
 
 ## system-index.md
 
 The map of every file in the template, its purpose, and how it relates to the others. The reference of last resort when something has fallen out of sync or a new file's role is unclear.
+
+## Guide Files (thin-rules / deep-docs)
+
+Instruction files that grow large are split into a thin rule file (terse imperatives, auto-loaded by agents) and a companion guide (examples, rationale, read on demand). The thin rule contains a `Full guidance` directive pointing to the guide. Agents read the guide when actively applying rules in depth.
+
+| Guide | Companion Rule |
+|-------|----------------|
+| `writing-voice-guide.md` | `writing-voice.instructions.md` |
+| `agent-guardrails-guide.md` | `agent-guardrails.instructions.md` |
+| `testing-guide.md` | `testing.instructions.md` |
+| `pr-review-guide.md` | `pr-review.instructions.md` |
+| `learning-system-guide.md` | root `README.md` (learning system summary) |
+| `context-efficiency-guide.md` | root `README.md` (design notes) |
+
+The last two are companions to the root README rather than an instruction file: the README carries the summary, these carry the depth.
+
+## Related
+
+- [Instruction files](../instructions/README.md): the thin rules these guides expand on.
+- [Skills](../skills/README.md): the procedures that read these templates and docs on demand.
+- [Scripts](../scripts/README.md): the validator that enforces the thin-rule and guide contract.
+- [Repo map](../../README.md): the high-level overview of every system.

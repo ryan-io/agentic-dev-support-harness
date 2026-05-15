@@ -28,6 +28,16 @@ The playbook's "Repo Signals" block was repo-specific generated metadata. It was
 
 ---
 
+## Other Considerations
+
+A one-off research document under `docs/` was the first alternative. It solves the documentation problem but not the enforcement problem: it would not auto-load, so an agent has to know to open it, and the sourcing behavior drifts exactly as it does today. Rejected.
+
+A skill was considered. Rejected for the same loading reason. Skills run on explicit invocation, and sourcing discipline must apply on every turn, not only when a developer remembers to call it.
+
+Folding the rules into `writing-voice.instructions.md` was the closest option, since the two are siblings. Rejected to keep one concern per file. `writing-voice` governs how findings are written; this file governs how they are gathered. Merging them pushes a single file toward the 4,000-character limit and blurs two distinct review checklists.
+
+---
+
 ## Consequences
 
 Agents now have an explicit, discoverable sourcing standard that loads on every file and pairs with `writing-voice`. The cost is one more file in the always-loaded set. Adding the row to `system-index.md` pushed it past its 4,000-character limit, so a redundant cross-reference line, already covered by the Entry Points table, was removed to make room. Technical debt: the Repo Signals block is a placeholder with no project-specific value until `project-setup` fills it.
@@ -37,3 +47,9 @@ Agents now have an explicit, discoverable sourcing standard that loads on every 
 ## Enforcement / Guidance
 
 `research.instructions.md` syncs to `.claude/rules/research.md` through `sync-claude-rules.py`, and `validate-system.py` checks its frontmatter, size, sync state, and hub reference. The pre-commit hook runs both, so a broken or unsynced state blocks the commit. The `project-setup` skill must fill the Repo Signals CUSTOMIZE block during onboarding. New sourcing rules extend this file rather than creating parallel ones.
+
+---
+
+## References
+
+None. The Defaults and Suggested Flow were adapted from an internal research playbook; the remainder rests on team experience with this harness.

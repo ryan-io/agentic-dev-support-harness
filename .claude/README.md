@@ -10,10 +10,17 @@ If you need to change a rule, edit the file in `../.github/instructions/` and le
 
 ## learning/
 
-Per-developer data from the continuous-learning pipeline. Only `config.json` is checked in, the thresholds and staleness windows that govern when observations become instincts and when instincts become proposals. The rest (`observations.jsonl`, `instincts/`, `proposals/`, `.session-notices/`) is gitignored and lives only on the developer's machine.
+Data from the continuous-learning pipeline. `config.json` (thresholds and staleness settings) and `proposals/` (curated instruction-file change suggestions) are tracked. The rest (`observations.jsonl` and its archive, `instincts/` and `instincts.archive/`, `proposals.archive/`, `.session-notices/`, `session-delta.md`, `last-modified.json`, `session-counter.json`) is gitignored and lives only on the developer's machine.
 
 See `../.github/scripts/learning/README.md` for the pipeline detail.
 
 ## sync_log.txt
 
 Append-only log of every sync run. Gitignored. Useful when diagnosing why the mirror looks wrong.
+
+## Related
+
+- [Instruction files](../.github/instructions/README.md): the source of truth for `rules/`.
+- [Scripts](../.github/scripts/README.md): the sync script that generates the mirror.
+- [Learning pipeline](../.github/scripts/learning/README.md): what fills `learning/`.
+- [Repo map](../README.md): the high-level overview of every system.

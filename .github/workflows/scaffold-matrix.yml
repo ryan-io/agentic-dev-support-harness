@@ -1,0 +1,78 @@
+# Scaffold matrix: proves every ah-ide template scaffolds and builds.
+# Enforcement arm of docs/adr/adr-scaffold-introduce-ah-ide-cli.md.
+name: scaffold-matrix
+
+on:
+  pull_request:
+    paths:
+      - "templates/**"
+      - ".github/scripts/scaffold.py"
+      - ".github/workflows/scaffold-matrix.yml"
+  workflow_dispatch:
+
+jobs:
+  csharp:
+    name: csharp ${{ matrix.type }} (${{ matrix.ide }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        type: [classlib, wpf, wpf-ef]
+        ide: [vscode, vs2026, both]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Scaffold
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path out | Out-Null
+          python .github/scripts/scaffold.py csharp --type ${{ matrix.type }} --name CiApp --ide ${{ matrix.ide }} --out out
+      - name: Assert IDE assets
+        shell: pwsh
+        run: |
+          $hasVscode = Test-Path out/.vscode
+          $expect = "${{ matrix.ide }}" -ne "vs2026"
+          if ($hasVscode -ne $expect) { throw ".vscode emission wrong for --ide ${{ matrix.ide }}" }
+      - name: Build
+        shell: pwsh
+        run: dotnet build out/CiApp.slnx
+
+  lua:
+    name: lua wow-addon (${{ matrix.ide }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ide: [vscode, vs2026, both]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install luacheck
+        run: sudo apt-get update && sudo apt-get install -y lua-check
+      - name: Scaffold
+        run: |
+          mkdir out
+          python3 .github/scripts/scaffold.py lua --name CiAddon --ide ${{ matrix.ide }} --out out
+      - name: Assert IDE assets
+        run: |
+          if [ "${{ matrix.ide }}" = "vs2026" ] && [ -d out/.vscode ]; then
+            echo ".vscode should not be emitted for vs2026"; exit 1; fi
+          if [ "${{ matrix.ide }}" != "vs2026" ] && [ ! -d out/.vscode ]; then
+            echo ".vscode missing for --ide ${{ matrix.ide }}"; exit 1; fi
+      - name: Lint
+        run: cd out && luacheck .
+
+  undo:
+    name: undo round-trip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scaffold then undo leaves no files
+        run: |
+          mkdir out
+          python3 .github/scripts/scaffold.py csharp --type classlib --name CiApp --out out
+          python3 .github/scripts/scaffold.py undo --out out --yes
+          remaining=$(ls -A out | wc -l)
+          if [ "$remaining" -ne 0 ]; then
+            echo "undo left $remaining file(s):"; ls -A out; exit 1; fi

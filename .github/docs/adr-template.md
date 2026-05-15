@@ -24,6 +24,12 @@
 
 ---
 
+## Other Considerations
+
+[Document alternatives that were evaluated. For each: describe what problem it solves, why it was not chosen or why it complements the decision, and whether it may be revisited. This section is required even if only one option was viable: state that and explain why. Options may be mutually exclusive, overlapping, or intended to work in tandem with the chosen approach.]
+
+---
+
 ## Consequences
 
 [Detail pros, cons, and any technical debt introduced. If no technical debt, write "None".]
@@ -33,3 +39,9 @@
 ## Enforcement / Guidance
 
 [Describe a concrete, actionable enforcement mechanism. Vague statements like "follow best practices" are not acceptable.]
+
+---
+
+## References
+
+[Cite any books, papers, or prior art that informed this decision. Use the format: Author, Title, Publisher, Year. If the decision was based entirely on team experience, write "None".]

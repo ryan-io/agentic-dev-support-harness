@@ -66,14 +66,14 @@ Wait for user approval before modifying instruction files.
 ### Step 5: Apply and Sync
 
 1. Write approved changes to `.github/instructions/` files.
-2. Run `sync.bat` (or `python .github/scripts/sync-claude-rules.py`).
-3. Verify sync log and confirm all files remain under 4,000 characters.
+2. Run `python .github/scripts/sync-claude-rules.py`.
+3. Verify sync log and confirm all touched instruction files remain under 4,000 characters.
 
 ### Step 6: Confirm
 
 - [ ] All rules cite git evidence; confidence marked
 - [ ] No rules invented without evidence
-- [ ] `applyTo` frontmatter correct; all `.md` under 4,000 chars
+- [ ] `applyTo` frontmatter correct; instruction files under 4,000 chars
 - [ ] Sync ran; user approved before files were modified
 
 <!-- WORKFLOW: PR merge → convention-discovery.yml gathers evidence into a GitHub Issue →

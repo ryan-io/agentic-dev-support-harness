@@ -1,0 +1,60 @@
+{
+  "description": "Removal plan for harness-eject. Categories A and B are removed (B is opt-out), C is reset to the consuming project. Everything not listed is kept. See docs/adr/adr-setup-introduce-harness-eject.md and docs/process/2026-06-07-harness-eject-plan.md.",
+  "guards": {
+    "require_marker": ".claude/setup-complete",
+    "refuse_if_present": ".github/TEMPLATE_SOURCE"
+  },
+  "protected_roots": [
+    ".github/instructions/",
+    ".claude/rules/",
+    ".github/scripts/learning/",
+    ".github/scripts/sync-claude-rules.py",
+    ".github/scripts/validate-system.py",
+    ".github/scripts/eject.py",
+    ".github/scripts/eject-manifest.json",
+    ".github/hooks/",
+    ".github/docs/",
+    ".github/skills/",
+    ".claude/settings.json",
+    ".claude/learning/config.json"
+  ],
+  "categories": {
+    "A": {
+      "label": "One-time init machinery",
+      "action": "remove",
+      "optional": false,
+      "paths": [
+        {"path": ".github/scripts/setup/repository-setup.py", "type": "file"}
+      ]
+    },
+    "B": {
+      "label": "Scaffolder",
+      "action": "remove",
+      "optional": true,
+      "optout_flag": "--keep-scaffolder",
+      "paths": [
+        {"path": "templates/", "type": "dir"},
+        {"path": ".github/scripts/scaffold.py", "type": "file"},
+        {"path": ".github/workflows/scaffold-matrix.yml", "type": "file"},
+        {"path": "docs/adr/adr-scaffold-introduce-ah-ide-cli.md", "type": "file"}
+      ]
+    },
+    "C": {
+      "label": "Template-authored content, reset to the consuming project",
+      "optional": false,
+      "paths": [
+        {"path": "docs/adr/adr-learn-capture-corrections-via-transcript-parse.md", "type": "file", "action": "remove"},
+        {"path": "docs/adr/adr-learn-establish-shared-project-memory.md", "type": "file", "action": "remove"},
+        {"path": "docs/adr/adr-learn-replace-wall-clock-decay-with-evidence-based-staleness.md", "type": "file", "action": "remove"},
+        {"path": "docs/adr/adr-design-establish-architecture-design-pipeline.md", "type": "file", "action": "remove"},
+        {"path": "docs/adr/adr-project-add-research-instruction-file.md", "type": "file", "action": "remove"},
+        {"path": "docs/adr/adr-rag-introduce-code-retrieval-subsystem.md", "type": "file", "action": "remove"},
+        {"path": "docs/adr/adr-setup-introduce-harness-eject.md", "type": "file", "action": "remove"},
+        {"path": "docs/process/", "type": "dir", "action": "remove"},
+        {"path": ".claude/learning/proposals/", "type": "dir", "action": "clear", "keep": [".gitkeep"]},
+        {"path": "README.md", "type": "file", "action": "reset"},
+        {"path": ".github/instructions/memory.instructions.md", "type": "file", "action": "reset"}
+      ]
+    }
+  }
+}

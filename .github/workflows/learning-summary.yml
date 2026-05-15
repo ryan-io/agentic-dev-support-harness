@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -62,9 +62,9 @@ jobs:
               const entry = {
                 id: idMatch ? idMatch[1].trim() : file,
                 status: statusMatch ? statusMatch[1] : 'unknown',
-                target: targetMatch ? targetMatch[1].trim() : ', ',
-                confidence: confMatch ? confMatch[1] : ', ',
-                created: createdMatch ? createdMatch[1] : ', ',
+                target: targetMatch ? targetMatch[1].trim() : '-',
+                confidence: confMatch ? confMatch[1] : '-',
+                created: createdMatch ? createdMatch[1] : '-',
               };
 
               if (entry.status === 'pending') pending.push(entry);
@@ -103,11 +103,30 @@ jobs:
             body += '---\n';
             body += 'Run the **continuous-learning** skill in your IDE to review and apply these proposals.\n';
 
+            const label = 'learning-summary';
+
+            // Ensure label exists
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+              });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: '0e8a16',
+                description: 'Weekly learning pipeline summary',
+              });
+            }
+
             // Find existing open issue
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              labels: 'learning-summary',
+              labels: label,
               state: 'open',
               per_page: 1,
             });
@@ -126,7 +145,7 @@ jobs:
                 repo: context.repo.repo,
                 title: 'Continuous Learning, Proposals Awaiting Review',
                 body,
-                labels: ['learning-summary'],
+                labels: [label],
               });
               console.log('Created new summary issue');
             }

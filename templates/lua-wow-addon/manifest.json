@@ -1,0 +1,18 @@
+{
+    "stack": "lua",
+    "summary": "WoW addon with Ace3 bootstrap, .pkgmeta packaging, luacheck",
+    "description": "World of Warcraft addon: .toc manifest, Ace3 bootstrap (AceAddon, AceConsole, AceEvent), BigWigsMods packager metadata (.pkgmeta), luacheck config. Libraries resolve at package time via .pkgmeta externals; for local play-testing copy Ace3 into Libs/.",
+    "token": "ProjectName",
+    "ide_assets": {
+        "vscode": [
+            ".vscode"
+        ],
+        "vs2026": []
+    },
+    "post_scaffold_notes": [
+        "Update '## Interface:' in {name}.toc to the current client build.",
+        "Copy LibStub, CallbackHandler-1.0, and Ace3 into Libs/ for local testing (see Libs/README.md).",
+        "Run 'luacheck .' to verify.",
+        "Run the project-setup skill to tailor lua instruction files."
+    ]
+}

@@ -33,7 +33,7 @@ Compare each `.claude/rules/` file against its `.github/instructions/` source:
 - No extra or orphaned files in `.claude/rules/`
 
 ### 4. Size Limits
-Every `.md` file must be ≤ 4,000 characters including whitespace. Flag any over.
+Instruction files (`.github/instructions/`, `.claude/rules/`) must be ≤ 4,000 characters including whitespace. Skill files (`.github/skills/`) and `README.md` files are exempt. Flag any instruction file over the limit.
 
 ### 5. Content Consistency
 - Agnostic files (`code-standards`, `pr-review`, `copilot-instructions`) must not contain stack-specific references (e.g., C#, WPF, MVVM, NUnit).

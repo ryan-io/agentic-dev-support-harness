@@ -40,13 +40,24 @@ __pycache__/
 # === Continuous learning (local per developer) ===
 .claude/learning/observations.jsonl
 .claude/learning/observations.archive/
+.claude/learning/proposals.archive/
 .claude/learning/instincts/
-.claude/learning/proposals/
+# proposals/ is tracked (not gitignored) so learning-summary.yml can surface them
+.claude/learning/instincts.archive/
 .claude/learning/.session-notices/
+.claude/learning/session-delta.md
+.claude/learning/last-modified.json
+.claude/learning/session-counter.json
 
-# === Test results =
-.claude/worktrees/hopeful-shannon-9b46bf
-
+# === Local settings ===
 .claude/settings.local.json
 
-.claude/settings.local.json
+# === Setup-complete marker (local; written by project-setup, gates harness-eject) ===
+.claude/setup-complete
+
+# === Pre-commit hook cache ===
+.claude/.sync-hash
+
+# ah-ide scaffold receipt (local working state; commit if you want undo after fresh pulls)
+.ah-ide-scaffold.json
+.vscode/extensions.json
