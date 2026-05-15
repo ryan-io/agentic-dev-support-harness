@@ -167,6 +167,15 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+
+:: Symlink into .git\hooks so clients that ignore core.hooksPath (e.g.
+:: GitKraken Desktop) still pick up the pre-commit hook.
+if not exist ".git\hooks" mkdir ".git\hooks"
+mklink ".git\hooks\pre-commit" "..\..\.github\hooks\pre-commit" >nul 2>&1
+if errorlevel 1 (
+    echo WARN: Could not create symlink in .git\hooks. GitKraken may not run hooks.
+    echo       Run this script as Administrator or enable Developer Mode in Windows Settings.
+)
 echo Git hooks installed. Pre-commit sync + validation is now active.
 echo.
 where python >nul 2>&1

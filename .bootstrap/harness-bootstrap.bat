@@ -92,6 +92,15 @@ echo.
 echo Installing git hooks...
 pushd "!TARGET_DIR!"
 git config core.hooksPath .github/hooks
+
+:: Symlink into .git\hooks so clients that ignore core.hooksPath (e.g.
+:: GitKraken Desktop) still pick up the pre-commit hook.
+if not exist ".git\hooks" mkdir ".git\hooks"
+mklink ".git\hooks\pre-commit" "..\..\.github\hooks\pre-commit" >nul 2>&1
+if errorlevel 1 (
+    echo WARN: Could not create symlink in .git\hooks. GitKraken may not run hooks.
+    echo       Run this script as Administrator or enable Developer Mode in Windows Settings.
+)
 popd
 echo Git hooks installed.
 

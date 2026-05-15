@@ -32,6 +32,11 @@ activate() {
     if [ -f "$dir/.github/hooks/pre-commit" ]; then
         chmod +x "$dir/.github/hooks/pre-commit"
     fi
+
+    # Symlink into .git/hooks so clients that ignore core.hooksPath (e.g.
+    # GitKraken Desktop) still pick up the pre-commit hook.
+    mkdir -p "$dir/.git/hooks"
+    ln -sf "../../.github/hooks/pre-commit" "$dir/.git/hooks/pre-commit"
     echo "Git hooks installed. Pre-commit sync + validation is now active."
 
     echo

@@ -76,6 +76,14 @@ done
 echo
 echo "Installing git hooks..."
 git -C "$TARGET_DIR" config core.hooksPath .github/hooks
+if [ -f "$TARGET_DIR/.github/hooks/pre-commit" ]; then
+    chmod +x "$TARGET_DIR/.github/hooks/pre-commit"
+fi
+
+# Symlink into .git/hooks so clients that ignore core.hooksPath (e.g.
+# GitKraken Desktop) still pick up the pre-commit hook.
+mkdir -p "$TARGET_DIR/.git/hooks"
+ln -sf "../../.github/hooks/pre-commit" "$TARGET_DIR/.git/hooks/pre-commit"
 echo "Git hooks installed."
 
 # --- Initial sync ---
