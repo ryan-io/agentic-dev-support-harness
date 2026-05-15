@@ -21,16 +21,16 @@ Every test follows Arrange-Act-Assert. Arrange sets up preconditions and inputs.
 
 ```csharp
 [TestMethod]
-public void Withdraw_ValidAmount_ChangesBalance()
+public void Rotate_NegativeDegrees_ClampsToZero()
 {
     // arrange
-    var account = new CheckingAccount("JohnDoe", currentBalance: 10.0);
+    var joint = new ServoJoint(minAngle: 0.0, maxAngle: 180.0);
 
     // act
-    account.Withdraw(1.0);
+    joint.Rotate(-15.0);
 
     // assert
-    Assert.AreEqual(9.0, account.Balance);
+    Assert.AreEqual(0.0, joint.CurrentAngle);
 }
 ```
 
