@@ -25,15 +25,36 @@ Each subsystem has its own README with the detail. The high-level map:
 
 ## Setup
 
-Every path requires one activation step. The template feature copies files but cannot set git config, so `core.hooksPath` has to be configured per clone, that is what `setup.sh` / `setup.bat` does. The GitHub Actions workflows run on their own; only the local pre-commit hook needs activation.
+Every path requires one activation step. GitHub's template feature copies files but cannot set git config, so `core.hooksPath` has to be configured per clone. That is what the setup scripts handle. The GitHub Actions workflows run on their own; only the local pre-commit hook needs activation.
 
-The recommended path is the GitHub **template repository**. Click "Use this template", clone the new repo, and from inside it run `setup.sh` (or `setup.bat` on Windows) with no arguments. The script detects that the files are already in place, configures the hook path, makes the hook executable, and runs an initial sync. Nothing is copied.
+### Path A: GitHub template repository (recommended)
 
-To **clone this repo manually as a scaffold source**, run `setup.sh` (or `setup.bat`) pointing at an empty target directory. The same script detects the empty target, initializes git there, copies the template files, then activates as above. One script, two modes, auto-detected.
+1. Click "Use this template" on the GitHub repo page and create a new repo.
+2. Clone the new repo locally.
+3. From the repo root, run `setup.sh` (Unix/macOS) or `setup.bat` (Windows).
+4. The script detects the files are already in place, configures `core.hooksPath`, makes the hook executable, and runs an initial sync.
+5. Run the `project-setup` skill to tailor CUSTOMIZE markers to your stack.
+6. Make your initial commit.
 
-The third path uses the **bootstrap scripts** in `.bootstrap/`. Copy `harness-bootstrap.sh` or `harness-bootstrap.bat` into an empty directory, run it, and it pulls the template from your local checkout (the path is hard-coded near the top of each script, update it once for your machine). Designed for the case where you create new projects often and do not want to remember where the template lives.
+### Path B: scaffold into an empty directory
 
-Whichever path you choose, the next step is the `project-setup` skill: it tailors the CUSTOMIZE markers, generates a `{language}-code-standards.instructions.md` file, and removes anything not relevant to your stack.
+1. Create an empty directory for your new project.
+2. From inside the empty directory, run `setup.sh` or `setup.bat` with no arguments.
+3. The script detects the empty target, initializes git, copies template files, configures hooks, and runs sync.
+4. Run the `project-setup` skill.
+5. Make your initial commit.
+
+### Path C: bootstrap scripts
+
+1. Copy `harness-bootstrap.sh` or `harness-bootstrap.bat` from `.bootstrap/` into an empty directory.
+2. Run it with the path to your local template checkout as the first argument: `./harness-bootstrap.sh /path/to/agentic-dev-support-harness` (or the `.bat` equivalent on Windows).
+3. The script initializes git, copies files, configures hooks, and runs sync.
+4. Run the `project-setup` skill.
+5. Make your initial commit.
+
+### After setup
+
+Regardless of which path you used, the `project-setup` skill is the next step. It walks through the `<!-- CUSTOMIZE -->` markers in the instruction files, generates a `{language}-code-standards.instructions.md` for your stack, and removes placeholders. Run `python .github/scripts/validate-system.py` to confirm everything passes before your first commit.
 
 ## Continuous learning
 
