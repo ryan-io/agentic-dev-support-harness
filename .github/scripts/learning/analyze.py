@@ -80,7 +80,8 @@ def instinct_id(text):
     """Generate a stable ID from a description string."""
     slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     if len(slug) > 50:
-        slug = slug[:50]
+        short_hash = hashlib.sha1(text.encode()).hexdigest()[:8]
+        slug = f"{slug[:50]}-{short_hash}"
     return slug
 
 

@@ -236,7 +236,7 @@ def proposal_exists(iid):
     if not os.path.isdir(PROPOSALS_DIR):
         return False
     for f in os.listdir(PROPOSALS_DIR):
-        if f.startswith(iid) and f.endswith(".md"):
+        if f == f"{iid}.md":
             return True
     return False
 
