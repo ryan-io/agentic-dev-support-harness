@@ -41,7 +41,7 @@ __pycache__/
 .claude/learning/observations.jsonl
 .claude/learning/proposals.archive/
 .claude/learning/instincts/
-.claude/learning/proposals/
+# proposals/ is tracked (not gitignored) so learning-summary.yml can surface them
 .claude/learning/.session-notices/
 .claude/learning/session-delta.md
 .claude/learning/last-modified.json

@@ -16,4 +16,6 @@ The `continuous-learning` skill is the human-in-the-loop step. It lists pending 
 
 ## Local-only data
 
-Only `config.json` is checked in. Observations, instincts, and proposals are per-developer and gitignored, every developer's harness learns from their own session, not the team's aggregate. That's by design: instincts that reflect one engineer's mistakes shouldn't auto-propagate to everyone else.
+Observations, instincts, and session data are per-developer and gitignored. Each developer's harness learns from their own sessions, not the team's aggregate. That's by design: instincts that reflect one engineer's workflow shouldn't auto-propagate to everyone else.
+
+Proposals and `config.json` are tracked (committed). Proposals are the curated, high-confidence output of the pipeline, meant for team review via the `continuous-learning` skill and the weekly `learning-summary.yml` GitHub Issue.

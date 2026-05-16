@@ -10,7 +10,7 @@ If you need to change a rule, edit the file in `../.github/instructions/` and le
 
 ## learning/
 
-Per-developer data from the continuous-learning pipeline. Only `config.json` is checked in, the thresholds and staleness windows that govern when observations become instincts and when instincts become proposals. The rest (`observations.jsonl`, `instincts/`, `proposals/`, `.session-notices/`) is gitignored and lives only on the developer's machine.
+Data from the continuous-learning pipeline. `config.json` (thresholds and staleness windows) and `proposals/` (curated instruction-file change suggestions) are tracked. The rest (`observations.jsonl`, `instincts/`, `.session-notices/`, `session-delta.md`) is gitignored and lives only on the developer's machine.
 
 See `../.github/scripts/learning/README.md` for the pipeline detail.
 

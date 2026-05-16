@@ -35,6 +35,6 @@ Full file map and constraints: `.github/docs/system-index.md`
 The project includes an automated learning pipeline that observes developer sessions and surfaces patterns as proposals for instruction file updates. No action is needed to enable it, hooks in `.github/hooks/observe.json` activate automatically.
 
 - **Pipeline**: `observe.py` (record) → `analyze.py` (detect patterns) → `propose.py` (promote high-confidence patterns)
-- **Data**: `.claude/learning/` holds observations, instincts, proposals, and config (all local per developer except `config.json`)
+- **Data**: `.claude/learning/` holds observations, instincts, proposals, and config (`config.json` and `proposals/` are tracked; the rest is local per developer)
 - **Review**: Run the `continuous-learning` skill to review and apply pending proposals
 - **Automation**: Session-start and session-end nudges when proposals await review; weekly GitHub Issue summary via `learning-summary.yml`

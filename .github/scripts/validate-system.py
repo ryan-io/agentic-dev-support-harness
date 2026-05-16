@@ -504,11 +504,12 @@ REQUIRED_IGNORES = [
     "observations.jsonl",
     "proposals.archive/",
     "instincts/",
-    "proposals/",
     ".session-notices/",
     "session-delta.md",
     "last-modified.json",
 ]
+# proposals/ is intentionally NOT gitignored -- it's tracked so the
+# learning-summary workflow can surface proposals as GitHub Issues.
 
 if os.path.isfile(".gitignore"):
     with open(".gitignore", "r", encoding="utf-8") as f:
