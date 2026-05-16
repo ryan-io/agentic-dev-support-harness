@@ -13,7 +13,7 @@ Detectors:
   5. Rule consultation: instruction files never consulted for in-scope edits
   6. Guide consultation: companion guides not read when rules are consulted
 
-Run from repo root: python .github/scripts/analyze.py
+Run from repo root: python .github/scripts/learning/analyze.py
 Called automatically by observe.py on Stop when threshold met.
 
 Flags:
