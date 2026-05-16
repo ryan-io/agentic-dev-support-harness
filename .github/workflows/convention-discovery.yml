@@ -93,6 +93,8 @@ jobs:
       - name: Create or update issue
         if: steps.threshold.outputs.skip == 'false'
         uses: actions/github-script@v9
+        env:
+          REPORT_BODY: ${{ steps.evidence.outputs.report }}
         with:
           script: |
             const title = 'Convention Discovery: Review Findings';
@@ -124,7 +126,7 @@ jobs:
               per_page: 1,
             });
 
-            const body = `${{ steps.evidence.outputs.report }}`;
+            const body = process.env.REPORT_BODY;
 
             if (issues.length > 0) {
               await github.rest.issues.update({
