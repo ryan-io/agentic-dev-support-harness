@@ -4,7 +4,8 @@ validate-system.py
 Automated validation of the project setup template system.
 Checks file existence, size limits, sync state, frontmatter, cross-references,
 cross-platform parity, hook config, config schema, Python syntax, YAML validity,
-pipeline chain integrity, gitignore coverage, and learning pipeline consistency.
+pipeline chain integrity, gitignore coverage, learning pipeline consistency,
+and workflow/sync/setup subsystem consistency.
 
 Run from repo root: python .github/scripts/validate-system.py
 Exit code: 0 = all pass, 1 = failures found.
@@ -956,6 +957,194 @@ if os.path.isfile(ANALYZE_PY):
             result("PASS", "save_instinct() -- trigger value escaping present")
         else:
             result("FAIL", "save_instinct() -- trigger value not escaped (YAML injection risk)")
+
+
+# ============================================================
+# 22. Workflow, sync, and setup consistency
+# ============================================================
+
+current_check = "[22] Workflow/sync/setup consistency"
+print("\n[22] Workflow/sync/setup consistency")
+
+SYNC_SCRIPT = os.path.join(SCRIPTS_DIR, "sync-claude-rules.py")
+DOCS_DIR_CHECK = os.path.join(".github", "docs")
+
+# 22a: Workflow checkout action versions -- must use @v4 (v6 does not exist)
+for wf_name in sorted(os.listdir(WORKFLOWS_DIR)) if os.path.isdir(WORKFLOWS_DIR) else []:
+    if not wf_name.endswith(".yml"):
+        continue
+    wf_path = os.path.join(WORKFLOWS_DIR, wf_name)
+    with open(wf_path, "r", encoding="utf-8") as f:
+        wf_content = f.read()
+    bad_versions = re.findall(r'actions/checkout@v(\d+)', wf_content)
+    for ver in bad_versions:
+        if int(ver) > 4:
+            result("FAIL", f"{wf_name} -- uses actions/checkout@v{ver} (v4 is latest)")
+        elif int(ver) < 3:
+            result("WARN", f"{wf_name} -- uses actions/checkout@v{ver} (consider updating to v4)")
+        else:
+            result("PASS", f"{wf_name} -- actions/checkout@v{ver}")
+
+# 22b: No ${{ }} interpolation in JS template literals (script injection risk)
+for wf_name in sorted(os.listdir(WORKFLOWS_DIR)) if os.path.isdir(WORKFLOWS_DIR) else []:
+    if not wf_name.endswith(".yml"):
+        continue
+    wf_path = os.path.join(WORKFLOWS_DIR, wf_name)
+    with open(wf_path, "r", encoding="utf-8") as f:
+        wf_content = f.read()
+    # Find github-script steps and check for ${{ }} inside backtick template literals
+    in_script_block = False
+    for line_num, line in enumerate(wf_content.splitlines(), 1):
+        if "actions/github-script" in line:
+            in_script_block = True
+        elif in_script_block and line.strip() and not line.startswith(" ") and not line.startswith("\t"):
+            in_script_block = False
+        if in_script_block and "`" in line and "${{" in line:
+            result("FAIL", f"{wf_name}:{line_num} -- ${{{{}}}} inside template literal (script injection risk)")
+            break
+    else:
+        if in_script_block:
+            pass
+        result("PASS", f"{wf_name} -- no template literal injection")
+
+# 22c: Workflow label creation -- issues.create with labels should ensure label exists first
+for wf_name in sorted(os.listdir(WORKFLOWS_DIR)) if os.path.isdir(WORKFLOWS_DIR) else []:
+    if not wf_name.endswith(".yml"):
+        continue
+    wf_path = os.path.join(WORKFLOWS_DIR, wf_name)
+    with open(wf_path, "r", encoding="utf-8") as f:
+        wf_content = f.read()
+    if "issues.create" in wf_content:
+        labels_used = re.findall(r"labels:\s*\[([^\]]+)\]", wf_content)
+        has_get_label = "issues.getLabel" in wf_content or "issues.createLabel" in wf_content
+        if labels_used and not has_get_label:
+            result("FAIL", f"{wf_name} -- creates issues with labels but never ensures labels exist")
+        elif labels_used:
+            result("PASS", f"{wf_name} -- label creation before use")
+
+# 22d: Sync script applyTo handling -- must split comma-separated values
+if os.path.isfile(SYNC_SCRIPT):
+    with open(SYNC_SCRIPT, "r", encoding="utf-8") as f:
+        sync_src = f.read()
+    if ".split(" in sync_src and "apply_to" in sync_src.lower():
+        result("PASS", "sync-claude-rules.py -- applyTo comma splitting present")
+    else:
+        result("FAIL", "sync-claude-rules.py -- applyTo not split on comma (multi-value bug)")
+
+# 22e: Sync script empty applyTo guard
+if os.path.isfile(SYNC_SCRIPT):
+    with open(SYNC_SCRIPT, "r", encoding="utf-8") as f:
+        sync_src = f.read()
+    if "not apply_to" in sync_src or "empty applyTo" in sync_src.lower():
+        result("PASS", "sync-claude-rules.py -- empty applyTo guard present")
+    else:
+        result("FAIL", "sync-claude-rules.py -- no guard against empty applyTo")
+
+# 22f: Setup scripts Python detection -- both .sh and .bat should try python3 and python
+BAT_SETUP = os.path.join(SETUP_SCRIPTS_DIR, "repository-setup.bat")
+SH_SETUP = os.path.join(SETUP_SCRIPTS_DIR, "repository-setup.sh")
+if os.path.isfile(SH_SETUP):
+    with open(SH_SETUP, "r", encoding="utf-8") as f:
+        sh_src = f.read()
+    has_python3 = "python3" in sh_src
+    has_python_fallback = re.search(r'command -v python\b', sh_src) or "python " in sh_src
+    if has_python3 and has_python_fallback:
+        result("PASS", "repository-setup.sh -- python3/python fallback present")
+    elif has_python3:
+        result("FAIL", "repository-setup.sh -- only tries python3, no python fallback")
+    else:
+        result("FAIL", "repository-setup.sh -- missing Python detection")
+
+# 22g: Setup .sh activate() has .git check
+if os.path.isfile(SH_SETUP):
+    with open(SH_SETUP, "r", encoding="utf-8") as f:
+        sh_src = f.read()
+    activate_match = re.search(r'activate\(\)\s*\{(.*?)^\}', sh_src, re.DOTALL | re.MULTILINE)
+    if activate_match:
+        activate_body = activate_match.group(1)
+        if ".git" in activate_body:
+            result("PASS", "repository-setup.sh -- activate() checks for .git")
+        else:
+            result("FAIL", "repository-setup.sh -- activate() missing .git check")
+    else:
+        result("FAIL", "repository-setup.sh -- activate() function not found")
+
+# 22h: Root shim parity -- every .bat root shim has a .sh counterpart
+root_shims_bat = {"setup.bat", "sync.bat"}
+root_shims_sh = {"setup.sh", "sync.sh"}
+for bat in sorted(root_shims_bat):
+    sh = bat.replace(".bat", ".sh")
+    if os.path.isfile(bat) and os.path.isfile(sh):
+        result("PASS", f"root shim parity: {bat} <-> {sh}")
+    elif os.path.isfile(bat) and not os.path.isfile(sh):
+        result("FAIL", f"root shim parity: {bat} exists but {sh} missing")
+    elif not os.path.isfile(bat) and os.path.isfile(sh):
+        result("FAIL", f"root shim parity: {sh} exists but {bat} missing")
+
+# 22i: Inner sync script parity -- .github/scripts/setup/ has both sync.bat and sync.sh
+inner_sync_bat = os.path.join(SETUP_SCRIPTS_DIR, "sync.bat")
+inner_sync_sh = os.path.join(SETUP_SCRIPTS_DIR, "sync.sh")
+if os.path.isfile(inner_sync_bat) and os.path.isfile(inner_sync_sh):
+    result("PASS", "inner sync script parity: sync.bat <-> sync.sh")
+elif os.path.isfile(inner_sync_bat) and not os.path.isfile(inner_sync_sh):
+    result("FAIL", "inner sync script parity: sync.bat exists but sync.sh missing")
+elif not os.path.isfile(inner_sync_bat) and os.path.isfile(inner_sync_sh):
+    result("FAIL", "inner sync script parity: sync.sh exists but sync.bat missing")
+
+# 22j: Proposals directory must NOT be gitignored (tracked for learning-summary workflow)
+if os.path.isfile(".gitignore"):
+    with open(".gitignore", "r", encoding="utf-8") as f:
+        gi_lines = f.read().splitlines()
+    proposals_ignored = any(
+        line.strip() == ".claude/learning/proposals/"
+        or line.strip() == ".claude/learning/proposals"
+        for line in gi_lines if not line.strip().startswith("#")
+    )
+    if proposals_ignored:
+        result("FAIL", "proposals/ is gitignored (must be tracked for learning-summary workflow)")
+    else:
+        result("PASS", "proposals/ is not gitignored (tracked)")
+
+# 22k: Proposals directory has .gitkeep so it survives empty state
+proposals_gitkeep = os.path.join(LEARNING_DIR, "proposals", ".gitkeep")
+if os.path.isfile(proposals_gitkeep):
+    result("PASS", "proposals/.gitkeep exists")
+else:
+    result("FAIL", "proposals/.gitkeep missing (empty dir won't be tracked by git)")
+
+# 22l: Skill files must not hardcode python3 (breaks Windows)
+if os.path.isdir(SKILLS_DIR):
+    for skill_name in sorted(os.listdir(SKILLS_DIR)):
+        skill_md = os.path.join(SKILLS_DIR, skill_name, "SKILL.md")
+        if not os.path.isfile(skill_md):
+            continue
+        with open(skill_md, "r", encoding="utf-8") as f:
+            skill_src = f.read()
+        # Match python3 in command contexts (backtick-wrapped or line-start commands)
+        python3_cmds = re.findall(r'`python3\s', skill_src)
+        if python3_cmds:
+            result("FAIL", f"{skill_name}/SKILL.md -- hardcodes python3 (use python for cross-platform)")
+        else:
+            result("PASS", f"{skill_name}/SKILL.md -- no hardcoded python3")
+
+# 22m: project-setup SKILL.md lists all instruction files with CUSTOMIZE markers
+setup_skill = os.path.join(SKILLS_DIR, "project-setup", "SKILL.md")
+if os.path.isfile(setup_skill) and os.path.isdir(SRC_DIR):
+    with open(setup_skill, "r", encoding="utf-8") as f:
+        setup_src = f.read()
+    for inst_file in sorted(os.listdir(SRC_DIR)):
+        if not inst_file.endswith(".instructions.md"):
+            continue
+        inst_path = os.path.join(SRC_DIR, inst_file)
+        with open(inst_path, "r", encoding="utf-8") as f:
+            inst_content = f.read()
+        if "CUSTOMIZE" in inst_content:
+            # The file has CUSTOMIZE markers -- should be referenced in setup skill
+            base = inst_file.replace(".instructions.md", "")
+            if inst_file in setup_src or base in setup_src:
+                result("PASS", f"project-setup lists CUSTOMIZE file: {inst_file}")
+            else:
+                result("FAIL", f"project-setup missing CUSTOMIZE file: {inst_file}")
 
 
 # ============================================================
