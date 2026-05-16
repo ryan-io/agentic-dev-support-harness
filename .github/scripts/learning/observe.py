@@ -60,10 +60,10 @@ def summarize_tool_input(tool_input):
     if not tool_input or not isinstance(tool_input, dict):
         return ""
 
-    # File-based tools: just the path
+    # File-based tools: just the path (normalize separators)
     file_path = tool_input.get("file_path", "")
     if file_path:
-        return file_path
+        return file_path.replace("\\", "/")
 
     # Bash: first 120 chars of command, no arguments after first pipe/redirect
     command = tool_input.get("command", "")
@@ -154,11 +154,12 @@ def build_observation(event_data):
             if ext:
                 obs["edit_ext"] = ext
 
-    # PostToolUse includes outcome
+    # PostToolUse includes outcome; failures carry a tool_error field
     if event_name == "PostToolUse":
-        obs["outcome"] = "success"
-    elif event_name == "PostToolUseFailure":
-        obs["outcome"] = "failure"
+        if event_data.get("tool_error"):
+            obs["outcome"] = "failure"
+        else:
+            obs["outcome"] = "success"
 
     # Stop event: check stop_hook_active to avoid loops
     if event_name == "Stop":

@@ -130,12 +130,15 @@ def save_instinct(iid, trigger, action, confidence, domain, evidence,
         evidence_count = new_count
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    safe_trigger = trigger.replace('"', '\\"')
+    safe_scope = file_scope.replace('"', '\\"')
+    safe_evidence = evidence.replace("---", "- - -")
     content = f"""---
 id: {iid}
-trigger: "{trigger}"
+trigger: "{safe_trigger}"
 confidence: {confidence:.2f}
 domain: {domain}
-file_scope: "{file_scope}"
+file_scope: "{safe_scope}"
 evidence_count: {evidence_count}
 last_seen: "{now}"
 ---
@@ -143,7 +146,7 @@ last_seen: "{now}"
 # {action}
 
 ## Evidence
-{evidence}
+{safe_evidence}
 """
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
