@@ -342,7 +342,7 @@ def detect_rule_consultation(observations):
     # Build a mapping of instruction files to their extension scopes.
     # Convention: files named {language}-code-standards.instructions.md scope
     # to that language extension. Generic instruction files (no language prefix)
-    # are skoped to all files and are excluded from this detector.
+    # are scoped to all files and are excluded from this detector.
     rule_ext_scope = {}
     ext_map = {
         "python": ".py", "py": ".py",
