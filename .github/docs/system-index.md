@@ -67,7 +67,7 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 | `.github/scripts/sync-claude-rules.py` | Syncs instructions → rules |
 | `.github/scripts/validate-system.py` | System validation |
 | `.github/scripts/setup/` | Sync runner, repo init (Windows + Unix) |
-| `setup.bat` / `setup.sh` / `sync.bat` | Root shims |
+| `setup.bat` / `setup.sh` / `sync.bat` / `sync.sh` | Root shims |
 | `.github/hooks/pre-commit` | Runs sync + validation on commit |
 | `.github/hooks/observe.json` | Hook config for learning |
 | `.github/scripts/learning/` | `observe.py` → `analyze.py` → `propose.py` |

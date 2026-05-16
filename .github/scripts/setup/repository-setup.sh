@@ -113,7 +113,7 @@ if [ -f "$SRC/.claude/learning/config.json" ]; then
 fi
 rsync -a "$SRC/docs/" "$TARGET_DIR/docs/"
 
-for f in CLAUDE.md .gitignore setup.bat setup.sh sync.bat; do
+for f in CLAUDE.md .gitignore setup.bat setup.sh sync.bat sync.sh; do
     if [ -f "$SRC/$f" ]; then
         cp "$SRC/$f" "$TARGET_DIR/$f"
         echo "  $f"

@@ -75,7 +75,8 @@ REQUIRED_FILES = [
     os.path.join(SETUP_SCRIPTS_DIR, "repository-setup.bat"),
     os.path.join(SETUP_SCRIPTS_DIR, "repository-setup.sh"),
     os.path.join(SETUP_SCRIPTS_DIR, "sync.bat"),
-    "setup.bat", "setup.sh", "sync.bat",
+    os.path.join(SETUP_SCRIPTS_DIR, "sync.sh"),
+    "setup.bat", "setup.sh", "sync.bat", "sync.sh",
     CONFIG_FILE,
 ]
 

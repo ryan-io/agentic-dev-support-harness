@@ -102,7 +102,7 @@ if errorlevel 8 (
     exit /b 1
 )
 
-for %%F in (CLAUDE.md .gitignore setup.bat setup.sh sync.bat) do (
+for %%F in (CLAUDE.md .gitignore setup.bat setup.sh sync.bat sync.sh) do (
     if exist "!SRC!\%%F" (
         copy /Y "!SRC!\%%F" "!TARGET_DIR!\%%F" >nul
         echo   %%F
