@@ -142,9 +142,10 @@ def build_observation(event_data):
         # Track rule/instruction file and guide consultations
         file_path = (tool_input or {}).get("file_path", "")
         if tool_name == "Read" and file_path:
-            if ".github/instructions/" in file_path or ".claude/rules/" in file_path:
+            normalized = file_path.replace("\\", "/")
+            if ".github/instructions/" in normalized or ".claude/rules/" in normalized:
                 obs["rule_consulted"] = os.path.basename(file_path)
-            elif ".github/docs/" in file_path and file_path.endswith("-guide.md"):
+            elif ".github/docs/" in normalized and normalized.endswith("-guide.md"):
                 obs["guide_consulted"] = os.path.basename(file_path)
 
         # Track file extension for edit/write operations
