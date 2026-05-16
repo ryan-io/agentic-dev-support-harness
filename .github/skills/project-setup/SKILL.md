@@ -42,6 +42,7 @@ Review all files with `CUSTOMIZE` comments and fill in stack-appropriate content
 - `patterns.instructions.md`: Replace the example pattern with the project's adopted patterns and code examples. Optionally narrow `applyTo` scope.
 - `user-interface.instructions.md`: If the project has a UI layer, narrow `applyTo` to the framework's file extensions (e.g., `**/*.xaml`, `**/*.tsx`) and fill in the CUSTOMIZE sections. If no UI layer, mark the file `<!-- DEPRECATED -->` so the sync script skips it.
 - `user-experience.instructions.md`: Same rule as user-interface: scope to UI extensions or mark deprecated.
+- `research.instructions.md`: Fill in the Repo Signals section (primary language, framework, build/test commands).
 - `code-standards.instructions.md`: Replace any customize markers with language-specific conventions.
 - `copilot-instructions.md`: Fill in the Project Overview section.
 - `.gitignore`: Replace `# CUSTOMIZE` sections with stack-specific build outputs, packages, test results, and config patterns.
