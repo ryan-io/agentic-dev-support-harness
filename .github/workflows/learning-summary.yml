@@ -103,11 +103,30 @@ jobs:
             body += '---\n';
             body += 'Run the **continuous-learning** skill in your IDE to review and apply these proposals.\n';
 
+            const label = 'learning-summary';
+
+            // Ensure label exists
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+              });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: '0e8a16',
+                description: 'Weekly learning pipeline summary',
+              });
+            }
+
             // Find existing open issue
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              labels: 'learning-summary',
+              labels: label,
               state: 'open',
               per_page: 1,
             });
@@ -126,7 +145,7 @@ jobs:
                 repo: context.repo.repo,
                 title: 'Continuous Learning, Proposals Awaiting Review',
                 body,
-                labels: ['learning-summary'],
+                labels: [label],
               });
               console.log('Created new summary issue');
             }
