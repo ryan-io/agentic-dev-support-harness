@@ -160,6 +160,10 @@ def map_target_file(instinct):
     if domain == "error-handling":
         return "code-standards.instructions.md"
 
+    # Git and shell instincts (commit workflow, agent behavior)
+    if domain in ("git", "shell", "navigation"):
+        return "agent-guardrails.instructions.md"
+
     # Workflow patterns
     if domain == "workflow":
         return "patterns.instructions.md"

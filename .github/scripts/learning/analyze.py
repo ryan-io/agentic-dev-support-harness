@@ -38,6 +38,8 @@ LEARNING_DIR = os.path.join(PROJECT_DIR, ".claude", "learning")
 OBS_FILE = os.path.join(LEARNING_DIR, "observations.jsonl")
 INSTINCTS_DIR = os.path.join(LEARNING_DIR, "instincts")
 CONFIG_FILE = os.path.join(LEARNING_DIR, "config.json")
+INSTRUCTIONS_DIR = os.path.join(PROJECT_DIR, ".github", "instructions")
+RULES_DIR = os.path.join(PROJECT_DIR, ".claude", "rules")
 
 # --- Config ---
 
@@ -370,10 +372,18 @@ def detect_rule_consultation(observations):
                 rule_ext_scope[rule_file] = ext
                 break
 
-    # Also check rule files that were never consulted but exist in observations
-    # as rule_consulted values from other observations. We already have those.
-    # Additionally, scan for any rule files referenced anywhere.
+    # Discover rule files from the filesystem (both source and mirror)
     all_rule_files = set(rule_consult_counts.keys())
+    for search_dir in (INSTRUCTIONS_DIR, RULES_DIR):
+        if os.path.isdir(search_dir):
+            for fname in os.listdir(search_dir):
+                if fname.endswith((".instructions.md", ".md")):
+                    all_rule_files.add(fname)
+                    basename = fname.lower()
+                    for lang, ext in ext_map.items():
+                        if basename.startswith(f"{lang}-"):
+                            rule_ext_scope[fname] = ext
+                            break
 
     for rule_file in all_rule_files:
         ext = rule_ext_scope.get(rule_file)

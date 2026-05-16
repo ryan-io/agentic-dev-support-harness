@@ -109,8 +109,11 @@ def classify_domain(tool_name, tool_input):
         return "shell"
 
     if name in ("edit", "write"):
-        ext = extract_file_ext(tool_input)
-        if ext in (".test.ts", ".test.js", ".spec.ts", ".spec.js", ".test.py"):
+        file_path = (tool_input or {}).get("file_path", "")
+        if any(file_path.endswith(s) for s in (
+            ".test.ts", ".test.js", ".spec.ts", ".spec.js", ".test.py",
+            "_test.go", "_test.py",
+        )):
             return "testing"
         return "code-style"
 
