@@ -96,14 +96,26 @@ for src in sorted(glob.glob(os.path.join(SRC_DIR, "*.instructions.md"))):
         errors += 1
         continue
 
-    apply_to = match.group(1).strip()
+    apply_to_raw = match.group(1).strip()
+    if not apply_to_raw:
+        log(f"FAIL: {filename} has empty applyTo value")
+        errors += 1
+        continue
+
+    # Split comma-separated applyTo values into a proper array
+    apply_to_parts = [p.strip() for p in apply_to_raw.split(",") if p.strip()]
+    if not apply_to_parts:
+        log(f"FAIL: {filename} has empty applyTo value after parsing")
+        errors += 1
+        continue
 
     # Derive destination filename
     dest_name = filename.replace(".instructions", "")
     dest_path = os.path.join(DEST_DIR, dest_name)
 
     # Build output content and validate size
-    output = f'---\npaths: ["{apply_to}"]\n---\n{body}'
+    paths_value = ", ".join(f'"{p}"' for p in apply_to_parts)
+    output = f'---\npaths: [{paths_value}]\n---\n{body}'
     if len(output) > MAX_CHARS:
         log(f"FAIL: {dest_name} output exceeds {MAX_CHARS} chars ({len(output)})")
         errors += 1
@@ -120,8 +132,9 @@ for src in sorted(glob.glob(os.path.join(SRC_DIR, "*.instructions.md"))):
 expected = set()
 for src in glob.glob(os.path.join(SRC_DIR, "*.instructions.md")):
     with open(src, "r", encoding="utf-8") as f:
-        first_line = f.read(50)
-    if first_line.strip().startswith("<!-- DEPRECATED"):
+        content_check = f.read()
+    content_check = content_check.replace("\r", "").replace("\x00", "")
+    if content_check.strip().startswith("<!-- DEPRECATED"):
         continue
     expected.add(os.path.basename(src).replace(".instructions", ""))
 
