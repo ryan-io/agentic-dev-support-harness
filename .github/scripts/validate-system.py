@@ -495,7 +495,7 @@ print("\n[13] Gitignore coverage")
 
 REQUIRED_IGNORES = [
     "observations.jsonl",
-    "observations.archive/",
+    "proposals.archive/",
     "instincts/",
     "proposals/",
     ".session-notices/",

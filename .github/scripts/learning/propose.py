@@ -26,7 +26,7 @@ PROJECT_DIR = os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd())
 LEARNING_DIR = os.path.join(PROJECT_DIR, ".claude", "learning")
 INSTINCTS_DIR = os.path.join(LEARNING_DIR, "instincts")
 PROPOSALS_DIR = os.path.join(LEARNING_DIR, "proposals")
-ARCHIVE_DIR = os.path.join(LEARNING_DIR, "observations.archive")
+ARCHIVE_DIR = os.path.join(LEARNING_DIR, "proposals.archive")
 CONFIG_FILE = os.path.join(LEARNING_DIR, "config.json")
 INSTRUCTIONS_DIR = os.path.join(PROJECT_DIR, ".github", "instructions")
 

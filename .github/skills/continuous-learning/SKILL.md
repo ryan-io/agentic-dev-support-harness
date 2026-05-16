@@ -52,7 +52,7 @@ If the developer requests it, or if there are 20+ unanalyzed observations:
 
 ## Step 5: Cleanup
 1. List any instincts with confidence below 0.2, suggest removal.
-2. List any archived proposals in `.claude/learning/observations.archive/`, summarize count.
+2. List any archived proposals in `.claude/learning/proposals.archive/`, summarize count.
 3. Confirm the developer is satisfied with the current state.
 
 <!-- REAL-WORLD WORKFLOW

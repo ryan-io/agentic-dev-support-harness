@@ -39,7 +39,7 @@ __pycache__/
 
 # === Continuous learning (local per developer) ===
 .claude/learning/observations.jsonl
-.claude/learning/observations.archive/
+.claude/learning/proposals.archive/
 .claude/learning/instincts/
 .claude/learning/proposals/
 .claude/learning/.session-notices/
