@@ -139,11 +139,13 @@ def build_observation(event_data):
         obs["file_ext"] = extract_file_ext(tool_input)
         obs["domain_hint"] = classify_domain(tool_name, tool_input)
 
-        # Track rule/instruction file consultations
+        # Track rule/instruction file and guide consultations
         file_path = (tool_input or {}).get("file_path", "")
         if tool_name == "Read" and file_path:
             if ".github/instructions/" in file_path or ".claude/rules/" in file_path:
                 obs["rule_consulted"] = os.path.basename(file_path)
+            elif ".github/docs/" in file_path and file_path.endswith("-guide.md"):
+                obs["guide_consulted"] = os.path.basename(file_path)
 
         # Track file extension for edit/write operations
         if tool_name in ("Edit", "Write") and file_path:
@@ -336,6 +338,7 @@ def generate_session_delta(session_id):
     edited_files = set()
     domains = set()
     rules_consulted = set()
+    guides_consulted = set()
     for obs in observations:
         tool = obs.get("tool", "")
         if tool in ("Edit", "Write"):
@@ -348,6 +351,9 @@ def generate_session_delta(session_id):
         rule = obs.get("rule_consulted", "")
         if rule:
             rules_consulted.add(rule)
+        guide = obs.get("guide_consulted", "")
+        if guide:
+            guides_consulted.add(guide)
 
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
     lines = [f"# Session Delta ({ts} UTC)", ""]
@@ -357,6 +363,8 @@ def generate_session_delta(session_id):
         lines.append(f"Domains: {', '.join(sorted(domains))}")
     if rules_consulted:
         lines.append(f"Rules consulted: {', '.join(sorted(rules_consulted))}")
+    if guides_consulted:
+        lines.append(f"Guides consulted: {', '.join(sorted(guides_consulted))}")
     lines.append(f"Tool calls: {len(observations)}")
     lines.append("")
 

@@ -761,6 +761,64 @@ for a, sents_a in instruction_bodies.items():
 
 
 # ============================================================
+# 20. Thin-rules / deep-docs contract
+# ============================================================
+
+current_check = "[20] Thin-rules / deep-docs contract"
+print("\n[20] Thin-rules / deep-docs contract")
+
+DOCS_DIR = os.path.join(".github", "docs")
+guide_directive_re = re.compile(
+    r'>\s*\*\*Full guidance:\*\*\s*`([^`]+)`'
+)
+
+# 20a: Every instruction file with a guide directive has a corresponding guide
+directives_found = {}
+for src in sorted(glob.glob(os.path.join(SRC_DIR, "*.instructions.md"))):
+    fname = os.path.basename(src)
+    with open(src, "r", encoding="utf-8") as f:
+        content = f.read()
+    match = guide_directive_re.search(content)
+    if match:
+        guide_path = match.group(1)
+        directives_found[fname] = guide_path
+        if os.path.isfile(guide_path):
+            result("PASS", f"{fname} -> {guide_path}")
+        else:
+            result("FAIL", f"{fname} -> {guide_path} -- guide file missing")
+
+# 20b: Every *-guide.md in .github/docs/ has a matching instruction file with directive
+if os.path.isdir(DOCS_DIR):
+    for gf in sorted(os.listdir(DOCS_DIR)):
+        if not gf.endswith("-guide.md"):
+            continue
+        guide_rel = os.path.join(DOCS_DIR, gf).replace("\\", "/")
+        found_directive = False
+        for inst_fname, directive_path in directives_found.items():
+            norm_directive = directive_path.replace("\\", "/")
+            if norm_directive == guide_rel or os.path.basename(norm_directive) == gf:
+                found_directive = True
+                break
+        if found_directive:
+            result("PASS", f"{gf} has matching instruction directive")
+        else:
+            result("WARN", f"{gf} -- no instruction file references this guide")
+
+# 20c: All guide files under 4000 chars
+if os.path.isdir(DOCS_DIR):
+    for gf in sorted(os.listdir(DOCS_DIR)):
+        if not gf.endswith("-guide.md"):
+            continue
+        gpath = os.path.join(DOCS_DIR, gf)
+        with open(gpath, "r", encoding="utf-8") as f:
+            gsize = len(f.read())
+        if gsize > MAX_CHARS:
+            result("FAIL", f"{gf} -- {gsize} chars (limit {MAX_CHARS})")
+        else:
+            result("PASS", f"{gf} -- {gsize} chars")
+
+
+# ============================================================
 # Summary
 # ============================================================
 

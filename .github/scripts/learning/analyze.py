@@ -11,6 +11,7 @@ Detectors:
   3. Error recovery: failure followed by resolution pattern
   4. File conventions: consistent file placement and naming
   5. Rule consultation: instruction files never consulted for in-scope edits
+  6. Guide consultation: companion guides not read when rules are consulted
 
 Run from repo root: python .github/scripts/analyze.py
 Called automatically by observe.py on Stop when threshold met.
@@ -395,6 +396,73 @@ def detect_rule_consultation(observations):
     return instincts
 
 
+# --- Detector 6: Guide Consultation Patterns ---
+
+RULE_GUIDE_PAIRS = {
+    "writing-voice.instructions.md": "writing-voice-guide.md",
+    "writing-voice.md": "writing-voice-guide.md",
+    "agent-guardrails.instructions.md": "agent-guardrails-guide.md",
+    "agent-guardrails.md": "agent-guardrails-guide.md",
+    "testing.instructions.md": "testing-guide.md",
+    "testing.md": "testing-guide.md",
+    "pr-review.instructions.md": "pr-review-guide.md",
+    "pr-review.md": "pr-review-guide.md",
+}
+
+
+def detect_guide_consultation(observations):
+    """
+    Find sessions where a rule with a companion guide was consulted but the
+    guide itself was never read. Agents should read the deep-doc guide when
+    actively applying rules that have one.
+    """
+    instincts = []
+
+    sessions = defaultdict(lambda: {"rules": set(), "guides": set()})
+    for o in observations:
+        sid = o.get("session_id", "")
+        if not sid:
+            continue
+        rule = o.get("rule_consulted")
+        if rule:
+            sessions[sid]["rules"].add(rule)
+        guide = o.get("guide_consulted")
+        if guide:
+            sessions[sid]["guides"].add(guide)
+
+    guide_miss_counts = Counter()
+    guide_total_counts = Counter()
+
+    for sid, data in sessions.items():
+        for rule_file in data["rules"]:
+            expected_guide = RULE_GUIDE_PAIRS.get(rule_file)
+            if not expected_guide:
+                continue
+            guide_total_counts[rule_file] += 1
+            if expected_guide not in data["guides"]:
+                guide_miss_counts[rule_file] += 1
+
+    for rule_file, total in guide_total_counts.items():
+        if total < 2:
+            continue
+        miss = guide_miss_counts.get(rule_file, 0)
+        miss_ratio = miss / total
+        if miss_ratio > 0.7:
+            expected_guide = RULE_GUIDE_PAIRS[rule_file]
+            instincts.append({
+                "trigger": f"when consulting {rule_file}",
+                "action": f"Also read companion guide {expected_guide}",
+                "confidence": min(0.3 + (miss_ratio * 0.3), 0.6),
+                "domain": "meta",
+                "file_scope": "**",
+                "evidence": f"- {miss}/{total} sessions consulted rule "
+                            f"without reading guide",
+                "evidence_count": total,
+            })
+
+    return instincts
+
+
 # --- Main ---
 
 def main():
@@ -423,6 +491,7 @@ def main():
     all_instincts.extend(detect_error_recovery(observations))
     all_instincts.extend(detect_file_conventions(observations))
     all_instincts.extend(detect_rule_consultation(observations))
+    all_instincts.extend(detect_guide_consultation(observations))
 
     if not all_instincts:
         print("[analyze] No patterns detected yet.", file=sys.stderr)
