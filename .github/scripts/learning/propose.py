@@ -133,9 +133,13 @@ def map_target_file(instinct):
     domain = instinct.get("domain", "")
     file_scope = instinct.get("file_scope", "**")
 
+    # Meta instincts (rule/guide consultation patterns)
+    if domain == "meta":
+        return "agent-guardrails.instructions.md"
+
     # Testing-related instincts
     if domain == "testing":
-        return "code-standards.instructions.md"
+        return "testing.instructions.md"
 
     # Code style with specific extension
     if domain == "code-style":
