@@ -406,9 +406,11 @@ def get_instruction_changes():
     except (json.JSONDecodeError, OSError):
         return []
     changed = []
+    current_files = set()
     for fname in os.listdir(INSTRUCTIONS_DIR):
         if not fname.endswith(".instructions.md"):
             continue
+        current_files.add(fname)
         fpath = os.path.join(INSTRUCTIONS_DIR, fname)
         try:
             current_mtime = os.path.getmtime(fpath)
@@ -416,6 +418,9 @@ def get_instruction_changes():
             continue
         if fname not in recorded or current_mtime > recorded[fname]:
             changed.append(fname)
+    for fname in recorded:
+        if fname not in current_files:
+            changed.append(f"{fname} (removed)")
     return changed
 
 
