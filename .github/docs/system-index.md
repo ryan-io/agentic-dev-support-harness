@@ -40,17 +40,25 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 | `csharp-code-standards.instructions.md` | `**/*.cs` |
 | `lua-code-standards.instructions.md` | `**/*.lua` |
 
+### Guide Files (on-demand deep docs, not auto-loaded)
+| Guide | Companion Rule |
+|-------|----------------|
+| `writing-voice-guide.md` | `writing-voice.instructions.md` |
+| `agent-guardrails-guide.md` | `agent-guardrails.instructions.md` |
+| `testing-guide.md` | `testing.instructions.md` |
+| `pr-review-guide.md` | `pr-review.instructions.md` |
+
 ### On-Demand (read by skills at runtime)
 | File | Purpose |
 |------|---------|
-| `.github/docs/adr-template.md` | Copyable ADR template |
-| `.github/docs/br-template.md` | Copyable BR template |
-| `.github/skills/adr-creation/SKILL.md` | Interactive ADR creation |
-| `.github/skills/create-business-rule/SKILL.md` | Interactive BR creation |
-| `.github/skills/system-review/SKILL.md` | System audit checklist |
-| `.github/skills/project-setup/SKILL.md` | Stack onboarding / template tailoring |
-| `.github/skills/convention-discovery/SKILL.md` | Generate rules from git history |
-| `.github/skills/continuous-learning/SKILL.md` | Review and apply learned patterns |
+| `.github/docs/adr-template.md` | ADR template |
+| `.github/docs/br-template.md` | BR template |
+| `.github/skills/adr-creation/SKILL.md` | ADR creation |
+| `.github/skills/create-business-rule/SKILL.md` | BR creation |
+| `.github/skills/system-review/SKILL.md` | System audit |
+| `.github/skills/project-setup/SKILL.md` | Stack onboarding |
+| `.github/skills/convention-discovery/SKILL.md` | Rules from git history |
+| `.github/skills/continuous-learning/SKILL.md` | Review learned patterns |
 
 ### Infrastructure
 | File | Purpose |
@@ -74,4 +82,4 @@ Each major directory has a `README.md` (human-facing, size-limit exempt).
 - Learning chain: `observe.json` → `observe.py` → `analyze.py` → `propose.py` → `continuous-learning`
 
 ## Size Management
-All agent-loaded files must stay under 4,000 characters. When a file passes 3,800: remove stale CUSTOMIZE markers, trim redundant cross-references, move examples to templates. When the hub passes 3,800: move detail here, keep the hub as a routing layer. When a learning proposal would push a file over 4,000: split into a new scoped instruction file.
+All agent-loaded files must stay under 4,000 characters. At 3,800: trim stale markers and redundant cross-references. Hub at 3,800: move detail here. Learning proposal over 4,000: split into a new scoped file. Rule file needs depth: extract to a companion guide (`{name}-guide.md`), add a `Full guidance` directive.
