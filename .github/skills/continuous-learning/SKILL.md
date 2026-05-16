@@ -42,12 +42,12 @@ For each accepted proposal:
 3. Add the rule text in the file's existing style and format.
 4. Verify the file stays under 4,000 characters. If it would exceed the limit, warn and ask the developer how to proceed.
 5. Mark the proposal `status: applied`.
-6. Run the sync script: `python3 .github/scripts/sync-claude-rules.py`.
+6. Run the sync script: `python .github/scripts/sync-claude-rules.py`.
 
 ## Step 4: Manual Analysis (Optional)
 If the developer requests it, or if there are 20+ unanalyzed observations:
-1. Run `python3 .github/scripts/learning/analyze.py` and display results.
-2. Run `python3 .github/scripts/learning/propose.py` and display any new proposals.
+1. Run `python .github/scripts/learning/analyze.py` and display results.
+2. Run `python .github/scripts/learning/propose.py` and display any new proposals.
 3. Return to Step 2 if new proposals were created.
 
 ## Step 5: Cleanup

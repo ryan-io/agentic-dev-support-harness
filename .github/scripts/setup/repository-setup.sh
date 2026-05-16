@@ -26,6 +26,10 @@ TARGET_DIR="$(cd "$TARGET_DIR" 2>/dev/null && pwd || echo "$TARGET_DIR")"
 
 activate() {
     local dir="$1"
+    if [ ! -d "$dir/.git" ]; then
+        echo "ERROR: $dir is not a git repository. Hook installation skipped."
+        return 1
+    fi
     echo
     echo "Configuring git hooks..."
     git -C "$dir" config core.hooksPath .github/hooks
@@ -40,12 +44,18 @@ activate() {
     echo "Git hooks installed. Pre-commit sync + validation is now active."
 
     echo
+    local py=""
     if command -v python3 &>/dev/null; then
+        py=python3
+    elif command -v python &>/dev/null; then
+        py=python
+    fi
+    if [ -n "$py" ]; then
         echo "Running initial sync..."
-        (cd "$dir" && python3 .github/scripts/sync-claude-rules.py) || \
+        (cd "$dir" && $py .github/scripts/sync-claude-rules.py) || \
             echo "WARN: Sync had errors. Run sync manually after fixing."
     else
-        echo "WARN: python3 not found. Run sync manually after installing Python."
+        echo "WARN: python not found. Run sync manually after installing Python 3."
     fi
 }
 
