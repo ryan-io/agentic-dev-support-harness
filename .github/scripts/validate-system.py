@@ -4,7 +4,7 @@ validate-system.py
 Automated validation of the project setup template system.
 Checks file existence, size limits, sync state, frontmatter, cross-references,
 cross-platform parity, hook config, config schema, Python syntax, YAML validity,
-pipeline chain integrity, and gitignore coverage.
+pipeline chain integrity, gitignore coverage, and learning pipeline consistency.
 
 Run from repo root: python .github/scripts/validate-system.py
 Exit code: 0 = all pass, 1 = failures found.
@@ -311,6 +311,13 @@ if os.path.isfile(HOOK_FILE):
 
     if hook_cfg:
         hooks_root = hook_cfg.get("hooks", {})
+        expected_events = {"PreToolUse", "PostToolUse", "Stop"}
+        found_events = set(hooks_root.keys())
+        for expected in sorted(expected_events):
+            if expected in found_events:
+                result("PASS", f"{expected} -- event type registered")
+            else:
+                result("FAIL", f"{expected} -- event type missing from observe.json")
         for event_name, event_list in hooks_root.items():
             for group in event_list:
                 for hook in group.get("hooks", []):
@@ -769,7 +776,7 @@ print("\n[20] Thin-rules / deep-docs contract")
 
 DOCS_DIR = os.path.join(".github", "docs")
 guide_directive_re = re.compile(
-    r'>\s*\*\*Full guidance:\*\*\s*`([^`]+)`'
+    r'^>\s*\*\*Full guidance:\*\*\s*`([^`]+)`', re.MULTILINE
 )
 
 # 20a: Every instruction file with a guide directive has a corresponding guide
@@ -816,6 +823,137 @@ if os.path.isdir(DOCS_DIR):
             result("FAIL", f"{gf} -- {gsize} chars (limit {MAX_CHARS})")
         else:
             result("PASS", f"{gf} -- {gsize} chars")
+
+
+# ============================================================
+# 21. Learning pipeline consistency
+# ============================================================
+
+current_check = "[21] Learning pipeline consistency"
+print("\n[21] Learning pipeline consistency")
+
+OBSERVE_PY = os.path.join(LEARNING_SCRIPTS_DIR, "observe.py")
+ANALYZE_PY = os.path.join(LEARNING_SCRIPTS_DIR, "analyze.py")
+PROPOSE_PY = os.path.join(LEARNING_SCRIPTS_DIR, "propose.py")
+
+# 21a: Hook group schema -- every event group has matcher + hooks fields
+if hook_cfg:
+    for event_name, event_list in hooks_root.items():
+        for i, group in enumerate(event_list):
+            if "matcher" not in group:
+                result("FAIL", f"observe.json {event_name}[{i}] -- missing 'matcher' field")
+            elif "hooks" not in group:
+                result("FAIL", f"observe.json {event_name}[{i}] -- missing 'hooks' field")
+            else:
+                result("PASS", f"observe.json {event_name}[{i}] -- schema complete")
+
+# 21b: Domain mapping coverage -- domains from observe.py handled in propose.py
+if os.path.isfile(OBSERVE_PY) and os.path.isfile(PROPOSE_PY):
+    with open(OBSERVE_PY, "r", encoding="utf-8") as f:
+        obs_content = f.read()
+    with open(PROPOSE_PY, "r", encoding="utf-8") as f:
+        prop_content = f.read()
+
+    # Extract domain return values from classify_domain()
+    cd_match = re.search(
+        r'def classify_domain\b.*?(?=\ndef |\Z)', obs_content, re.DOTALL
+    )
+    if cd_match:
+        cd_body = cd_match.group()
+        domains = set(re.findall(r'return\s+"([^"]+)"', cd_body))
+
+        # Extract domain checks from map_target_file() using targeted patterns
+        mt_match = re.search(
+            r'def map_target_file\b.*?(?=\ndef |\Z)', prop_content, re.DOTALL
+        )
+        if mt_match:
+            mt_body = mt_match.group()
+            # Match domain == "x" and domain in ("x", "y", ...) patterns
+            eq_domains = set(re.findall(r'domain\s*==\s*"([^"]+)"', mt_body))
+            in_domains = set(re.findall(r'domain\s+in\s*\([^)]+\)', mt_body))
+            # Extract individual values from in(...) tuples
+            for in_match in re.finditer(r'domain\s+in\s*\(([^)]+)\)', mt_body):
+                eq_domains.update(re.findall(r'"([^"]+)"', in_match.group(1)))
+            for domain in sorted(domains):
+                if domain in eq_domains:
+                    result("PASS", f"domain '{domain}' -- mapped in propose.py")
+                else:
+                    result("FAIL", f"domain '{domain}' -- returned by observe.py but not mapped in propose.py")
+        else:
+            result("FAIL", "propose.py -- map_target_file() not found")
+    else:
+        result("FAIL", "observe.py -- classify_domain() not found")
+
+# 21c: Archive dir consistency -- propose.py archive dir matches .gitignore
+if os.path.isfile(PROPOSE_PY) and os.path.isfile(".gitignore"):
+    with open(PROPOSE_PY, "r", encoding="utf-8") as f:
+        prop_src = f.read()
+    archive_match = re.search(r'ARCHIVE_DIR\s*=.*["\']([^"\'\n]+)["\']', prop_src)
+    if archive_match:
+        archive_name = archive_match.group(1)
+        with open(".gitignore", "r", encoding="utf-8") as f:
+            gitignore = f.read()
+        if archive_name in gitignore:
+            result("PASS", f"archive dir '{archive_name}' -- covered in .gitignore")
+        else:
+            result("FAIL", f"archive dir '{archive_name}' -- missing from .gitignore")
+    else:
+        result("FAIL", "propose.py -- ARCHIVE_DIR not found")
+
+# 21d: Event name consistency -- observe.py event checks match observe.json
+if os.path.isfile(OBSERVE_PY) and hook_cfg:
+    with open(OBSERVE_PY, "r", encoding="utf-8") as f:
+        obs_src = f.read()
+
+    # Find all event_name == "..." comparisons in observe.py
+    checked_events = set(re.findall(r'event_name\s*==\s*"([^"]+)"', obs_src))
+    registered = set(hooks_root.keys())
+    # Internal markers (not hook events) are allowed
+    internal_events = {"_analysis_marker"}
+    for ev in sorted(checked_events):
+        if ev in registered:
+            result("PASS", f"event '{ev}' -- registered in observe.json")
+        elif ev in internal_events:
+            result("PASS", f"event '{ev}' -- internal marker (not a hook event)")
+        else:
+            result("FAIL", f"event '{ev}' -- checked in observe.py but not registered in observe.json")
+
+# 21e: Path normalization -- observe.py normalizes paths before directory checks
+if os.path.isfile(OBSERVE_PY):
+    with open(OBSERVE_PY, "r", encoding="utf-8") as f:
+        obs_src = f.read()
+
+    # Check that .github/instructions/ or .claude/rules/ path checks are preceded
+    # by path normalization (replace("\\", "/"))
+    bo_match = re.search(
+        r'def build_observation\b.*?(?=\ndef |\Z)', obs_src, re.DOTALL
+    )
+    if bo_match:
+        bo_body = bo_match.group()
+        has_path_check = (
+            '".github/instructions/"' in bo_body or '".claude/rules/"' in bo_body
+        )
+        has_normalization = '.replace("\\\\", "/")' in bo_body or ".replace('\\\\', '/')" in bo_body
+        if has_path_check and has_normalization:
+            result("PASS", "build_observation() -- path normalization present")
+        elif has_path_check and not has_normalization:
+            result("FAIL", "build_observation() -- path checks without normalization (Windows compat)")
+        else:
+            result("PASS", "build_observation() -- no path checks to normalize")
+
+# 21f: YAML safety -- save_instinct() escapes quotes in trigger field
+if os.path.isfile(ANALYZE_PY):
+    with open(ANALYZE_PY, "r", encoding="utf-8") as f:
+        analyze_src = f.read()
+    si_match = re.search(
+        r'def save_instinct\b.*?(?=\ndef |\Z)', analyze_src, re.DOTALL
+    )
+    if si_match:
+        si_body = si_match.group()
+        if 'replace(\'"\',' in si_body or ".replace('\"'," in si_body or '.replace(\\\'"\\\'' in si_body or 'replace(\'"\', ' in si_body or "safe_trigger" in si_body:
+            result("PASS", "save_instinct() -- trigger value escaping present")
+        else:
+            result("FAIL", "save_instinct() -- trigger value not escaped (YAML injection risk)")
 
 
 # ============================================================
