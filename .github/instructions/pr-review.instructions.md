@@ -32,7 +32,7 @@ One severity + one category per comment. No vague feedback. Be actionable and ob
 - **Question**: Clarification needed. Do not imply a change unless clearly required.
 
 ## AI Reviewer Guidance
-Only comment with HIGH CONFIDENCE (>90%) that an issue exists.
+Raise a comment only when you can name the concrete failure: the triggering input or code path and the wrong result it produces. If you cannot state that scenario, use `Question/` or stay silent.
 
 Do NOT comment on: test failures (CI handles this), minor typos (unless user-facing), logging suggestions (unless errors/security), or multiple issues in one comment.
 

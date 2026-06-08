@@ -92,7 +92,10 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 | `.claude/settings.json` | Claude Code hook registration for learning |
 | `.github/scripts/learning/` | `observe.py` → `analyze.py` → `propose.py` |
 | `.github/scripts/scaffold.py` | ah-ide scaffolding engine (`python ...scaffold.py`) |
+| `.github/scripts/tests/test_eject.py` | Tests for the harness-eject engine |
+| `.github/scripts/tests/test_repository_setup.py` | Tests for the repo-init engine |
 | `templates/` | Stack templates consumed by the scaffolder |
+| `templates/README.md` | Template authoring guide |
 | `.github/workflows/` | `validate-system.yml`, `convention-discovery.yml`, `learning-summary.yml`, `scaffold-matrix.yml` |
 | `.claude/learning/config.json` | Learning thresholds |
 | `.gitignore` / `.gitattributes` | Ignores and line endings |

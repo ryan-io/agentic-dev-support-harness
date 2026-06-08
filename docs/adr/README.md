@@ -12,7 +12,7 @@ Invoke the `adr-creation` skill, it walks you through the template at `../../.gi
 
 ## Conventions
 
-Filenames follow `adr-{prefix}-{kebab-case-title}.md`, where the prefix groups a subsystem or concern (`design`, `learn`, `project`, `rag`, `scaffold`): `adr-scaffold-introduce-ah-ide-cli.md`. Archived ADRs stay in place with their status updated. Both Copilot and Claude auto-load `adr-template` and `adr-pr-review` rules when editing files in this directory.
+Filenames follow `adr-{prefix}-{kebab-case-title}.md`, where the prefix groups a subsystem or concern (`design`, `learn`, `project`, `rag`, `scaffold`, `setup`): `adr-scaffold-introduce-ah-ide-cli.md`. Archived ADRs stay in place with their status updated. Both Copilot and Claude auto-load `adr-template` and `adr-pr-review` rules when editing files in this directory.
 
 ## Related
 

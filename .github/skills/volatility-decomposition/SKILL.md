@@ -33,7 +33,7 @@ Every phase of this skill revolves around one question: **"Is this volatile, or 
 - **Volatile:** open-ended change that, unless encapsulated at the architecture level, ripples across the system. Deserves its own component behind a stable interface.
 - **Variable:** bounded change you handle with conditional logic, configuration, or a code-level abstraction. Not an architectural concern.
 
-When something is clearly variable (90%+ confidence), call it out immediately in whatever phase you are in. When the classification is ambiguous, collect it as a candidate and defer judgment to Phase 4, where the full context makes the distinction clearer.
+When something is clearly variable rather than volatile (it stays bounded, with no open-ended change that ripples across the system), call it out immediately in whatever phase you are in. When the classification is ambiguous, collect it as a candidate and defer judgment to Phase 4, where the full context makes the distinction clearer.
 
 ## Starting the Session
 
@@ -59,7 +59,7 @@ For each aspect, follow up: "What specifically changes about it? The technology?
 
 As you walk through, maintain a running candidate list of things that seem volatile. Do not commit to design yet. You are compiling observations, not architecture.
 
-If something is clearly variable (90%+ confidence), say so: "That sounds like something you'd handle in code, not an architectural boundary. Does that match your read?" Set it aside and move on.
+If something is clearly variable rather than volatile (bounded change, no system-wide ripple), say so: "That sounds like something you'd handle in code, not an architectural boundary. Does that match your read?" Set it aside and move on.
 
 ## Phase 2: Apply the Axes of Volatility
 

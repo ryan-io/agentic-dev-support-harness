@@ -4,7 +4,7 @@ Python automation that keeps the harness coherent. Two scripts run on every comm
 
 ## sync-claude-rules.py
 
-The keystone. Copies `../copilot-instructions.md` to `CLAUDE.md` byte-for-byte and transforms each `../instructions/*.instructions.md` into a `.claude/rules/*.md` mirror, converting `applyTo` frontmatter to `paths`, stripping the suffix from the filename. Validates each instruction file's frontmatter, body, and character count (≤ 4,000). Skips files prefixed with `<!-- DEPRECATED` and cleans orphaned mirrors. Runs from the pre-commit hook (`../hooks/pre-commit`) and directly via `python .github/scripts/sync-claude-rules.py`.
+The keystone. Copies `../copilot-instructions.md` to `CLAUDE.md` with line-ending and BOM normalization, and transforms each `../instructions/*.instructions.md` into a `.claude/rules/*.md` mirror, converting `applyTo` frontmatter to `paths`, stripping the suffix from the filename. Validates each instruction file's frontmatter, body, and character count (≤ 4,000). Skips files prefixed with `<!-- DEPRECATED` and cleans orphaned mirrors. Runs from the pre-commit hook (`../hooks/pre-commit`) and directly via `python .github/scripts/sync-claude-rules.py`.
 
 ## validate-system.py
 

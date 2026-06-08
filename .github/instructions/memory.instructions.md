@@ -20,7 +20,7 @@ Pipeline Python is stdlib-only and fails closed: hooks always exit 0 and degrade
 
 ## Decisions and constraints
 
-Staleness is evidence-based and session-clock driven; wall-clock decay is removed and confirmed knowledge (`confirmed: true`) never decays. Corrections are captured by parsing the SessionEnd transcript: derived fields only, raw transcript text never enters the observation log. SessionEnd, not Stop, is the session boundary. Instruction files are hard-capped at 4,000 characters. Both learning ADRs (staleness, correction capture) went Active 2026-06-05.
+Staleness is evidence-based and session-clock driven; wall-clock decay is removed and confirmed knowledge (`confirmed: true`) never decays. Corrections are captured by parsing the SessionEnd transcript: derived fields only, raw transcript text never enters the observation log. SessionEnd, not Stop, is the session boundary. Instruction files are hard-capped at 4,000 characters. Both learning ADRs (staleness, correction capture) were implemented and amended 2026-06-05.
 
 ## Open threads
 
