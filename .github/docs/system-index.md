@@ -77,6 +77,7 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 | `.github/skills/architecture-layering/SKILL.md` | Layered architecture classification (pipeline stage 3) |
 | `.github/skills/architecture-design-pipeline/SKILL.md` | Orchestrates the three-stage design pipeline |
 | `.github/skills/implementation/SKILL.md` | Pair-program a design into C#/WPF code (pipeline stage 4) |
+| `.github/skills/write-unit-tests/SKILL.md` | Write unit tests for existing code (NUnit 4 + Moq) |
 | `.github/skills/sequence-diagram/SKILL.md` | Mermaid sequence diagram creation |
 
 ### Infrastructure

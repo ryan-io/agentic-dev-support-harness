@@ -72,4 +72,4 @@ One type per file, name matches type. Allman braces. Members top-down: static fi
 
 ## Testing
 
-NUnit as the test framework. Projects named `{ProjectName}.Tests`. Classes mirror the type under test (`FooServiceTests`). Methods follow `Method_State_ExpectedBehavior` per `testing.instructions.md`. Use Moq for mocking, factory methods for test data.
+NUnit 4, constraint model (`Assert.That`, not classic `Assert.AreEqual`; legacy asserts in `NUnit.Framework.Legacy`). Projects `{ProjectName}.Tests`, one class per type (`FooServiceTests`). Names `Method_State_ExpectedBehavior` per `testing.instructions.md`. Moq, default Loose: verify outcomes, not call order. Factory methods for data. Author via the `write-unit-tests` skill.

@@ -26,6 +26,8 @@ On-demand procedures the agent runs when invoked by name. Unlike instruction fil
 
 `implementation` pair-programs a design into C#/WPF code: the agent drives, the developer navigates. It reads the `docs/design/{slug}/` artifacts in any combination, builds a service backlog from `architecture.md`, and implements them one at a time, test first, with the design as the source of truth and drift flagged back into the design skills. Stage 4 of the pipeline. Bootstraps a base solution via `scaffold.py` when none exists and keeps a backlog note in `docs/process/`.
 
+`write-unit-tests` writes unit tests for code that already exists, one unit at a time, applying the testing standards rather than restating them. Reads the unit and its collaborators, enumerates behaviors and edge cases, writes Arrange-Act-Assert tests, mocks only at owned boundaries, verifies outcomes, and runs the suite green. C# default is NUnit 4 with Moq. Distinct from `implementation`, which is test-first pairing on a new design: this skill produces the tests themselves and also revises an existing test file in place.
+
 `sequence-diagram` creates a Mermaid sequence diagram from a structured specification or natural-language description. Walks the user through participants, message flow, and interaction patterns (loops, conditionals, parallel flows), then saves a markdown file with the diagram source to `docs/diagrams/`.
 
 ## Adding a New Skill

@@ -16,9 +16,17 @@ Integration tests verify interactions across boundaries (API, database, service 
 
 E2E tests exercise critical user flows through the full stack. Cover paths where failure would block users.
 
+## FIRST
+
+Good unit tests are Fast (milliseconds, no I/O), Isolated (independent, run in any order, no shared mutable state), Repeatable (same result every run, no leaking clock or randomness), Self-validating (a pass/fail assertion, never manual inspection), and Timely (written with the code, not bolted on later).
+
 ## Test Structure
 
-Every test follows Arrange-Act-Assert. Keep each section short. If Arrange dominates the test, extract a factory or builder.
+Every test follows Arrange-Act-Assert. Keep each section short: small Arrange, a single Act, a focused Assert. If Arrange dominates the test, extract a factory or builder.
+
+## Behavior Over Implementation
+
+Test the observable contract: return values, state changes, and thrown errors. Do not assert private state or incidental call sequences. A test that breaks on a safe refactor is testing the wrong thing.
 
 ## Naming
 
@@ -27,6 +35,8 @@ Test names follow the pattern `Method_State_ExpectedBehavior`. The method under 
 ## Mocking and Stubbing
 
 Mock or stub external dependencies at public API boundaries. Prefer fakes over mocks when the dependency has complex behavior.
+
+Know the test doubles: a dummy fills a parameter, a stub returns canned values, a fake has a working lightweight implementation, a spy records calls, a mock asserts the calls it expects. Verify state where you can; verify interactions only when the interaction is the behavior. Do not over-mock. Mocking the type under test, types you do not own, or internal detail produces brittle tests that pass while production breaks.
 
 ## Test Data
 
