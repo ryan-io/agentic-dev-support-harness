@@ -6,6 +6,8 @@ On-demand procedures the agent runs when invoked by name. Unlike instruction fil
 
 `project-setup` tailors the template to a specific stack: offers scaffolding (`python .github/scripts/scaffold.py`) as step zero when no solution exists, fills in the CUSTOMIZE markers, generates a `{language}-code-standards` file, and removes anything not relevant. Run this once, right after setup (`python .github/scripts/setup/repository-setup.py`).
 
+`harness-eject` runs the one-time, reversible teardown after `project-setup`: previews the removal plan, confirms the scaffolder opt-out, runs `../scripts/eject.py`, and verifies the validator stays green. The eject lands as a single revertable commit.
+
 `adr-creation` walks the user through writing an Architecture Decision Record using the template in `../docs/adr-template.md`, validating against the rules in `../instructions/adr-pr-review.instructions.md`, and saving to `docs/adr/`.
 
 `create-business-rule` does the same for business rules, against `../docs/br-template.md` and `../instructions/br-review.instructions.md`, saving to `docs/business-rules/`.

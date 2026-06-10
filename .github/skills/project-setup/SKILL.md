@@ -18,6 +18,33 @@ Read the system index for the current file map:
 
 ## Workflow
 
+### Adopt path (existing projects)
+
+When the harness was overlaid onto an existing project (`repository-setup.py --adopt`,
+or a manual overlay), the project already has a solution.
+Skip Step 0; scaffolding is for empty repositories.
+Detect the adopt context before asking: `ProjectSettings/ProjectVersion.txt`
+means a Unity project; any populated repo without `.github/TEMPLATE_SOURCE`
+that predates the harness files is an adoption.
+
+Run these adopt-only actions, then continue at Step 1:
+
+1. **Verify the .gitignore merge.** The adopt merge header
+   (`# === agentic-dev-support-harness (adopt merge) ===`) must be present, and
+   no tracked project path may be swallowed by a harness pattern. For Unity,
+   confirm `git check-ignore Packages/manifest.json` reports nothing (the
+   `!/Packages/` negation protects it on case-insensitive filesystems).
+2. **Merge the LFS attributes (Unity: required).** Read the reference set in
+   `.github/docs/unity.gitattributes` and the project root `.gitattributes`
+   (if any). Append the reference lines that are missing; never remove or
+   reorder existing lines. Show the resulting diff and confirm with the
+   developer before writing, then save to the root `.gitattributes`. Git LFS
+   is required for Unity projects under git: instruct the developer to run
+   `git lfs install` once per machine. Files already committed as plain blobs
+   need `git lfs migrate`; flag this rather than running it.
+3. **Scope the UI instruction files.** For Unity with UI Toolkit, narrow
+   `user-interface` / `user-experience` to `**/*.uxml,**/*.uss` (see Step 3).
+
 ### Step 0: Scaffold the Solution (ah-ide)
 
 If the repository has no solution or project files yet, offer to scaffold one

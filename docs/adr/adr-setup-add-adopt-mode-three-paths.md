@@ -12,6 +12,18 @@
 
 ---
 
+## Amendment 2026-06-10: project-setup adopt path and required Git LFS for Unity
+
+This amendment extends the Decision with the skill-side half of the adopt path and a Unity-specific VCS requirement. Amendments are recorded here rather than by editing the original text, per the ADR permanence policy.
+
+**project-setup adopt path.** The `project-setup` skill gains an adopt path: it detects an adopted project (for Unity, `ProjectSettings/ProjectVersion.txt`), skips the scaffold step, verifies the `.gitignore` merge (merge header present, `git check-ignore` clean on `Packages/manifest.json`), and scopes the UI instruction files. This closes the third ADR candidate from the unity-greenfield exploration doc. The second candidate (recording how stack decisions land in the rule set) needs no separate ADR: the supersession layer is the consuming project's own `unity-code-standards.instructions.md`, governed by that project's ADRs.
+
+**Git LFS is required for Unity adoption** (developer decision, 2026-06-10), not deferred. A Unity LFS reference set ships at `.github/docs/unity.gitattributes`; the adopt path merges it into the project root `.gitattributes` (append-only, confirmed with the developer) and instructs `git lfs install`. Unity text assets (`.unity`, `.prefab`, `.asset`, `.meta`) never route through LFS.
+
+**Implementation status.** Eject Phases 1 and 2 (destructive run, reference scrub, scaffolder trim, `harness-eject` skill) and adopt mode in `repository-setup.py` shipped 2026-06-10 per `docs/process/2026-06-10-finalize-unity-adopt-plan.md`. The chain is procedural across script and skill: adopt overlays and activates, `project-setup` writes the completion marker, `harness-eject` finishes the teardown.
+
+---
+
 ## Context
 
 The harness assumes it arrives first: clone the template, run setup, scaffold, eject. Tools that own project creation invert that order. Unity Hub creates the project folder itself and cannot create into a non-empty directory, so a Unity stack template under `templates/` would never be consumed; the same applies to any generator-owned ecosystem. The first real case (unity-greenfield, 2026-06-10) was integrated by hand: manual copy with collision policy, in-place activate, then a hand-trim following the eject Phase 0 plan. It worked, but every step was error-prone manual policy, and the overlay initially carried dead template machinery (scaffolder, `templates/`, harness ADRs) into the consuming project.

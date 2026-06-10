@@ -4,13 +4,21 @@ repository-setup.py
 The repository-setup engine. Sets up a project from this harness template,
 cross-platform, replacing the former repository-setup.sh / .bat pair.
 
-Two modes, auto-detected:
-  - Activate in place: run from inside a repo already created from the template
-    (GitHub's "Use this template"). Configures the hook path, makes the hook
-    executable, installs a .git/hooks compatibility symlink, then runs sync,
-    validation, and the ah-ide smoke check. No files copied.
-  - Scaffold: run pointing at an empty / non-git directory. Initializes git,
-    copies the template files, then activates as above.
+Three modes:
+  - Activate in place (auto-detected): run from inside a repo already created
+    from the template (GitHub's "Use this template"). Configures the hook path,
+    makes the hook executable, installs a .git/hooks compatibility symlink, then
+    runs sync, validation, and the ah-ide smoke check. No files copied.
+  - Scaffold (auto-detected): run pointing at an empty / non-git directory.
+    Initializes git, copies the template files, then activates as above.
+  - Adopt (--adopt, explicit): overlay the template into an existing, populated
+    project (e.g. a Unity Hub-created root). Collision policy: never overwrite
+    an existing file, merge .gitignore (with case-insensitive collision
+    negations for tracked directories), tolerate an existing .git (init only
+    when absent), report every skipped collision. The template README.md is
+    never copied on any path. Adopt ends by handing off to the project-setup
+    skill, which chains into harness-eject.
+    Decision record: docs/adr/adr-setup-add-adopt-mode-three-paths.md
 
 Setup never edits a shell rc file or the system environment (ADR-SCAFFOLD
 Amendment 2026-06-08). The scaffolder is invoked through Python as
@@ -22,6 +30,7 @@ hook is the only shell script in the template):
   python .github/scripts/setup/repository-setup.py            # activate / scaffold
   python .github/scripts/setup/repository-setup.py --dry-run  # preview, no changes
   python .github/scripts/setup/repository-setup.py /path/to/new/dir
+  python .github/scripts/setup/repository-setup.py --adopt /path/to/existing/project
   python .github/scripts/setup/repository-setup.py --remove-path
 
 Decision record: docs/adr/adr-scaffold-introduce-ah-ide-cli.md (Amendment 2026-06-08)
@@ -29,6 +38,7 @@ Plan: docs/process/2026-06-08-setup-python-engine-plan.md
 """
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -269,6 +279,178 @@ def _copyfile(src, dst, dry_run):
     print(f"  {rel}")
 
 
+# --- Adopt: overlay the template into an existing, populated project ---
+
+GITIGNORE_MERGE_HEADER = "# === agentic-dev-support-harness (adopt merge) ==="
+
+
+def adopt(target, dry_run=False):
+    """Overlay the template into a non-empty target with the collision policy
+    from adr-setup-add-adopt-mode-three-paths: never overwrite, merge
+    .gitignore, tolerate an existing .git, report every skipped collision."""
+    print("Mode: adopt (overlay into an existing project)")
+    print(f"Target: {target}\n")
+
+    if os.path.abspath(target) == SRC:
+        raise SetupError("adopt target is the template source itself.")
+    if os.path.isfile(os.path.join(target, ".github", "TEMPLATE_SOURCE")):
+        raise SetupError(
+            f"{target} carries .github/TEMPLATE_SOURCE: it is a template clone.\n"
+            "       Run setup from inside it with no flags (activate mode) instead.")
+    if not os.path.isdir(target) or not os.listdir(target):
+        raise SetupError(
+            "adopt requires an existing, non-empty directory.\n"
+            "       For an empty or new directory, run setup without --adopt "
+            "(scaffold mode).")
+
+    # Snapshot the target's own top-level directories before the overlay, so
+    # gitignore negations consider only pre-existing (project) content.
+    pre_dirs = [d for d in os.listdir(target)
+                if os.path.isdir(os.path.join(target, d)) and d != ".git"]
+
+    if not os.path.isdir(os.path.join(target, ".git")):
+        print("Initializing git repository (none present)...")
+        _run(["git", "init", target], dry_run)
+
+    print(f"\nOverlaying template files from: {SRC}")
+    print(f"                            to: {target}\n")
+    collisions = overlay_template(target, dry_run)
+
+    for line in merge_gitignore(target, pre_dirs, dry_run):
+        print(line)
+
+    if collisions:
+        print(f"\nSkipped {len(collisions)} existing file(s) (never overwritten):")
+        for c in collisions:
+            print(f"  collision: {c}")
+    else:
+        print("\nNo collisions: no overlay file already existed in the target.")
+
+    activate(target, dry_run)
+    return collisions
+
+
+def overlay_template(target, dry_run=False):
+    """Copy the template trees and files, skipping anything that already
+    exists. .gitignore is merged separately; the template README.md is not in
+    any copy list, so it is skipped by construction. Returns the collision list."""
+    collisions = []
+    for rel, ignore in TREE_COPIES:
+        src_root = os.path.join(SRC, rel)
+        if not os.path.isdir(src_root):
+            continue
+        ignore_fn = shutil.ignore_patterns(*ignore) if ignore else None
+        for dirpath, dirnames, filenames in os.walk(src_root):
+            if ignore_fn:
+                ignored = ignore_fn(dirpath, dirnames + filenames)
+                dirnames[:] = [d for d in dirnames if d not in ignored]
+                filenames = [f for f in filenames if f not in ignored]
+            for fname in filenames:
+                src = os.path.join(dirpath, fname)
+                rel_path = os.path.relpath(src, SRC)
+                _overlay_file(src, os.path.join(target, rel_path),
+                              rel_path, collisions, dry_run)
+    for rel in FILE_COPIES + ROOT_FILES:
+        if rel == ".gitignore":
+            continue
+        src = os.path.join(SRC, rel)
+        if os.path.isfile(src):
+            _overlay_file(src, os.path.join(target, rel), rel, collisions, dry_run)
+    return collisions
+
+
+def _overlay_file(src, dst, rel, collisions, dry_run):
+    if os.path.exists(dst):
+        collisions.append(rel.replace(os.sep, "/"))
+        return
+    if dry_run:
+        print(f"[dry-run] would copy {rel}")
+        return
+    os.makedirs(os.path.dirname(dst) or ".", exist_ok=True)
+    shutil.copy2(src, dst)
+
+
+def _expand_char_classes(pattern):
+    """Collapse single-char classes: '[Bb]in' -> 'bin'."""
+    return re.sub(r"\[(.)(.)?\]", lambda m: m.group(1).lower(), pattern)
+
+
+def _collision_negations(src_lines, pre_dirs):
+    """
+    Case-insensitive filesystems (Windows, macOS) match gitignore patterns
+    case-insensitively, so a harness pattern like 'packages/' would swallow a
+    tracked 'Packages/' directory. For each pre-existing top-level directory
+    whose name matches a simple harness directory pattern case-insensitively
+    but not exactly, emit a '!/Dir/' negation.
+    """
+    negations = []
+    patterns = []
+    for line in src_lines:
+        p = line.strip()
+        if not p or p.startswith("#") or p.startswith("!"):
+            continue
+        p = _expand_char_classes(p).lstrip("/").rstrip("/")
+        if p and not any(ch in p for ch in "*?/"):
+            patterns.append(p)
+    for d in pre_dirs:
+        for p in patterns:
+            if p.lower() == d.lower() and p != d:
+                neg = f"!/{d}/"
+                if neg not in negations:
+                    negations.append(neg)
+    return negations
+
+
+def merge_gitignore(target, pre_dirs, dry_run=False):
+    """Merge the template .gitignore into the target's. Never removes a target
+    line; appends missing harness lines under a marker header, then collision
+    negations. Returns report lines."""
+    src_path = os.path.join(SRC, ".gitignore")
+    dst_path = os.path.join(target, ".gitignore")
+    if not os.path.isfile(src_path):
+        return ["  WARN: template .gitignore missing; nothing to merge"]
+    with open(src_path, "r", encoding="utf-8") as fh:
+        src_lines = fh.read().splitlines()
+
+    if not os.path.isfile(dst_path):
+        if dry_run:
+            return ["[dry-run] would copy .gitignore (target has none)"]
+        shutil.copy2(src_path, dst_path)
+        return ["  copied .gitignore (target had none)"]
+
+    with open(dst_path, "r", encoding="utf-8") as fh:
+        dst_lines = fh.read().splitlines()
+    if GITIGNORE_MERGE_HEADER in dst_lines:
+        return ["  .gitignore already merged (marker present); left untouched"]
+
+    existing = {ln.strip() for ln in dst_lines if ln.strip() and not ln.strip().startswith("#")}
+    additions = [ln for ln in src_lines
+                 if not ln.strip() or ln.strip().startswith("#")
+                 or ln.strip() not in existing]
+    negations = _collision_negations(src_lines, pre_dirs)
+
+    if dry_run:
+        report = [f"[dry-run] would merge .gitignore ({len(additions)} line(s) appended)"]
+        report += [f"[dry-run] would negate: {n}" for n in negations]
+        return report
+
+    out = list(dst_lines)
+    if out and out[-1].strip():
+        out.append("")
+    out.append(GITIGNORE_MERGE_HEADER)
+    out.extend(additions)
+    if negations:
+        out.append("")
+        out.append("# Adopt merge: on case-insensitive filesystems the harness patterns")
+        out.append("# above would swallow these tracked directories; negate them.")
+        out.extend(negations)
+    with open(dst_path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write("\n".join(out) + "\n")
+    report = [f"  merged .gitignore ({len(additions)} line(s) appended)"]
+    report += [f"  negated: {n}" for n in negations]
+    return report
+
+
 # --- Subprocess helpers ---
 
 def _run(cmd, dry_run):
@@ -289,10 +471,28 @@ def _run_py(target, script_args, quiet=False):
 
 # --- Entry point ---
 
-def run_setup(target, dry_run=False):
+def run_setup(target, dry_run=False, mode=None):
     print("============================================")
     print(" Repository Setup - Project Template Init")
     print("============================================\n")
+    if mode == "adopt":
+        adopt(target, dry_run)
+        banner, steps = "Adoption overlay complete", [
+            "Open the project in your editor.",
+            "Run the project-setup skill (adopt path) to tailor instruction "
+            "files and merge stack-specific ignores and attributes.",
+            "project-setup's final step writes .claude/setup-complete and "
+            "removes .github/TEMPLATE_SOURCE.",
+            "Run the harness-eject skill to remove template-only machinery "
+            "(adopt chains into eject).",
+        ]
+        print("\n============================================")
+        print(f" {banner}: {target}")
+        print("============================================\n")
+        print("Next steps:")
+        for i, step in enumerate(steps, 1):
+            print(f"  {i}. {step}")
+        return
     if target == SRC:
         print("Mode: activate in place")
         print(f"Target: {target}")
@@ -325,7 +525,8 @@ def main(argv):
         return 0
 
     dry_run = "--dry-run" in argv
-    flags = {"--dry-run", "--remove-path"}
+    adopt_mode = "--adopt" in argv
+    flags = {"--dry-run", "--remove-path", "--adopt"}
     positionals = [a for a in argv if a not in flags]
 
     try:
@@ -334,7 +535,7 @@ def main(argv):
             return 0
         check_prerequisites()
         target = os.path.abspath(positionals[0]) if positionals else os.getcwd()
-        run_setup(target, dry_run)
+        run_setup(target, dry_run, mode="adopt" if adopt_mode else None)
         return 0
     except SetupError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

@@ -80,6 +80,7 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 | `.github/skills/implementation/SKILL.md` | Pair-program a design into C#/WPF code (pipeline stage 4) |
 | `.github/skills/write-unit-tests/SKILL.md` | Write unit tests for existing code (NUnit 4 + Moq) |
 | `.github/skills/sequence-diagram/SKILL.md` | Mermaid sequence diagram creation |
+| `.github/skills/harness-eject/SKILL.md` | Post-setup teardown of template machinery |
 
 ### Infrastructure
 | File | Purpose |

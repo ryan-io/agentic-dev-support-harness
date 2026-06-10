@@ -116,6 +116,92 @@ class TestRemovePathPosix(unittest.TestCase):
         self.assertIn("No ah-ide PATH entry found", out.getvalue())
 
 
+class TestAdopt(unittest.TestCase):
+    """Adopt-mode collision policy (adr-setup-add-adopt-mode-three-paths):
+    never-overwrite, gitignore merge with negations, collision report."""
+
+    def _make_target(self, tmp):
+        """A Unity-shaped, populated project root."""
+        def w(rel, content):
+            path = os.path.join(tmp, rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(content)
+        w(os.path.join("Assets", "Scenes", "Main.unity"), "scene\n")
+        w(os.path.join("ProjectSettings", "ProjectVersion.txt"),
+          "m_EditorVersion: 6000.4.10f1\n")
+        w(os.path.join("Packages", "manifest.json"), "{}\n")
+        w("README.md", "MY PROJECT\n")
+        w(".gitignore", "/Library/\n/Temp/\n")
+        return tmp
+
+    def test_overlay_never_overwrites_and_reports_collision(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._make_target(tmp)
+            local = os.path.join(tmp, ".github", "instructions",
+                                 "code-standards.instructions.md")
+            os.makedirs(os.path.dirname(local), exist_ok=True)
+            with open(local, "w", encoding="utf-8") as fh:
+                fh.write("LOCAL\n")
+            with redirect_stdout(io.StringIO()):
+                collisions = rs.overlay_template(tmp, dry_run=False)
+            with open(local, encoding="utf-8") as fh:
+                self.assertEqual(fh.read(), "LOCAL\n")
+            self.assertIn(".github/instructions/code-standards.instructions.md",
+                          collisions)
+            # Non-colliding template files arrived; the project's README is untouched.
+            self.assertTrue(os.path.isfile(os.path.join(tmp, "CLAUDE.md")))
+            with open(os.path.join(tmp, "README.md"), encoding="utf-8") as fh:
+                self.assertEqual(fh.read(), "MY PROJECT\n")
+
+    def test_gitignore_merge_appends_and_negates_packages(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._make_target(tmp)
+            pre_dirs = [d for d in os.listdir(tmp)
+                        if os.path.isdir(os.path.join(tmp, d))]
+            report = rs.merge_gitignore(tmp, pre_dirs, dry_run=False)
+            with open(os.path.join(tmp, ".gitignore"), encoding="utf-8") as fh:
+                merged = fh.read()
+            self.assertIn("/Library/", merged)          # target lines kept
+            self.assertIn("packages/", merged)          # harness lines appended
+            self.assertIn("!/Packages/", merged)        # case-collision negated
+            self.assertIn(rs.GITIGNORE_MERGE_HEADER, merged)
+            self.assertTrue(any("negated: !/Packages/" in r for r in report))
+            # Re-merge is a no-op (marker present).
+            again = rs.merge_gitignore(tmp, pre_dirs, dry_run=False)
+            self.assertTrue(any("already merged" in r for r in again))
+
+    def test_adopt_refuses_empty_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with redirect_stdout(io.StringIO()):
+                with self.assertRaises(rs.SetupError):
+                    rs.adopt(tmp, dry_run=True)
+
+    def test_adopt_refuses_template_source_clone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            sentinel = os.path.join(tmp, ".github", "TEMPLATE_SOURCE")
+            os.makedirs(os.path.dirname(sentinel), exist_ok=True)
+            with open(sentinel, "w", encoding="utf-8") as fh:
+                fh.write("sentinel\n")
+            with redirect_stdout(io.StringIO()):
+                with self.assertRaises(rs.SetupError):
+                    rs.adopt(tmp, dry_run=True)
+
+    def test_adopt_dry_run_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._make_target(tmp)
+            before = sorted(os.path.relpath(os.path.join(r, f), tmp)
+                            for r, _, fs in os.walk(tmp) for f in fs)
+            with redirect_stdout(io.StringIO()):
+                rc = rs.main(["--adopt", "--dry-run", tmp])
+            self.assertEqual(rc, 0)
+            after = sorted(os.path.relpath(os.path.join(r, f), tmp)
+                           for r, _, fs in os.walk(tmp) for f in fs)
+            self.assertEqual(before, after)
+            with open(os.path.join(tmp, ".gitignore"), encoding="utf-8") as fh:
+                self.assertEqual(fh.read(), "/Library/\n/Temp/\n")
+
+
 class TestEntryPoint(unittest.TestCase):
     def test_help_returns_zero(self):
         with redirect_stdout(io.StringIO()):
