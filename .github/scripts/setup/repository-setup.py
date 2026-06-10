@@ -50,10 +50,12 @@ ROOT_FILES = [
 
 # Directory trees copied in scaffold mode. .github carries everything under it
 # (instructions, scripts, skills, docs, hooks); exclude .git and the sync log.
+# Banner art is template-repo branding; no copy path ships it (eject removes
+# it on the template-clone path).
 TREE_COPIES = [
     (".github", {".git", "sync_log.txt"}),
     (os.path.join(".claude", "rules"), None),
-    ("docs", None),
+    ("docs", {"banner.*"}),
     ("templates", None),
 ]
 

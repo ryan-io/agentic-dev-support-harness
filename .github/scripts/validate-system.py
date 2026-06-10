@@ -137,6 +137,10 @@ print("\n[1] File existence")
 
 if should_run(1):
 
+    # Post-setup, the init machinery is removable (harness-eject Category A),
+    # so its presence is only required while setup has not completed.
+    _setup_done = os.path.isfile(os.path.join(".claude", "setup-complete"))
+
     REQUIRED_FILES = [
         HUB_SRC, HUB_DEST, SYSTEM_INDEX,
         os.path.join(SCRIPTS_DIR, "sync-claude-rules.py"),
@@ -149,9 +153,10 @@ if should_run(1):
         os.path.join(LEARNING_SCRIPTS_DIR, "observe.py"),
         os.path.join(LEARNING_SCRIPTS_DIR, "analyze.py"),
         os.path.join(LEARNING_SCRIPTS_DIR, "propose.py"),
-        os.path.join(SETUP_SCRIPTS_DIR, "repository-setup.py"),
         CONFIG_FILE,
     ]
+    if not _setup_done:
+        REQUIRED_FILES.append(os.path.join(SETUP_SCRIPTS_DIR, "repository-setup.py"))
 
     for f in REQUIRED_FILES:
         if os.path.isfile(f):
@@ -372,6 +377,8 @@ if should_run(7):
                 result("PASS", f"engine: {marker}")
             else:
                 result("FAIL", f"engine: {marker} -- missing from repository-setup.py")
+    elif os.path.isfile(os.path.join(".claude", "setup-complete")):
+        result("PASS", "setup engine removed post-setup (harness-eject Category A)")
     else:
         result("FAIL", f"{ENGINE_FILE} -- missing (setup engine)")
 
@@ -1357,8 +1364,10 @@ if should_run(23):
                                        f"({', '.join(options)}) have overlays")
         if not found_any:
             result("WARN", "templates/ contains no template directories")
-    else:
+    elif os.path.isfile(os.path.join(".github", "scripts", "scaffold.py")):
         result("WARN", "templates/ missing -- scaffolder has no stacks")
+    else:
+        result("PASS", "scaffolder and templates removed (harness-eject Category B)")
 
 # ============================================================
 # Summary

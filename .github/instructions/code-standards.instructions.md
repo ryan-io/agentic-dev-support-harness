@@ -3,7 +3,7 @@ applyTo: "**"
 ---
 
 # Code Standards (Universal)
-Apply to all source files regardless of language. Stack-specific rules live in `{language}-code-standards.instructions.md`.
+Apply to all source files regardless of language. Stack-specific rules live in `{language}-code-standards.instructions.md`. A stack file may supersede specific rules within its glob; supersessions are stated explicitly in that file (see `unity-code-standards` for `Assets/**`).
 
 ## Null Safety
 - Prefer explicit null handling over implicit assumptions.

@@ -15,7 +15,7 @@ Auto-loaded by file scope. Source: `.github/instructions/`, mirror: `.claude/rul
 **UI files:** user-interface, user-experience
 **ADR (`docs/adr/**`):** adr-template, adr-pr-review
 **Business rules (`docs/business-rules/**`):** br-review
-**Stack-specific:** csharp-code-standards (`*.cs`), lua-code-standards (`*.lua`)
+**Stack-specific:** csharp-code-standards (`*.cs`), lua-code-standards (`*.lua`), unity-code-standards (`Assets/**/*.cs`)
 
 Full file map and constraints: `.github/docs/system-index.md`
 

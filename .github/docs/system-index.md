@@ -50,6 +50,7 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 | `br-review.instructions.md` | `docs/business-rules/**` |
 | `csharp-code-standards.instructions.md` | `**/*.cs` |
 | `lua-code-standards.instructions.md` | `**/*.lua` |
+| `unity-code-standards.instructions.md` | `**/Assets/**/*.cs` |
 
 ### Guide Files (on-demand deep docs, not auto-loaded)
 | Guide | Companion Rule |
