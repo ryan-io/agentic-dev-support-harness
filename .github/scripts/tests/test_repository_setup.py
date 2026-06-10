@@ -216,7 +216,12 @@ class TestAdopt(unittest.TestCase):
             self._make_target(tmp)
             rs.merge_unity_gitattributes(tmp, dry_run=False)
             with open(os.path.join(tmp, ".gitattributes"), encoding="utf-8") as fh:
-                self.assertIn("*.png filter=lfs", fh.read())
+                merged = fh.read()
+            # Community template: the lfs macro must precede its first use.
+            self.assertIn("[attr]lfs", merged)
+            self.assertRegex(merged, r"(?m)^\*\.png\s+lfs$")
+            self.assertLess(merged.index("[attr]lfs"), merged.index("*.png"))
+            self.assertIn("unity-yaml", merged)              # yamlmerge macro kept
 
     def test_adopt_refuses_empty_target(self):
         with tempfile.TemporaryDirectory() as tmp:
