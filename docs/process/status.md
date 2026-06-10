@@ -1,6 +1,10 @@
 # Harness Status
 
-Point-in-time state of the harness. Update this when a subsystem ships or a verification window opens or closes. Last updated 2026-06-05.
+Point-in-time state of the harness. Update this when a subsystem ships or a verification window opens or closes. Last updated 2026-06-10.
+
+## Setup paths
+
+Three paths are live: template, scaffold, and adopt (`repository-setup.py --adopt`, shipped 2026-06-10 with collision policy and gitignore merge). Eject is implemented through reference scrub and the `harness-eject` skill, verified end to end on a real Hub-created Unity project the same day (`docs/process/2026-06-10-finalize-unity-adopt-plan.md`, Phase 5 results). Unity adoption requires Git LFS; the reference set ships at `.github/docs/unity.gitattributes`.
 
 ## Configuration
 

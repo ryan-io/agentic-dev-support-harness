@@ -1,7 +1,7 @@
 # Finalize Unity Adoption Plan (Adopt Mode + Eject Phase 1)
 
 Date: 2026-06-10
-Status: In progress (Phases 1-4 complete 2026-06-10; next: Phase 5 verification)
+Status: Complete (Phases 1-5 done 2026-06-10; Phase 5 results recorded below)
 Governing ADRs: `adr-setup-add-adopt-mode-three-paths` (Active), `adr-setup-introduce-harness-eject` (Active)
 
 The unity-greenfield integration (2026-06-10) proved the adoption procedure by hand: manual overlay with collision policy, in-place activate, project-setup's Unity path, then a hand-trim following the eject Phase 0 classification. This plan turns that procedure into code so adopt runs as a first-class path. Per the adopt ADR, adopt mode and eject Phase 1 are one delivery unit; eject lands first because adopt chains into it. Git LFS is required for Unity projects under git (developer decision, 2026-06-10) and lands in the project-setup Unity path (Phase 4).
@@ -59,6 +59,12 @@ Goal: prove the path end to end and prove it is safe to re-run. Effort: small.
 3. Regression. The template and scaffold paths (csharp vscode/vs2026, lua) pass their existing test and validation suites unchanged, the hard constraint from the adopt ADR.
 
 Exit: all three green.
+
+**Phase 5 results (2026-06-10).** Fresh project: a real Hub-created Unity 6000.4.10f1 (Universal 2D) project was adopted end to end: overlay (zero collisions), gitignore copy with `!/Packages/` negation, project-setup adopt path (Unity gitignore block, 39 LFS lines merged, UI globs, repo signals, unity-code-standards), marker written, sentinel removed, pre-commit hook green on the initial commit, LFS routing confirmed (`URP.png`), eject run (removal, resets carrying the project name, scrub, trim, gate), validator 511 pass / 0 fail, and one `git revert` restored the pre-eject tree. Re-adoption: adopt `--dry-run` against unity-greenfield reported a collision for every live file and would copy only ejected machinery, files new this session, and the sentinel; nothing would be overwritten. Regression: repository-setup (15), eject (25), and learning suites green; source validator 549 pass / 0 fail. Two engine fixes came out of the run: the no-`.gitignore` copy branch now emits collision negations, and `__pycache__`/`.pyc` are excluded from every copy path. `.gitattributes` was added to `ROOT_FILES` so the line-ending rules ship on scaffold and adopt.
+
+## Post-completion adjustments (2026-06-10, same day)
+
+Two hardening changes after Phase 5 closed. First, ADR eject coverage: all eleven harness ADRs were already manifest-listed (verified empty `docs/adr/` on the throwaway, README only), and the validator now fails the template source when any `docs/adr/adr-*.md` is missing from the eject manifest, so future ADRs cannot silently survive eject. The check gates on `.github/TEMPLATE_SOURCE` and skips in consuming projects. Second, LFS moved into the adopt workflow proper: `repository-setup.py --adopt` detects a Unity target, merges `.github/docs/unity.gitattributes` into the root `.gitattributes` (append-only, marker header, idempotent), and runs `git lfs install --local`, warning loudly when git-lfs is absent. The project-setup adopt path now verifies rather than performs the merge and keeps the `git lfs migrate` judgment. ADR amendment updated; suites at 18 + 25 green; validator 550 pass / 0 fail.
 
 ## Downstream handoff (unity-greenfield, separate sessions)
 

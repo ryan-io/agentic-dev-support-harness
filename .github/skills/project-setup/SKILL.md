@@ -34,14 +34,14 @@ Run these adopt-only actions, then continue at Step 1:
    no tracked project path may be swallowed by a harness pattern. For Unity,
    confirm `git check-ignore Packages/manifest.json` reports nothing (the
    `!/Packages/` negation protects it on case-insensitive filesystems).
-2. **Merge the LFS attributes (Unity: required).** Read the reference set in
-   `.github/docs/unity.gitattributes` and the project root `.gitattributes`
-   (if any). Append the reference lines that are missing; never remove or
-   reorder existing lines. Show the resulting diff and confirm with the
-   developer before writing, then save to the root `.gitattributes`. Git LFS
-   is required for Unity projects under git: instruct the developer to run
-   `git lfs install` once per machine. Files already committed as plain blobs
-   need `git lfs migrate`; flag this rather than running it.
+2. **Verify the LFS attributes (Unity: required).** `repository-setup.py --adopt`
+   merges `.github/docs/unity.gitattributes` into the root `.gitattributes` and
+   runs `git lfs install --local` when it detects a Unity target; confirm the
+   merge header is present and `git lfs version` works. After a manual overlay,
+   perform the merge yourself: append the missing reference lines (never remove
+   or reorder existing ones), show the diff, confirm with the developer before
+   writing. Files already committed as plain blobs need `git lfs migrate`; flag
+   this rather than running it.
 3. **Scope the UI instruction files.** For Unity with UI Toolkit, narrow
    `user-interface` / `user-experience` to `**/*.uxml,**/*.uss` (see Step 3).
 

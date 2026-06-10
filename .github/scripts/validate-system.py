@@ -70,6 +70,8 @@ SECTION_MAP = [
     (".gitignore",                          {13, 22}),
     (".claude/rules/*.md",                  {3, 4, 14}),
     ("templates/*",                         {23}),
+    ("docs/adr/*.md",                       {23}),
+    (".github/scripts/eject-manifest.json", {23}),
 ]
 ALL_SECTIONS = set(range(1, 24))
 
@@ -1368,6 +1370,34 @@ if should_run(23):
         result("WARN", "templates/ missing -- scaffolder has no stacks")
     else:
         result("PASS", "scaffolder and templates removed (harness-eject Category B)")
+
+    # Eject-manifest ADR coverage (template source only). Every harness ADR
+    # must be listed in the eject manifest (Category B or C), or it would
+    # survive eject and pollute consuming projects. Post-setup, docs/adr/
+    # holds the consuming project's own ADRs, so the check gates on the
+    # source sentinel.
+    if os.path.isfile(os.path.join(".github", "TEMPLATE_SOURCE")):
+        EJECT_MANIFEST = os.path.join(".github", "scripts", "eject-manifest.json")
+        try:
+            _em = json.loads(read_file(EJECT_MANIFEST))
+            _listed = {item["path"]
+                       for cat in _em.get("categories", {}).values()
+                       for item in cat.get("paths", [])}
+            _adr_dir = os.path.join("docs", "adr")
+            _unlisted = sorted(
+                f for f in os.listdir(_adr_dir)
+                if f.startswith("adr-") and f.endswith(".md")
+                and f"docs/adr/{f}" not in _listed)
+            if _unlisted:
+                for f in _unlisted:
+                    result("FAIL", f"docs/adr/{f} -- not in eject manifest; "
+                                   "it would survive eject")
+            else:
+                result("PASS", "every harness ADR is listed in the eject manifest")
+        except (OSError, ValueError, KeyError) as exc:
+            result("FAIL", f"eject-manifest ADR coverage check errored: {exc}")
+    else:
+        result("PASS", "eject-manifest ADR coverage -- skipped (consuming project)")
 
 # ============================================================
 # Summary

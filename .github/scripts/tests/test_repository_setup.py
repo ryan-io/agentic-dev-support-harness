@@ -51,6 +51,10 @@ class TestCopyTemplate(unittest.TestCase):
             # The local sync log is excluded from the .github copy.
             self.assertFalse(
                 os.path.exists(os.path.join(tmp, ".github", "sync_log.txt")))
+            # Source-clone bytecode never ships.
+            for root, dirs, _ in os.walk(tmp):
+                self.assertNotIn("__pycache__", dirs,
+                                 f"__pycache__ leaked into {root}")
 
     def test_dry_run_copies_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -170,6 +174,49 @@ class TestAdopt(unittest.TestCase):
             # Re-merge is a no-op (marker present).
             again = rs.merge_gitignore(tmp, pre_dirs, dry_run=False)
             self.assertTrue(any("already merged" in r for r in again))
+
+    def test_gitignore_copy_branch_still_negates(self):
+        # A Hub-created Unity project ships no .gitignore; the copy branch
+        # must still protect tracked dirs from case-insensitive swallowing.
+        with tempfile.TemporaryDirectory() as tmp:
+            self._make_target(tmp)
+            os.remove(os.path.join(tmp, ".gitignore"))
+            pre_dirs = [d for d in os.listdir(tmp)
+                        if os.path.isdir(os.path.join(tmp, d))]
+            report = rs.merge_gitignore(tmp, pre_dirs, dry_run=False)
+            with open(os.path.join(tmp, ".gitignore"), encoding="utf-8") as fh:
+                merged = fh.read()
+            self.assertIn("packages/", merged)
+            self.assertIn("!/Packages/", merged)
+            self.assertTrue(any("negated: !/Packages/" in r for r in report))
+
+    def test_unity_detection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertFalse(rs.is_unity_project(tmp))
+            self._make_target(tmp)
+            self.assertTrue(rs.is_unity_project(tmp))
+
+    def test_unity_gitattributes_merge_appends_lfs_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._make_target(tmp)
+            with open(os.path.join(tmp, ".gitattributes"), "w", encoding="utf-8") as fh:
+                fh.write("* text=auto eol=lf\n")
+            report = rs.merge_unity_gitattributes(tmp, dry_run=False)
+            with open(os.path.join(tmp, ".gitattributes"), encoding="utf-8") as fh:
+                merged = fh.read()
+            self.assertIn("* text=auto eol=lf", merged)       # existing kept
+            self.assertIn("filter=lfs", merged)               # LFS block added
+            self.assertIn(rs.GITATTRIBUTES_MERGE_HEADER, merged)
+            self.assertTrue(any("merged" in r for r in report))
+            again = rs.merge_unity_gitattributes(tmp, dry_run=False)
+            self.assertTrue(any("left untouched" in r for r in again))
+
+    def test_unity_gitattributes_merge_creates_when_absent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._make_target(tmp)
+            rs.merge_unity_gitattributes(tmp, dry_run=False)
+            with open(os.path.join(tmp, ".gitattributes"), encoding="utf-8") as fh:
+                self.assertIn("*.png filter=lfs", fh.read())
 
     def test_adopt_refuses_empty_target(self):
         with tempfile.TemporaryDirectory() as tmp:

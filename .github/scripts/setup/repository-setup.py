@@ -55,7 +55,7 @@ RC_MARKER = "# ah-ide (agentic-dev-support-harness)"
 # by directory. Setup, sync, and scaffolder are invoked through Python, so no
 # root shims are shipped (ADR-SCAFFOLD Amendment 2026-06-08).
 ROOT_FILES = [
-    "CLAUDE.md", ".gitignore",
+    "CLAUDE.md", ".gitignore", ".gitattributes",
 ]
 
 # Directory trees copied in scaffold mode. .github carries everything under it
@@ -76,6 +76,10 @@ FILE_COPIES = [
     os.path.join(".claude", "learning", "proposals", ".gitkeep"),
     os.path.join(".claude", "settings.json"),
 ]
+
+
+# Never ship Python bytecode from the source clone, on any copy path.
+ALWAYS_IGNORE = {"__pycache__", "*.pyc"}
 
 
 class SetupError(Exception):
@@ -262,7 +266,7 @@ def _copytree(src, dst, dry_run, ignore=None):
     if dry_run:
         print(f"[dry-run] would copy tree {os.path.relpath(src, SRC)}/")
         return
-    ignore_fn = shutil.ignore_patterns(*ignore) if ignore else None
+    ignore_fn = shutil.ignore_patterns(*(set(ignore or set()) | ALWAYS_IGNORE))
     shutil.copytree(src, dst, dirs_exist_ok=True, ignore=ignore_fn)
     print(f"  {os.path.relpath(src, SRC)}/")
 
@@ -319,6 +323,20 @@ def adopt(target, dry_run=False):
     for line in merge_gitignore(target, pre_dirs, dry_run):
         print(line)
 
+    if is_unity_project(target):
+        print("\nUnity project detected (ProjectSettings/ProjectVersion.txt); "
+              "Git LFS is required:")
+        for line in merge_unity_gitattributes(target, dry_run):
+            print(line)
+        if _git_lfs_available():
+            _run(["git", "-C", target, "lfs", "install", "--local"], dry_run)
+            if not dry_run:
+                print("  git lfs install --local: done")
+        else:
+            warn("git-lfs not found on PATH. Install it, then run "
+                 "'git lfs install' in the project before committing binary "
+                 "assets (required for Unity).")
+
     if collisions:
         print(f"\nSkipped {len(collisions)} existing file(s) (never overwritten):")
         for c in collisions:
@@ -339,12 +357,11 @@ def overlay_template(target, dry_run=False):
         src_root = os.path.join(SRC, rel)
         if not os.path.isdir(src_root):
             continue
-        ignore_fn = shutil.ignore_patterns(*ignore) if ignore else None
+        ignore_fn = shutil.ignore_patterns(*(set(ignore or set()) | ALWAYS_IGNORE))
         for dirpath, dirnames, filenames in os.walk(src_root):
-            if ignore_fn:
-                ignored = ignore_fn(dirpath, dirnames + filenames)
-                dirnames[:] = [d for d in dirnames if d not in ignored]
-                filenames = [f for f in filenames if f not in ignored]
+            ignored = ignore_fn(dirpath, dirnames + filenames)
+            dirnames[:] = [d for d in dirnames if d not in ignored]
+            filenames = [f for f in filenames if f not in ignored]
             for fname in filenames:
                 src = os.path.join(dirpath, fname)
                 rel_path = os.path.relpath(src, SRC)
@@ -413,10 +430,25 @@ def merge_gitignore(target, pre_dirs, dry_run=False):
         src_lines = fh.read().splitlines()
 
     if not os.path.isfile(dst_path):
+        # Copying is still a merge with the (empty) target: the negation pass
+        # must run, or 'packages/' would swallow a tracked 'Packages/' on
+        # case-insensitive filesystems.
+        negations = _collision_negations(src_lines, pre_dirs)
         if dry_run:
-            return ["[dry-run] would copy .gitignore (target has none)"]
-        shutil.copy2(src_path, dst_path)
-        return ["  copied .gitignore (target had none)"]
+            report = ["[dry-run] would copy .gitignore (target has none)"]
+            report += [f"[dry-run] would negate: {n}" for n in negations]
+            return report
+        out = list(src_lines)
+        if negations:
+            out.append("")
+            out.append(GITIGNORE_MERGE_HEADER)
+            out.append("# Adopt: on case-insensitive filesystems the harness patterns")
+            out.append("# above would swallow these tracked directories; negate them.")
+            out.extend(negations)
+        with open(dst_path, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("\n".join(out) + "\n")
+        return (["  copied .gitignore (target had none)"]
+                + [f"  negated: {n}" for n in negations])
 
     with open(dst_path, "r", encoding="utf-8") as fh:
         dst_lines = fh.read().splitlines()
@@ -449,6 +481,60 @@ def merge_gitignore(target, pre_dirs, dry_run=False):
     report = [f"  merged .gitignore ({len(additions)} line(s) appended)"]
     report += [f"  negated: {n}" for n in negations]
     return report
+
+
+# --- Unity LFS (adopt path) ---
+
+UNITY_GITATTRIBUTES_REF = os.path.join(".github", "docs", "unity.gitattributes")
+GITATTRIBUTES_MERGE_HEADER = "# === Unity LFS (agentic-dev-support-harness adopt merge) ==="
+
+
+def is_unity_project(target):
+    return os.path.isfile(os.path.join(target, "ProjectSettings", "ProjectVersion.txt"))
+
+
+def _git_lfs_available():
+    try:
+        return subprocess.run(["git", "lfs", "version"],
+                              stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL).returncode == 0
+    except OSError:
+        return False
+
+
+def merge_unity_gitattributes(target, dry_run=False):
+    """Git LFS is required for Unity projects under git (adopt ADR, Amendment
+    2026-06-10). Merge the reference LFS set into the target root
+    .gitattributes, append-only under a marker header. Returns report lines."""
+    ref_path = os.path.join(SRC, UNITY_GITATTRIBUTES_REF)
+    if not os.path.isfile(ref_path):
+        return [f"  WARN: {UNITY_GITATTRIBUTES_REF} missing; LFS merge skipped"]
+    with open(ref_path, "r", encoding="utf-8") as fh:
+        ref_lines = fh.read().splitlines()
+    dst_path = os.path.join(target, ".gitattributes")
+    dst_lines = []
+    if os.path.isfile(dst_path):
+        with open(dst_path, "r", encoding="utf-8") as fh:
+            dst_lines = fh.read().splitlines()
+    if GITATTRIBUTES_MERGE_HEADER in dst_lines:
+        return ["  .gitattributes already carries the Unity LFS block; left untouched"]
+    have = {ln.strip() for ln in dst_lines if ln.strip()}
+    additions = [ln for ln in ref_lines
+                 if ln.strip() and not ln.strip().startswith("#")
+                 and ln.strip() not in have]
+    if dry_run:
+        return [f"[dry-run] would merge {len(additions)} Unity LFS line(s) "
+                "into .gitattributes"]
+    out = list(dst_lines)
+    if out and out[-1].strip():
+        out.append("")
+    out.append(GITATTRIBUTES_MERGE_HEADER)
+    out.append("# Required for Unity. Never route Unity text assets (.unity,")
+    out.append("# .prefab, .asset, .meta) through LFS.")
+    out.extend(additions)
+    with open(dst_path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write("\n".join(out) + "\n")
+    return [f"  merged {len(additions)} Unity LFS line(s) into .gitattributes"]
 
 
 # --- Subprocess helpers ---

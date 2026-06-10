@@ -1,7 +1,7 @@
 # Harness Eject Implementation Plan
 
 Date: 2026-06-07
-Status: In progress (Phases 1-3 complete 2026-06-10: destructive run, reference scrub and scaffolder trim, harness-eject skill. Validator de-scaffolding was already satisfied by the eject-aware gates. Next: Phase 4 verification, tracked as Phase 5 of docs/process/2026-06-10-finalize-unity-adopt-plan.md.)
+Status: Complete (Phases 0-3 shipped 2026-06-10; Phase 4 verification performed via the adopt-path end-to-end run, results in docs/process/2026-06-10-finalize-unity-adopt-plan.md. The --keep-scaffolder live path is covered by unit tests.)
 Governing ADR: `adr-setup-introduce-harness-eject` (Active)
 
 A bootstrapped clone keeps machinery that exists only to instantiate the project. This plan adds `harness-eject`: a one-time, reversible teardown that runs after `project-setup`, removes setup-only machinery, resets template-authored content to the new project, and leaves the governance layer intact with the validator green. It lands in five phases. Each phase has exit criteria; no phase starts until the prior one meets them.

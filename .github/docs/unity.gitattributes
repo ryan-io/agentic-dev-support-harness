@@ -1,6 +1,8 @@
 # Unity .gitattributes reference set (agentic-dev-support-harness)
 #
-# Merged into the project root .gitattributes by the project-setup adopt path.
+# Merged into the project root .gitattributes by adopt mode
+# (repository-setup.py --adopt) when it detects a Unity target;
+# the project-setup adopt path verifies the merge.
 # Git LFS is required for Unity projects under git (decision 2026-06-10, see
 # docs/adr/adr-setup-add-adopt-mode-three-paths.md, Amendment 2026-06-10).
 # After merging, run once per machine: git lfs install
