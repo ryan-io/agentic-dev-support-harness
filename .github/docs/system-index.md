@@ -81,6 +81,7 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 | `.github/skills/write-unit-tests/SKILL.md` | Write unit tests for existing code (NUnit 4 + Moq) |
 | `.github/skills/sequence-diagram/SKILL.md` | Mermaid sequence diagram creation |
 | `.github/skills/harness-eject/SKILL.md` | Post-setup teardown of template machinery |
+| `.github/skills/harness-update/SKILL.md` | Pull harness updates into an adopted project |
 
 ### Infrastructure
 | File | Purpose |
@@ -90,12 +91,15 @@ Copies in `.claude/rules/` drop the `.instructions` segment (e.g., `code-standar
 | `.github/scripts/validate-system.py` | System validation |
 | `.github/scripts/setup/repository-setup.py` | Repo-init engine (Python; `python ...repository-setup.py`) |
 | `.github/scripts/eject.py` | harness-eject engine (Python; `python ...eject.py`) |
+| `.github/scripts/update.py` | harness-update engine (Python; `python ...update.py`) |
+| `.github/scripts/update-manifest.json` | harness-update file classification (overwrite/merge/exclude) |
 | `.github/scripts/eject-manifest.json` | Eject category manifest (A/B/C removable paths) |
 | `.github/hooks/pre-commit` | Runs sync + validation on commit (only shell script) |
 | `.claude/settings.json` | Claude Code hook registration for learning |
 | `.github/scripts/learning/` | `observe.py` → `analyze.py` → `propose.py` |
 | `.github/scripts/scaffold.py` | ah-ide scaffolding engine (`python ...scaffold.py`) |
 | `.github/scripts/tests/test_eject.py` | Tests for the harness-eject engine |
+| `.github/scripts/tests/test_update.py` | Tests for the harness-update engine |
 | `.github/scripts/tests/test_repository_setup.py` | Tests for the repo-init engine |
 | `templates/` | Stack templates consumed by the scaffolder |
 | `templates/README.md` | Template authoring guide |
@@ -113,6 +117,17 @@ Each major directory has a `README.md` (human-facing, size-limit exempt).
 | `docs/design/` | Use cases, volatilities, architecture docs (design pipeline) |
 | `docs/diagrams/` | Mermaid diagrams (sequence-diagram skill) |
 | `docs/process/` | Backlogs, subsystem plans, working notes |
+
+### Documentation Indexes
+Triage tables an agent consults before loading full records, so whole documents stay out of context until one is relevant. Scan by status and context, then open the source file only when it governs the change. This file is the systems index; the other two cover the content directories above.
+
+| Index | Covers | Maintained by |
+|-------|--------|---------------|
+| `.github/docs/system-index.md` | System files (this file) | Hand-curated; section-18 validation enforces completeness |
+| `docs/adr/adr-index.md` | All ADRs (name, status, context, synopsis) | `adr-creation` skill appends a row per new ADR |
+| `docs/business-rules/br-index.md` | All business rules (name, status, domain, related ADRs, synopsis) | `create-business-rule` skill appends a row per new rule |
+
+The index-first protocol is enforced by `pattern-fidelity.instructions.md` (universal), `adr-pr-review.instructions.md` (`docs/adr/**`), and `br-review.instructions.md` (`docs/business-rules/**`).
 
 ## Cross-References
 - Skills read templates in `.github/docs/`; scoped rules auto-load by directory

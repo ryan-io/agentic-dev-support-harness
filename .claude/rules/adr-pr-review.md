@@ -21,5 +21,8 @@ Flag any section that is missing, empty, or contains only placeholder text (brac
 - `## Consequences`: Detail pros, cons, and any technical debt introduced. If none, write "None".
 - `## Enforcement / Guidance`: Must describe a concrete, actionable enforcement mechanism. Vague statements like "follow best practices" are not acceptable.
 
+## Index
+`adr-index.md` is the triage table for this directory. Before loading other ADRs for context, consult it: scan by status and context, then open only the full ADR that governs the change. When you add an ADR, append a row (name, status, context, one-line synopsis). When you archive or change an ADR's status, update its row in the same PR. A row must never drift from the file it points to.
+
 ## Policy
 If an ADR is no longer applicable, change its status to `Archived` via PR. Deleting ADRs is not allowed. See `pr-review.instructions.md` for PR review process and comment format.

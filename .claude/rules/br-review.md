@@ -21,6 +21,9 @@ Flag any section that is missing, empty, or contains only placeholder text (brac
 - `## Expected Behavior`: What must happen when the rule is triggered. Must be precise.
 - `## Exceptions`: Cases where the rule does not apply. Write "None" if there are no exceptions.
 
+## Index
+`br-index.md` is the triage table for this directory. Before loading other rules for context, consult it: scan by status and domain, then open only the rule that governs the change. When you add a rule, append a row (name, status, domain, related ADRs, one-line synopsis), copying Domain and Related ADRs from the rule's Metadata. When a rule's status changes, update its row in the same PR. Cross-check any Related ADR through `../adr/adr-index.md`.
+
 ## Policy
 - Status must be `Active` (default) or `Archived`.
 - If a rule is no longer applicable, change its status to `Archived` via PR.

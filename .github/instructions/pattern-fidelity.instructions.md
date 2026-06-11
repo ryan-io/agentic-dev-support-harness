@@ -9,7 +9,7 @@ Match the project. Before introducing any pattern, abstraction, coding standard,
 Check for precedent in this order, and stop at the first that answers:
 
 1. Adopted patterns in `patterns.instructions.md` and the language-specific code standards.
-2. Decisions in `docs/adr/` and constraints in `docs/business-rules/`.
+2. Decisions and constraints, found through the triage indexes first: scan `docs/adr/adr-index.md` and `docs/business-rules/br-index.md` by status and context, then open only the full ADR or rule that governs the change. Do not load whole records from `docs/adr/` or `docs/business-rules/` before checking the index.
 3. Neighboring code: how the surrounding module, package, or feature already solves the same shape of problem.
 4. Confirmed instincts and proposals from the learning pipeline (`.claude/learning/`).
 

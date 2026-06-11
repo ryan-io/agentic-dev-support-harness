@@ -1,0 +1,41 @@
+{
+  "description": "Classification for harness-update. Files under governance_roots default to the overwrite set (applied directly from the new harness version) unless listed in merge_set (three-way merged: base = anchored harness version, ours = project file, theirs = new harness version) or exclude (never updated; setup-only machinery eject removes). out_of_scope documents paths the coverage check accepts without classification: generated mirrors and the downstream-only anchor. Everything outside governance_roots is project-owned and untouched. See docs/adr/adr-setup-add-harness-update-mechanism.md.",
+  "guards": {
+    "refuse_if_present": ".github/TEMPLATE_SOURCE",
+    "anchor": ".github/harness-version.json"
+  },
+  "governance_roots": [
+    ".github/instructions/",
+    ".github/skills/",
+    ".github/scripts/",
+    ".github/docs/",
+    ".github/hooks/",
+    ".github/workflows/",
+    ".github/copilot-instructions.md",
+    ".claude/settings.json"
+  ],
+  "merge_set": [
+    ".github/instructions/memory.instructions.md",
+    ".github/instructions/research.instructions.md",
+    ".github/instructions/patterns.instructions.md",
+    ".github/instructions/user-interface.instructions.md",
+    ".github/instructions/user-experience.instructions.md",
+    ".github/instructions/csharp-code-standards.instructions.md",
+    ".github/instructions/lua-code-standards.instructions.md",
+    ".github/instructions/unity-code-standards.instructions.md",
+    ".github/copilot-instructions.md",
+    ".github/docs/system-index.md",
+    ".claude/learning/config.json"
+  ],
+  "exclude": [
+    ".github/scripts/setup/",
+    ".github/scripts/scaffold.py",
+    ".github/scripts/tests/test_repository_setup.py",
+    ".github/workflows/scaffold-matrix.yml"
+  ],
+  "out_of_scope": [
+    ".claude/rules/",
+    "CLAUDE.md",
+    ".github/harness-version.json"
+  ]
+}

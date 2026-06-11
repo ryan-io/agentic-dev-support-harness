@@ -128,7 +128,13 @@ not the template source.
 1. Write `.claude/setup-complete`. Put today's date on the first line and a short
    note that `project-setup` completed (for example: `2026-06-07 project-setup completed`).
    This marker is gitignored, so it stays local and never commits back upstream.
-2. Remove `.github/TEMPLATE_SOURCE`. This committed sentinel ships in the template
+2. Write the update anchor `.github/harness-version.json`: the harness source URL
+   (or path) and the harness commit this project adopted, via
+   `python .github/scripts/update.py --anchor <sha> --source <url>`. Derive the
+   commit from the template clone's history or ask the developer. Unlike the
+   marker, the anchor is committed; it is the base revision the `harness-update`
+   skill merges from. See `docs/adr/adr-setup-add-harness-update-mechanism.md`.
+3. Remove `.github/TEMPLATE_SOURCE`. This committed sentinel ships in the template
    to protect the upstream source; deleting it here marks this clone as a consuming
    project. Removing it is a tracked change, so it appears in the next commit.
 

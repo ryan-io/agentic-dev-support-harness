@@ -8,6 +8,8 @@ On-demand procedures the agent runs when invoked by name. Unlike instruction fil
 
 `harness-eject` runs the one-time, reversible teardown after `project-setup`: previews the removal plan, confirms the scaffolder opt-out, runs `../scripts/eject.py`, and verifies the validator stays green. The eject lands as a single revertable commit.
 
+`harness-update` pulls harness improvements from the template into an adopted project: checks the committed version anchor, previews overwrites and three-way merges, and lands one revertable commit. Conflicted merges stop before the commit; `--finish` completes after resolution. Decision record: `docs/adr/adr-setup-add-harness-update-mechanism.md`.
+
 `adr-creation` walks the user through writing an Architecture Decision Record using the template in `../docs/adr-template.md`, validating against the rules in `../instructions/adr-pr-review.instructions.md`, and saving to `docs/adr/`.
 
 `create-business-rule` does the same for business rules, against `../docs/br-template.md` and `../instructions/br-review.instructions.md`, saving to `docs/business-rules/`.

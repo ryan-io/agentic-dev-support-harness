@@ -101,9 +101,27 @@ None recorded yet.
 None recorded yet.
 """
 
+ADR_INDEX_SKELETON = """# ADR Index
+
+Triage table for every Architecture Decision Record in `docs/adr/`. Consult it before loading any full ADR into context.
+
+Read this first: scan for a row whose Context matches what you are touching, check its Status, then read the Synopsis. Open the full ADR only when the Synopsis shows it governs your change.
+
+Status values follow the ADR policy: `Active` (in force), `Proposed` (recorded, not yet adopted), `Archived` (superseded or retired). Context is the subsystem or concern the decision belongs to.
+
+| ADR | Status | Context | Synopsis |
+|-----|--------|---------|----------|
+| _None yet._ | | | |
+
+## Maintenance
+
+This index is generated content. Keep one row per ADR. When the `adr-creation` skill writes a new ADR, it appends a row here. When an ADR's status changes, update the Status cell in the same PR. Replace the placeholder row with the first real ADR.
+"""
+
 RESET_CONTENT = {
     "README.md": README_SKELETON,
     ".github/instructions/memory.instructions.md": MEMORY_SKELETON,
+    "docs/adr/adr-index.md": ADR_INDEX_SKELETON,
 }
 
 

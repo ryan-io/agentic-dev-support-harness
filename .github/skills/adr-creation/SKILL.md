@@ -68,6 +68,10 @@ Before saving, validate the completed ADR against the rejection criteria in `adr
 
 Save to `docs/adr/` and confirm the file path to the user.
 
+### Step 4b: Update the ADR Index
+
+After saving, append a row to `docs/adr/adr-index.md` so the new ADR is discoverable without loading it. Read the index first, then add one row with: the ADR name as a relative markdown link, its Status, its Context (the subsystem or concern, matching the style of existing rows), and a one-line synopsis of what it governs or enforces. Keep the synopsis to a single sentence and apply writing-voice. Do not touch other rows. If the placeholder `_None yet._` row is present, replace it.
+
 ### Step 5: Revise an Existing ADR
 
 Use this step when the user wants to change an ADR that is already saved.
@@ -77,3 +81,5 @@ Read the existing file from `docs/adr/adr-{project}-{kebab-case-title}.md` first
 Apply the requested change. Keep every other section, the metadata, and the writing-voice conventions intact. If the change alters the decision itself rather than wording, consider whether Status should move to `Archived` and a new ADR should supersede it; raise this with the user rather than silently rewriting history.
 
 Re-validate against the Step 4 rejection criteria. Confirm before overwriting. Save to the same path, unless the title changes, in which case derive a new filename and tell the user the old file is now orphaned.
+
+If the change alters the ADR's Status, Context, or what it governs, or renames the file, update its row in `docs/adr/adr-index.md` to match in the same pass. A row must never drift from the file it points to.

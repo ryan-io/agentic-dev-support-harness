@@ -71,9 +71,12 @@ SECTION_MAP = [
     (".claude/rules/*.md",                  {3, 4, 14}),
     ("templates/*",                         {23}),
     ("docs/adr/*.md",                       {23}),
-    (".github/scripts/eject-manifest.json", {23}),
+    (".github/scripts/eject-manifest.json", {23, 24}),
+    (".github/scripts/update-manifest.json", {24}),
+    (".github/scripts/update.py",           {10, 12, 22, 24}),
+    (".github/harness-version.json",        {24}),
 ]
-ALL_SECTIONS = set(range(1, 24))
+ALL_SECTIONS = set(range(1, 25))
 
 def compute_active_sections(changed_files):
     active = set()
@@ -1398,6 +1401,96 @@ if should_run(23):
             result("FAIL", f"eject-manifest ADR coverage check errored: {exc}")
     else:
         result("PASS", "eject-manifest ADR coverage -- skipped (consuming project)")
+
+current_check = "[24] Harness update manifest"
+print("\n[24] Harness update manifest")
+
+if should_run(24):
+    # See docs/adr/adr-setup-add-harness-update-mechanism.md. The update
+    # manifest classifies template-shipped paths; the anchor records the
+    # adopted harness commit downstream.
+    UPDATE_MANIFEST = os.path.join(".github", "scripts", "update-manifest.json")
+    ANCHOR_FILE = os.path.join(".github", "harness-version.json")
+    _um = None
+    if not os.path.isfile(UPDATE_MANIFEST):
+        result("FAIL", f"{UPDATE_MANIFEST} -- missing")
+    else:
+        try:
+            _um = json.loads(read_file(UPDATE_MANIFEST))
+        except (json.JSONDecodeError, ValueError) as exc:
+            result("FAIL", f"update-manifest.json does not parse: {exc}")
+    if _um is not None:
+        _missing = [k for k in ("governance_roots", "merge_set", "exclude",
+                                "guards") if k not in _um]
+        if _missing:
+            result("FAIL", "update-manifest.json missing: "
+                           + ", ".join(_missing))
+        else:
+            result("PASS", "update-manifest.json declares roots, merge_set, "
+                           "exclude, guards")
+            _overlap = sorted(set(_um["merge_set"]) & set(_um["exclude"]))
+            for p in _overlap:
+                result("FAIL", f"'{p}' is in both merge_set and exclude")
+            if not _overlap:
+                result("PASS", "merge_set and exclude are disjoint")
+
+            def _u_under(path, root):
+                p = path.rstrip("/")
+                if root.endswith("/"):
+                    b = root.rstrip("/")
+                    return p == b or p.startswith(b + "/")
+                return p == root
+
+            if os.path.isfile(os.path.join(".github", "TEMPLATE_SOURCE")):
+                # Template source: classified paths must exist, and every
+                # eject-protected root must be reachable by the update
+                # manifest (or documented out of scope), so governance the
+                # template still owns downstream never goes stale.
+                _bad = [p for p in _um["merge_set"] if not os.path.isfile(p)]
+                _bad += [p for p in _um["exclude"]
+                         if not os.path.exists(p.rstrip("/"))]
+                for p in _bad:
+                    result("FAIL", f"update-manifest path missing in tree: {p}")
+                if not _bad:
+                    result("PASS", "merge_set and exclude paths exist in the tree")
+                try:
+                    _em24 = json.loads(read_file(os.path.join(
+                        ".github", "scripts", "eject-manifest.json")))
+                    _reach = (_um["governance_roots"] + _um["merge_set"]
+                              + _um["exclude"] + _um.get("out_of_scope", []))
+                    _uncov = [r for r in _em24.get("protected_roots", [])
+                              if not any(_u_under(r.rstrip("/"), c)
+                                         for c in _reach)]
+                    for r in _uncov:
+                        result("FAIL", f"eject-protected root not covered by "
+                                       f"update manifest: {r}")
+                    if not _uncov:
+                        result("PASS", "every eject-protected root is covered "
+                                       "by the update manifest")
+                except (OSError, ValueError, KeyError) as exc:
+                    result("FAIL", f"update/eject coverage check errored: {exc}")
+                if os.path.exists(ANCHOR_FILE):
+                    result("FAIL", f"{ANCHOR_FILE} -- must not exist in the "
+                                   "template source (downstream-only)")
+                else:
+                    result("PASS", "anchor absent in template source")
+            elif os.path.isfile(os.path.join(".claude", "setup-complete")):
+                # Downstream, setup complete: the anchor must exist and parse.
+                try:
+                    _anchor = json.loads(read_file(ANCHOR_FILE))
+                    if _anchor.get("source") and _anchor.get("commit"):
+                        result("PASS", "harness-version.json anchor present "
+                                       "and well-formed")
+                    else:
+                        result("FAIL", "harness-version.json missing 'source' "
+                                       "or 'commit'")
+                except FileNotFoundError:
+                    result("FAIL", f"{ANCHOR_FILE} -- missing; project-setup "
+                                   "writes it (bootstrap: update.py --anchor)")
+                except (ValueError, OSError) as exc:
+                    result("FAIL", f"harness-version.json does not parse: {exc}")
+            else:
+                result("PASS", "anchor check skipped (setup not complete)")
 
 # ============================================================
 # Summary

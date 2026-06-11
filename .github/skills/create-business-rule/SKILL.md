@@ -66,6 +66,10 @@ Before saving, validate:
 
 Save to `docs/business-rules/` and confirm the file path to the user.
 
+### Step 4b: Update the Business Rule Index
+
+After saving, append a row to `docs/business-rules/br-index.md` so the new rule is discoverable without loading it. Read the index first, then add one row with: the rule name as a relative markdown link, its Status, its Domain, its Related ADRs (copy both from the rule's Metadata), and a one-line synopsis of what it governs. Keep the synopsis to a single sentence and apply writing-voice. Do not touch other rows. Replace the placeholder `_None yet._` row when adding the first rule.
+
 ### Step 5: Revise an Existing Business Rule
 
 Use this step when the user wants to change a business rule that is already saved.
@@ -75,3 +79,5 @@ Read the existing file from `docs/business-rules/br-{project}-{kebab-case-title}
 Apply the requested change. Keep every other section and the metadata intact. One rule per document still holds: if the change introduces a second rule, create a separate file instead.
 
 Re-validate against the Step 4 criteria. Confirm before overwriting. Save to the same path, unless the title changes, in which case derive a new lowercase filename and tell the user the old file is now orphaned.
+
+If the change alters the rule's Status, Domain, Related ADRs, or what it governs, or renames the file, update its row in `docs/business-rules/br-index.md` to match in the same pass. A row must never drift from the file it points to.

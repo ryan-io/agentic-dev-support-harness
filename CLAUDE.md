@@ -21,7 +21,7 @@ Full file map and constraints: `.github/docs/system-index.md`
 
 ## On-Demand (not preloaded)
 - Templates: `.github/docs/adr-template.md`, `.github/docs/br-template.md`
-- Skills: `adr-creation`, `create-business-rule`, `system-review`, `project-setup`, `convention-discovery`, `continuous-learning`, `behavioral-requirements`, `volatility-decomposition`, `architecture-layering`, `architecture-design-pipeline`, `implementation`, `write-unit-tests`, `sequence-diagram`, `harness-eject` (all in `.github/skills/{name}/SKILL.md`)
+- Skills: `adr-creation`, `create-business-rule`, `system-review`, `project-setup`, `convention-discovery`, `continuous-learning`, `behavioral-requirements`, `volatility-decomposition`, `architecture-layering`, `architecture-design-pipeline`, `implementation`, `write-unit-tests`, `sequence-diagram`, `harness-eject`, `harness-update` (all in `.github/skills/{name}/SKILL.md`)
 - Reference: `.github/docs/system-index.md`
 
 ## Key Policies
