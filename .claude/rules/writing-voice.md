@@ -2,7 +2,6 @@
 paths: ["**"]
 ---
 
-
 # Writing Voice
 
 > **Full guidance:** `.github/docs/writing-voice-guide.md`

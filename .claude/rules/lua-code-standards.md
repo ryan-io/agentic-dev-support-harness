@@ -2,7 +2,6 @@
 paths: ["**/*.lua"]
 ---
 
-
 # Lua Code Standards
 
 Extends `code-standards.instructions.md`. Draws from the [LuaRocks](https://github.com/luarocks/lua-style-guide) and [lua-users](http://lua-users.org/wiki/LuaStyleGuide) style guides.

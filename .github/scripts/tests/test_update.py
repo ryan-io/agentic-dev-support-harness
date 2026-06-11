@@ -308,6 +308,44 @@ class UpdateFixture(unittest.TestCase):
         self.assertEqual(rc, 1)
         self.assertIn("no pending", out)
 
+    def test_finish_ignores_marker_text_in_unconflicted_file(self):
+        """B7: --finish gates on the recorded conflicted paths only. A
+        merge-set doc that legitimately contains conflict-marker text must
+        not block completion forever."""
+        _write(RESEARCH, "research doc\nexample marker: <<<<<<< ours\n")
+        _write(MEMORY, MEMORY_V0.replace("line three", "line three (local)"))
+        _git("add", "-A")
+        _git("commit", "-q", "-m", "local edits")
+        rc, out = self._run("--run")
+        self.assertEqual(rc, 2)
+        with open(update.PENDING_PATH, encoding="utf-8") as fh:
+            pending = json.load(fh)
+        self.assertEqual(pending["conflicts"], [MEMORY])
+        # Resolve the real conflict; the doc's marker text must not block.
+        _write(MEMORY, MEMORY_V0.replace("line three",
+                                         "line three (resolved)"))
+        rc, out = self._run("--finish")
+        self.assertEqual(rc, 0, out)
+        self.assertFalse(os.path.exists(update.PENDING_PATH))
+
+    def test_finish_falls_back_to_merge_set_without_recorded_conflicts(self):
+        """A pending file from before the conflict list existed still gates
+        on the whole merge set rather than skipping the check."""
+        _write(MEMORY, MEMORY_V0.replace("line three", "line three (local)"))
+        _git("add", "-A")
+        _git("commit", "-q", "-m", "conflicting local edit")
+        rc, _ = self._run("--run")
+        self.assertEqual(rc, 2)
+        # Strip the conflicts key, simulating an old pending file.
+        with open(update.PENDING_PATH, encoding="utf-8") as fh:
+            pending = json.load(fh)
+        del pending["conflicts"]
+        with open(update.PENDING_PATH, "w", encoding="utf-8") as fh:
+            json.dump(pending, fh)
+        rc, out = self._run("--finish")
+        self.assertEqual(rc, 1)
+        self.assertIn("markers remain", out)
+
     # --- guards ---
 
     def test_refuses_on_template_source(self):

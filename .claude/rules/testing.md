@@ -2,7 +2,6 @@
 paths: ["**/*.cs", "**/*.lua", "**/*.py", "**/*.ts", "**/*.js", "**/*.jsx", "**/*.tsx", "**/test/**", "**/tests/**", "**/spec/**"]
 ---
 
-
 # Testing Standards
 
 > **Full guidance:** `.github/docs/testing-guide.md`

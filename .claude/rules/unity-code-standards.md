@@ -2,7 +2,6 @@
 paths: ["**/Assets/**/*.cs"]
 ---
 
-
 # Unity Code Standards
 
 Extends `code-standards` and `csharp-code-standards`. Within this glob, the following supersede the general rules; everything not superseded still applies.

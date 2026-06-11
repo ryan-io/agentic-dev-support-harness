@@ -10,7 +10,7 @@ Corrections evaporate. You tell the agent to stop doing something, it complies, 
 
 A three-stage pipeline runs from hooks registered in `.claude/settings.json`.
 
-`observe.py` records tool calls on every PreToolUse, PostToolUse, and session boundary, appending JSON lines to `.claude/learning/observations.jsonl`. At session end it also parses the session transcript for real user corrections (derived fields only; raw transcript text never enters the log), and a prompt starting with `#correction` flags one explicitly.
+`observe.py` records one observation per tool call on PostToolUse (which carries the outcome), plus session boundaries, appending JSON lines to `.claude/learning/observations.jsonl`. PreToolUse is deliberately not hooked: recording both sides doubled every count (2026-06-10 review, B1). At session end it also parses the session transcript for real user corrections (derived fields only; raw transcript text never enters the log), and a prompt starting with `#correction` flags one explicitly.
 
 `analyze.py` aggregates recurring shapes into instincts, short YAML files carrying a confidence score and a provenance label that keeps real corrections distinct from frequency proxies.
 

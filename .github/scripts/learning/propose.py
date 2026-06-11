@@ -58,7 +58,8 @@ def parse_instinct(path):
                     val = float(val)
                 except ValueError:
                     val = 0.0
-            elif key in ("evidence_count", "last_seen_session"):
+            elif key in ("evidence_count", "last_seen_session",
+                         "decay_charged_windows"):
                 try:
                     val = int(val)
                 except ValueError:
@@ -81,6 +82,41 @@ def save_instinct_confidence(path, new_confidence):
         f.write(updated)
 
 
+def _set_frontmatter_int(content, key, value):
+    """Set or insert an integer key in a file's frontmatter block."""
+    if re.search(rf"^{key}:", content, re.MULTILINE):
+        return re.sub(rf"^({key}:\s*)\S+", rf"\g<1>{value}",
+                      content, flags=re.MULTILINE)
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return content
+    return f"---{parts[1].rstrip()}\n{key}: {value}\n---{parts[2]}"
+
+
+def save_instinct_decay_state(path, new_confidence, charged_windows):
+    """Persist confidence and the decay bookkeeping mark together.
+
+    decay_charged_windows records how many completed stale windows have
+    already been charged against this instinct, keyed off its current
+    last_seen_session. Without the mark, every propose run re-subtracted
+    the full stale-window decay (B3): two runs while two windows stale
+    cost 0.40 instead of the intended 0.05 per window. Reinforcement
+    rewrites the instinct without the mark (analyze.save_instinct), which
+    resets the charge along with the clock."""
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+    content = re.sub(
+        r'(confidence:\s*)[\d.]+',
+        f'\\g<1>{new_confidence:.2f}',
+        content
+    )
+    content = _set_frontmatter_int(
+        content, "decay_charged_windows", charged_windows
+    )
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+
 # --- Staleness decay (session-clock, per the evidence-based staleness ADR) ---
 
 def apply_instinct_decay(instincts, config, current_session, dry_run=False):
@@ -88,7 +124,14 @@ def apply_instinct_decay(instincts, config, current_session, dry_run=False):
 
     The clock counts sessions worked, not days elapsed: a dormant repository
     is frozen, only continued work without reinforcement decays an instinct.
-    Confirmed instincts are structurally exempt and skipped first."""
+    Confirmed instincts are structurally exempt and skipped first.
+
+    Decay is idempotent per completed stale window (B3): each instinct
+    carries decay_charged_windows, the number of windows already charged
+    since its last_seen_session. A run charges only windows beyond that
+    mark, so how often propose happens to fire no longer changes the
+    effective rate. The ADR's intended rate, one decrement per window of
+    sessions stale, is now what actually happens."""
     staleness = config.get("staleness", {})
     rate = staleness.get("instinct_decay_per_sessions", 0.05)
     window = staleness.get("instinct_decay_session_window", 15)
@@ -101,22 +144,31 @@ def apply_instinct_decay(instincts, config, current_session, dry_run=False):
         if not isinstance(last_seen_session, int):
             continue  # pre-clock instinct awaiting backfill: never decay
         sessions_stale = current_session - last_seen_session
-        windows_stale = sessions_stale / float(window)
-        if windows_stale > 1.0:
-            decay = rate * windows_stale
-            old_conf = inst.get("confidence", 0.0)
-            new_conf = max(0.1, round(old_conf - decay, 2))
-            if new_conf != old_conf:
-                inst["confidence"] = new_conf
-                if not dry_run:
-                    save_instinct_confidence(inst["_path"], new_conf)
-                tag = "[dry-run][decay]" if dry_run else "[decay]"
-                print(
-                    f"  {tag} {inst.get('id', '?')}: "
-                    f"{old_conf:.2f} -> {new_conf:.2f} "
-                    f"({sessions_stale} sessions stale)",
-                    file=sys.stderr
+        full_windows = sessions_stale // window
+        charged = inst.get("decay_charged_windows", 0)
+        if not isinstance(charged, int) or charged < 0:
+            charged = 0
+        new_windows = full_windows - charged
+        if new_windows <= 0:
+            continue  # nothing new to charge: already decayed for this span
+        decay = rate * new_windows
+        old_conf = inst.get("confidence", 0.0)
+        new_conf = max(0.1, round(old_conf - decay, 2))
+        if new_conf != old_conf:
+            inst["confidence"] = new_conf
+            inst["decay_charged_windows"] = full_windows
+            if not dry_run:
+                save_instinct_decay_state(
+                    inst["_path"], new_conf, full_windows
                 )
+            tag = "[dry-run][decay]" if dry_run else "[decay]"
+            print(
+                f"  {tag} {inst.get('id', '?')}: "
+                f"{old_conf:.2f} -> {new_conf:.2f} "
+                f"({sessions_stale} sessions stale, "
+                f"{new_windows} new window(s) charged)",
+                file=sys.stderr
+            )
 
 
 # --- Target mapping ---
@@ -280,11 +332,17 @@ Domain: {instinct.get('domain', 'unknown')} | Scope: `{instinct.get('file_scope'
 
 
 def proposal_exists(iid):
-    """Check if a proposal already exists for this instinct."""
-    if not os.path.isdir(PROPOSALS_DIR):
-        return False
-    for f in os.listdir(PROPOSALS_DIR):
-        if f == f"{iid}.md":
+    """Check if a live or archived proposal exists for this instinct.
+
+    Archived proposals count (B4): without this, an instinct still above
+    the promotion threshold re-promoted a fresh proposal on the run after
+    its old one archived, a 30-session archive-and-recreate loop for any
+    unreviewed proposal whose instinct stayed hot. An archived proposal is
+    a developer-visible record; resurrecting it is the developer's call
+    via the continuous-learning skill, not the pipeline's."""
+    for directory in (PROPOSALS_DIR, ARCHIVE_DIR):
+        if (os.path.isdir(directory)
+                and os.path.isfile(os.path.join(directory, f"{iid}.md"))):
             return True
     return False
 
@@ -317,7 +375,11 @@ def process_existing_proposals(config, current_session, dry_run=False):
 
     A pending proposal goes stale after proposal_decay_sessions without
     reinforcement and archives (reason: decayed) at proposal_archive_sessions.
-    Confirmed proposals and any non-pending status are untouched."""
+    Confirmed proposals and any non-pending status are untouched.
+
+    "Without reinforcement" is real now (B4): staleness is measured from
+    reinforced_session when analyze.py has stamped one (the instinct behind
+    the proposal gathered new evidence), falling back to created_session."""
     if not os.path.isdir(PROPOSALS_DIR):
         return
 
@@ -344,7 +406,11 @@ def process_existing_proposals(config, current_session, dry_run=False):
         created_match = re.search(r'created_session:\s*(\d+)', content)
         if not created_match:
             continue  # pre-clock proposal awaiting backfill: never decay
-        sessions_old = current_session - int(created_match.group(1))
+        reference = int(created_match.group(1))
+        reinforced_match = re.search(r'reinforced_session:\s*(\d+)', content)
+        if reinforced_match:
+            reference = max(reference, int(reinforced_match.group(1)))
+        sessions_old = current_session - reference
 
         # Archive past the archive threshold, with a recorded reason.
         if sessions_old >= archive_sessions:

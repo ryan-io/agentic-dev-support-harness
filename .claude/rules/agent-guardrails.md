@@ -2,7 +2,6 @@
 paths: ["**"]
 ---
 
-
 # Agent Guardrails
 
 > **Full guidance:** `.github/docs/agent-guardrails-guide.md`

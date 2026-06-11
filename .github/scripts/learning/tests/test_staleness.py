@@ -201,7 +201,7 @@ class TestInstinctDecay(TempLearningDirMixin, unittest.TestCase):
               instinct_yaml("old", confidence=0.5, last_seen_session=0))
         inst = self.load("old")
         propose.apply_instinct_decay([inst], self.config(), 31)
-        # 31 sessions stale / window 15 = 2.07 windows -> 0.5 - 0.05*2.07
+        # 31 sessions stale // window 15 = 2 full windows -> 0.5 - 0.05*2
         self.assertAlmostEqual(inst["confidence"], 0.4, places=2)
         self.assertAlmostEqual(self.load("old")["confidence"], 0.4, places=2)
 
@@ -226,6 +226,30 @@ class TestInstinctDecay(TempLearningDirMixin, unittest.TestCase):
         inst = self.load("old")
         propose.apply_instinct_decay([inst], self.config(), 31, dry_run=True)
         self.assertAlmostEqual(self.load("old")["confidence"], 0.5, places=2)
+
+    def test_decay_is_idempotent_within_a_window(self):
+        """B3: two propose runs in the same stale span charge decay once.
+        The old code subtracted rate * windows_stale on every run."""
+        write(os.path.join(self.instincts, "old.yaml"),
+              instinct_yaml("old", confidence=0.5, last_seen_session=0))
+        inst = self.load("old")
+        propose.apply_instinct_decay([inst], self.config(), 31)
+        self.assertAlmostEqual(inst["confidence"], 0.4, places=2)
+        # Same session count, fresh parse (as a new propose run would see).
+        inst = self.load("old")
+        propose.apply_instinct_decay([inst], self.config(), 31)
+        self.assertAlmostEqual(self.load("old")["confidence"], 0.4, places=2)
+
+    def test_decay_charges_only_new_windows(self):
+        """B3: after the idempotent charge, one more completed window
+        costs exactly one more decrement."""
+        write(os.path.join(self.instincts, "old.yaml"),
+              instinct_yaml("old", confidence=0.5, last_seen_session=0))
+        inst = self.load("old")
+        propose.apply_instinct_decay([inst], self.config(), 31)  # 2 windows
+        inst = self.load("old")
+        propose.apply_instinct_decay([inst], self.config(), 46)  # 3rd window
+        self.assertAlmostEqual(self.load("old")["confidence"], 0.35, places=2)
 
 
 class TestProposalStaleness(TempLearningDirMixin, unittest.TestCase):
@@ -268,6 +292,58 @@ class TestProposalStaleness(TempLearningDirMixin, unittest.TestCase):
               proposal_md("p", created_session=0))
         propose.process_existing_proposals(self.config(), 500, dry_run=True)
         self.assertIn("status: pending", self.read(self.proposals, "p"))
+
+    def test_reinforced_proposal_does_not_decay_or_archive(self):
+        """B4/F4: staleness reads reinforced_session when present, so a
+        proposal whose instinct keeps gathering evidence stays pending."""
+        content = proposal_md("p", created_session=0).replace(
+            "created_session: 0", "created_session: 0\nreinforced_session: 39")
+        write(os.path.join(self.proposals, "p.md"), content)
+        propose.process_existing_proposals(self.config(), 40)
+        self.assertIn("status: pending", self.read(self.proposals, "p"))
+
+    def test_reinforce_proposal_stamps_and_revives(self):
+        """B4: analyze.reinforce_proposal stamps reinforced_session and
+        flips a stale proposal back to pending."""
+        saved = analyze.PROPOSALS_DIR
+        analyze.PROPOSALS_DIR = self.proposals
+        try:
+            write(os.path.join(self.proposals, "p.md"),
+                  proposal_md("p", status="stale", created_session=0))
+            analyze.reinforce_proposal("p", 12)
+            content = self.read(self.proposals, "p")
+            self.assertIn("reinforced_session: 12", content)
+            self.assertIn("status: pending", content)
+            # Re-stamp updates in place rather than duplicating the key.
+            analyze.reinforce_proposal("p", 14)
+            content = self.read(self.proposals, "p")
+            self.assertIn("reinforced_session: 14", content)
+            self.assertEqual(content.count("reinforced_session"), 1)
+        finally:
+            analyze.PROPOSALS_DIR = saved
+
+    def test_reinforce_does_not_touch_resolved_proposals(self):
+        """B4: applied or rejected proposals are a developer's decision;
+        reinforcement must not revive them."""
+        saved = analyze.PROPOSALS_DIR
+        analyze.PROPOSALS_DIR = self.proposals
+        try:
+            write(os.path.join(self.proposals, "p.md"),
+                  proposal_md("p", status="applied", created_session=0))
+            analyze.reinforce_proposal("p", 12)
+            self.assertNotIn("reinforced_session",
+                             self.read(self.proposals, "p"))
+        finally:
+            analyze.PROPOSALS_DIR = saved
+
+    def test_archived_proposal_blocks_repromotion(self):
+        """B4: proposal_exists sees the archive, so a hot instinct cannot
+        mint a fresh proposal the run after its old one archived."""
+        os.makedirs(propose.ARCHIVE_DIR, exist_ok=True)
+        write(os.path.join(propose.ARCHIVE_DIR, "p.md"),
+              proposal_md("p", created_session=0))
+        self.assertTrue(propose.proposal_exists("p"))
+        self.assertFalse(propose.proposal_exists("other"))
 
 
 class TestRelevancePass(TempLearningDirMixin, unittest.TestCase):

@@ -5,8 +5,11 @@ Hook handler for continuous learning observation layer.
 Reads hook event JSON from stdin, extracts relevant fields,
 appends a single JSONL line to .claude/learning/observations.jsonl.
 
-Registered as a Claude Code hook in .claude/settings.json; runs on PreToolUse,
-PostToolUse, SessionStart, and SessionEnd events.
+Registered as a Claude Code hook in .claude/settings.json; runs on
+PostToolUse, SessionStart, SessionEnd, and UserPromptSubmit events.
+Tool calls are recorded on PostToolUse only: one observation per call,
+carrying the outcome. (PreToolUse recording was removed because it doubled
+every count; see the 2026-06-10 system review, B1.)
 Never blocks, always exits 0.
 
 On SessionEnd it also ticks the session clock (session-counter.json), the
@@ -61,43 +64,55 @@ DEFAULT_CONFIG = {
 MAX_OBSERVATIONS = 1000  # Rotate after this many entries
 
 
+def _acquire_lock(f):
+    """Take an advisory exclusive lock on an open file. Returns True if held.
+
+    msvcrt on Windows, fcntl elsewhere. Failure to lock is tolerated: losing
+    serialization is better than dropping a write or blocking the hook."""
+    try:
+        if os.name == "nt":
+            import msvcrt
+            f.seek(0)
+            msvcrt.locking(f.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        return True
+    except (OSError, ImportError):
+        return False
+
+
+def _release_lock(f):
+    """Release the advisory lock taken by _acquire_lock. Never raises."""
+    try:
+        if os.name == "nt":
+            import msvcrt
+            f.seek(0)
+            msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+    except (OSError, ImportError):
+        pass
+
+
 def locked_append(path, text):
     """Append text under an OS-level exclusive lock.
 
     Concurrent hook invocations (parallel tool calls, overlapping sessions)
     can interleave bytes mid-record in a plain append. An advisory lock
-    serializes writers: msvcrt on Windows, fcntl elsewhere. If the lock
-    cannot be taken, the write proceeds unlocked; losing serialization is
-    better than dropping the observation or blocking the hook.
+    serializes writers. If the lock cannot be taken, the write proceeds
+    unlocked; losing serialization is better than dropping the observation
+    or blocking the hook.
     """
     with open(path, "a", encoding="utf-8") as f:
-        locked = False
+        locked = _acquire_lock(f)
         try:
-            try:
-                if os.name == "nt":
-                    import msvcrt
-                    f.seek(0)
-                    msvcrt.locking(f.fileno(), msvcrt.LK_LOCK, 1)
-                else:
-                    import fcntl
-                    fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-                locked = True
-            except (OSError, ImportError):
-                pass
             f.write(text)
             f.flush()
         finally:
             if locked:
-                try:
-                    if os.name == "nt":
-                        import msvcrt
-                        f.seek(0)
-                        msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
-                    else:
-                        import fcntl
-                        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-                except (OSError, ImportError):
-                    pass
+                _release_lock(f)
 
 
 def rotate_observations_if_needed():
@@ -113,34 +128,57 @@ def rotate_observations_if_needed():
     if not os.path.isfile(OBS_FILE):
         return
     try:
-        with open(OBS_FILE, "r", encoding="utf-8") as f:
-            lines = [line for line in f if line.strip()]
-        if len(lines) < MAX_OBSERVATIONS:
-            return
-
-        # Find the last analysis marker; everything after it is unanalyzed.
-        last_marker = -1
-        for i, line in enumerate(lines):
+        # The whole read-archive-truncate sequence runs under the same lock
+        # locked_append takes (B5). With the old os.replace approach, a
+        # detached analyze.py could append its analysis marker between the
+        # rotation's read and the swap; the swap discarded the marker and
+        # the carried-forward tail was analyzed twice. Rewriting in place
+        # under the lock closes that window: a concurrent append lands
+        # either before the read (and is rotated correctly) or after the
+        # truncate (and survives in the fresh tail).
+        with open(OBS_FILE, "r+", encoding="utf-8") as f:
+            locked = _acquire_lock(f)
             try:
-                if json.loads(line).get("event") == "_analysis_marker":
-                    last_marker = i
-            except json.JSONDecodeError:
-                continue
-        # No marker means analysis never ran; archive everything rather
-        # than letting the file grow without bound.
-        keep = lines[last_marker + 1:] if last_marker >= 0 else []
+                f.seek(0)
+                lines = [line for line in f if line.strip()]
+                if len(lines) < MAX_OBSERVATIONS:
+                    return
 
-        # Archive with timestamp suffix
-        ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-        archive_dir = os.path.join(LEARNING_DIR, "observations.archive")
-        os.makedirs(archive_dir, exist_ok=True)
-        archive_path = os.path.join(archive_dir, f"observations-{ts}.jsonl")
+                # Find the last analysis marker; everything after it is
+                # unanalyzed and carried forward.
+                last_marker = -1
+                for i, line in enumerate(lines):
+                    try:
+                        if (json.loads(line).get("event")
+                                == "_analysis_marker"):
+                            last_marker = i
+                    except json.JSONDecodeError:
+                        continue
+                # No marker means analysis never ran; archive everything
+                # rather than letting the file grow without bound.
+                keep = lines[last_marker + 1:] if last_marker >= 0 else []
 
-        os.replace(OBS_FILE, archive_path)
+                # Archive copy first, then truncate in place. A crash
+                # between the two leaves duplicates in the archive, never
+                # data loss in the live file.
+                ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+                archive_dir = os.path.join(
+                    LEARNING_DIR, "observations.archive"
+                )
+                os.makedirs(archive_dir, exist_ok=True)
+                archive_path = os.path.join(
+                    archive_dir, f"observations-{ts}.jsonl"
+                )
+                with open(archive_path, "w", encoding="utf-8") as af:
+                    af.writelines(lines)
 
-        # Start fresh, carrying forward the unanalyzed tail.
-        with open(OBS_FILE, "w", encoding="utf-8") as f:
-            f.writelines(keep)
+                f.seek(0)
+                f.truncate()
+                f.writelines(keep)
+                f.flush()
+            finally:
+                if locked:
+                    _release_lock(f)
     except OSError:
         pass  # Never block on rotation errors
 
@@ -234,15 +272,31 @@ def classify_domain(tool_name, tool_input):
 SELF_OBSERVATION_FRAGMENTS = (".claude/learning/",)
 
 
+# Input fields that name a tool's target: file paths for file tools, the
+# command line for Bash, pattern/query/path for search tools. Content
+# fields (old_string, new_string, file content) are deliberately excluded:
+# editing a document that mentions the learning directory is real work.
+SELF_OBSERVATION_INPUT_KEYS = (
+    "file_path", "notebook_path", "command", "pattern", "query", "path",
+)
+
+
 def is_self_observation(tool_input):
-    """True if the tool targets the learning pipeline's own data directory."""
+    """True if the tool targets the learning pipeline's own data directory.
+
+    Checks every target-naming input field, not just file_path (B6):
+    Bash, Grep, and Glob calls aimed at .claude/learning/ are the
+    pipeline observing its own churn and must not reach the log."""
     if not tool_input or not isinstance(tool_input, dict):
         return False
-    file_path = tool_input.get("file_path", "")
-    if not file_path:
-        return False
-    normalized = file_path.replace("\\", "/")
-    return any(frag in normalized for frag in SELF_OBSERVATION_FRAGMENTS)
+    for key in SELF_OBSERVATION_INPUT_KEYS:
+        val = tool_input.get(key, "")
+        if isinstance(val, str) and val:
+            normalized = val.replace("\\", "/")
+            if any(frag in normalized
+                   for frag in SELF_OBSERVATION_FRAGMENTS):
+                return True
+    return False
 
 
 def build_observation(event_data):
@@ -414,7 +468,7 @@ def session_already_notified(session_id):
 
 
 def handle_session_start_notice(session_id):
-    """On first PreToolUse of a session, notify about pending proposals and changes."""
+    """On SessionStart, notify about pending proposals and changes."""
     if session_already_notified(session_id):
         return
 
@@ -894,7 +948,7 @@ def main():
                     pass
         sys.exit(0)
 
-    # Tool events (PreToolUse / PostToolUse): record one observation.
+    # Tool events (PostToolUse only): record one observation per tool call.
     obs = build_observation(event_data)
     if obs is None:
         sys.exit(0)

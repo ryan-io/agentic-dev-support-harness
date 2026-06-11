@@ -2,7 +2,6 @@
 paths: ["docs/business-rules/**"]
 ---
 
-
 # Business Rule Review Policy
 Validation rules for Business Rule documents. Applies to all files under `docs/business-rules/`.
 

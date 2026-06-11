@@ -3,8 +3,8 @@ id: place-yml-files-in-github-workflows
 status: pending
 target: code-standards.instructions.md
 instinct_confidence: 0.70
-evidence_count: 6
-priority: 4
+evidence_count: 3
+priority: 3
 provenance: frequency
 created: "2026-06-08"
 created_session: 9
@@ -22,10 +22,10 @@ Add to `code-standards.instructions.md`:
 > Place .yml files in .github/workflows/
 
 ## Evidence
-Confidence: 0.70 from 6 observations.
+Confidence: 0.70 from 3 observations.
 Domain: code-style | Scope: `**/*.yml`
 
-- 6/6 (100%) of .yml files placed in .github/workflows/
+- 3/3 (100%) of .yml files placed in .github/workflows/
 
 ## Review
 - [ ] Reviewed by developer

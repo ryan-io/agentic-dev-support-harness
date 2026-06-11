@@ -2,7 +2,6 @@
 paths: ["**/*.xaml", "**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.html", "**/*.css", "**/*.razor"]
 ---
 
-
 # User Experience Standards
 UX behavior and interaction rules. Complements `user-interface.instructions.md` (implementation).
 

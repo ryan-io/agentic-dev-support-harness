@@ -266,7 +266,12 @@ if should_run(4):
 
         apply_to_parts = [p.strip() for p in apply_to.split(",") if p.strip()]
         paths_value = ", ".join(f'"{p}"' for p in apply_to_parts)
-        expected_output = f'---\npaths: [{paths_value}]\n---\n{parts[2]}'
+        # Same template as sync-claude-rules.py (B8): the body keeps its own
+        # leading newline, the template adds none.
+        expected_body = parts[2]
+        if not expected_body.startswith("\n"):
+            expected_body = "\n" + expected_body
+        expected_output = f'---\npaths: [{paths_value}]\n---{expected_body}'
 
         dest_name = filename.replace(".instructions", "")
         dest_path = os.path.join(DEST_DIR, dest_name)
@@ -409,13 +414,20 @@ if should_run(8):
             hooks_root = hook_cfg.get("hooks", {})
             if not hooks_root:
                 result("FAIL", "settings.json -- no 'hooks' block (learning pipeline would be inert)")
-            expected_events = {"PreToolUse", "PostToolUse", "SessionStart", "SessionEnd"}
+            # PostToolUse only for tool calls (B1): a PreToolUse hook would
+            # double every observation and inflate detector evidence 2x.
+            expected_events = {"PostToolUse", "SessionStart", "SessionEnd",
+                               "UserPromptSubmit"}
             found_events = set(hooks_root.keys())
             for expected in sorted(expected_events):
                 if expected in found_events:
                     result("PASS", f"{expected} -- event registered in settings.json")
                 else:
                     result("FAIL", f"{expected} -- event missing from settings.json")
+            if "PreToolUse" in found_events:
+                result("FAIL", "PreToolUse -- registered in settings.json; "
+                               "tool recording is PostToolUse-only (doubles "
+                               "observation counts, see 2026-06-10 review B1)")
             for event_name, event_list in hooks_root.items():
                 for group in event_list:
                     for hook in group.get("hooks", []):

@@ -451,8 +451,13 @@ def cmd_execute(manifest, dry_run, source_override=None, to_ref=None):
                   + (f" Expect {n} conflicted file(s)." if n else ""))
             return 0
         if conflicts:
+            # Record the conflicted paths so --finish gates on exactly
+            # these files, not the whole merge set (B7): a merge-set doc
+            # that legitimately contains conflict-marker text must not
+            # block completion.
             with open(PENDING_PATH, "w", encoding="utf-8") as fh:
-                json.dump({"source": source, "target": target}, fh)
+                json.dump({"source": source, "target": target,
+                           "conflicts": conflicts}, fh)
             print("\nCONFLICTS: the run stopped before the commit. Resolve the "
                   "markers in:")
             for c in conflicts:
@@ -482,7 +487,15 @@ def cmd_finish(manifest):
         print("REFUSED: no pending conflicted update "
               f"({PENDING_PATH} absent). Run --run first.")
         return 1
-    unresolved = [p for p in manifest.get("merge_set", [])
+    # Gate only the paths the run actually conflicted on (B7). A pending
+    # file from before this fix carries no conflict list; fall back to the
+    # whole merge set rather than skipping the gate.
+    recorded = pending.get("conflicts")
+    if isinstance(recorded, list):
+        candidates = [p for p in recorded if isinstance(p, str)]
+    else:
+        candidates = manifest.get("merge_set", [])
+    unresolved = [p for p in candidates
                   if os.path.isfile(p) and CONFLICT_MARKER in _read_local(p)]
     if unresolved:
         print("REFUSED: conflict markers remain in:")

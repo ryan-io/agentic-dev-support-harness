@@ -2,7 +2,6 @@
 paths: ["docs/adr/**"]
 ---
 
-
 # ADR Review Policy
 Full validation rules for Architecture Decision Records. Applies to all files under `docs/adr/`.
 

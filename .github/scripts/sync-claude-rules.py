@@ -124,9 +124,13 @@ for src in sorted(glob.glob(os.path.join(SRC_DIR, "*.instructions.md"))):
     dest_name = filename.replace(".instructions", "")
     dest_path = os.path.join(DEST_DIR, dest_name)
 
-    # Build output content and validate size
+    # Build output content and validate size. The body already starts with
+    # the newline that followed the source's closing ---, so the template
+    # adds none (B8): mirror bodies are byte-identical to their sources.
     paths_value = ", ".join(f'"{p}"' for p in apply_to_parts)
-    output = f'---\npaths: [{paths_value}]\n---\n{body}'
+    if not body.startswith("\n"):
+        body = "\n" + body
+    output = f'---\npaths: [{paths_value}]\n---{body}'
     if len(output) > MAX_CHARS:
         log(f"FAIL: {dest_name} output exceeds {MAX_CHARS} chars ({len(output)})")
         errors += 1

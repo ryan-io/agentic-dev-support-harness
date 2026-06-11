@@ -2,7 +2,6 @@
 paths: ["**/*.cs", "**/*.lua", "**/*.py", "**/*.ts", "**/*.js", "**/*.jsx", "**/*.tsx", "**/*.xaml", "**/*.html", "**/*.css", "**/*.vue"]
 ---
 
-
 # PR Review Standards
 
 > **Full guidance:** `.github/docs/pr-review-guide.md`

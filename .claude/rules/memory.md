@@ -2,7 +2,6 @@
 paths: ["**"]
 ---
 
-
 # Project Memory
 
 Durable, curated facts about this project. This file loads on turn one for every session so an agent starts oriented instead of rediscovering the codebase. The `continuous-learning` skill maintains it by promoting entries from the local session log under developer review. Do not hand-edit it mid-task; propose changes through that skill. Keep the whole file under 4,000 characters. When it fills, prune the least useful entry rather than letting it overflow.

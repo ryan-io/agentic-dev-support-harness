@@ -2,7 +2,6 @@
 paths: ["**"]
 ---
 
-
 # Research Practice
 How the agent gathers context and cites sources. Use it when a task is documentation-heavy, source-sensitive, or needs broad repository context. `writing-voice` governs how findings are written; this file governs how they are gathered and supported.
 

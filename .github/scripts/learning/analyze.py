@@ -45,6 +45,7 @@ LEARNING_DIR = os.path.join(PROJECT_DIR, ".claude", "learning")
 OBS_FILE = os.path.join(LEARNING_DIR, "observations.jsonl")
 INSTINCTS_DIR = os.path.join(LEARNING_DIR, "instincts")
 INSTINCTS_ARCHIVE_DIR = os.path.join(LEARNING_DIR, "instincts.archive")
+PROPOSALS_DIR = os.path.join(LEARNING_DIR, "proposals")
 CONFIG_FILE = os.path.join(LEARNING_DIR, "config.json")
 INSTRUCTIONS_DIR = os.path.join(PROJECT_DIR, ".github", "instructions")
 RULES_DIR = os.path.join(PROJECT_DIR, ".claude", "rules")
@@ -83,6 +84,20 @@ def load_observations(incremental=True):
             except json.JSONDecodeError:
                 continue
     return obs
+
+
+def tool_events(observations):
+    """Tool observations every detector must count from.
+
+    Recording is PostToolUse-only (one observation per tool call, outcome
+    included). The filter stays as a structural guard: if a PreToolUse hook
+    is ever re-registered, detectors keep counting one event per call
+    instead of silently doubling their evidence (the B1 failure mode --
+    two detectors filtered, two did not, and counts inflated 2x)."""
+    return [
+        o for o in observations
+        if o.get("event") == "PostToolUse" and o.get("tool")
+    ]
 
 
 # --- Instinct I/O ---
@@ -126,6 +141,58 @@ def load_instinct(instinct_file):
     return data
 
 
+def _evidence_lines(body):
+    """Evidence bullet lines from an instinct body, oldest first."""
+    if "## Evidence" not in body:
+        return []
+    tail = body.split("## Evidence", 1)[1]
+    return [ln for ln in tail.split("\n") if ln.strip().startswith("-")]
+
+
+def reinforce_proposal(iid, current_session):
+    """Stamp reinforced_session on a live proposal whose instinct was just
+    reinforced, reviving a stale one to pending.
+
+    propose.py measures proposal staleness from this stamp (falling back to
+    created_session), so a proposal whose instinct keeps gathering evidence
+    neither goes stale nor archives (B4/F4). Fails closed: any error leaves
+    the proposal untouched."""
+    path = os.path.join(PROPOSALS_DIR, f"{iid}.md")
+    if not os.path.isfile(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        status = re.search(r'status:\s*(\w+)', content)
+        if not status or status.group(1) not in ("pending", "stale"):
+            return
+        if re.search(r"^reinforced_session:", content, re.MULTILINE):
+            content = re.sub(
+                r"^(reinforced_session:\s*)\d+",
+                rf"\g<1>{current_session}",
+                content, flags=re.MULTILINE
+            )
+        else:
+            parts = content.split("---", 2)
+            if len(parts) < 3:
+                return
+            content = (
+                f"---{parts[1].rstrip()}\n"
+                f"reinforced_session: {current_session}\n---{parts[2]}"
+            )
+        if status.group(1) == "stale":
+            content = content.replace("status: stale", "status: pending", 1)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+    except OSError:
+        pass
+
+
+# Most recent evidence entries kept per instinct. Merging is additive (B2):
+# prior entries survive reinforcement instead of being rebuilt from the new
+# batch alone, capped so instinct files stay bounded.
+EVIDENCE_CAP = 10
+
 # Flat confidence bump applied each time an instinct is reinforced by a new
 # analysis run. It is intentionally NOT scaled by the batch's evidence_count:
 # a detector that emits one instinct backed by eight events would otherwise add
@@ -160,6 +227,19 @@ def save_instinct(iid, trigger, action, confidence, domain, evidence,
         new_conf = min(0.9, old_conf + MERGE_CONFIDENCE_INCREMENT)
         confidence = new_conf
         evidence_count = new_count
+        # Append, do not replace (B2): prior evidence survives the merge so
+        # a long-lived instinct shows its history at review time, capped to
+        # the most recent EVIDENCE_CAP entries. Duplicates of lines already
+        # present are dropped.
+        old_lines = _evidence_lines(existing.get("body", ""))
+        new_lines = [ln for ln in evidence.split("\n") if ln.strip()]
+        combined = old_lines + [ln for ln in new_lines
+                                if ln not in old_lines]
+        evidence = "\n".join(combined[-EVIDENCE_CAP:])
+        # The instinct was reinforced: keep its pending proposal alive (B4).
+        reinforce_proposal(
+            iid, session_clock.read_session_count(LEARNING_DIR)
+        )
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     # Reinforcement resets the session clock: last_seen_session is the
@@ -170,6 +250,9 @@ def save_instinct(iid, trigger, action, confidence, domain, evidence,
     safe_evidence = evidence.replace("---", "- - -")
     # The confirmed marker survives merges: a developer's decision is never
     # dropped by a pipeline rewrite (permanence guarantee).
+    # decay_charged_windows is deliberately NOT carried through: the rewrite
+    # resets last_seen_session, so the decay charge (propose.py, B3) starts
+    # over with the fresh clock.
     confirmed_line = "confirmed: true\n" if confirmed else ""
     content = f"""---
 id: {iid}
@@ -450,11 +533,10 @@ def detect_corrections(observations, window_seconds=60, min_attempts=3):
     duplicate instincts.
     """
     instincts = []
-    # PostToolUse carries both the file path and the success/failure outcome.
+    # Tool events carry both the file path and the success/failure outcome.
     post_events = [
-        o for o in observations
-        if o.get("event") == "PostToolUse"
-        and o.get("tool") in MUTATING_TOOLS
+        o for o in tool_events(observations)
+        if o.get("tool") in MUTATING_TOOLS
         and o.get("file_ext")
         and o.get("input_summary")
     ]
@@ -523,14 +605,10 @@ def detect_repeated_sequences(observations):
     instincts = []
     MIN_SESSIONS = 3
 
-    # Build per-session tool sequences from PostToolUse only. Every tool
-    # call emits both a PreToolUse and a PostToolUse observation, so mixing
-    # event types doubles each tool (A, A, B, B, ...) and the trigrams
-    # measure the doubling artifact instead of real workflows.
+    # Build per-session tool sequences from tool events (one per call).
     sessions = defaultdict(list)
-    for o in observations:
-        if o.get("event") == "PostToolUse" and o.get("tool"):
-            sessions[o.get("session_id", "unknown")].append(o.get("tool"))
+    for o in tool_events(observations):
+        sessions[o.get("session_id", "unknown")].append(o.get("tool"))
 
     # Extract 3-grams from each session, skipping homogeneous ones
     ngram_sessions = defaultdict(set)
@@ -568,9 +646,10 @@ def detect_error_recovery(observations):
     """
     instincts = []
 
-    # Group by session
+    # Group by session, tool events only: a lookahead window over a stream
+    # with non-tool records in it would measure the wrong distance.
     sessions = defaultdict(list)
-    for o in observations:
+    for o in tool_events(observations):
         sessions[o.get("session_id", "unknown")].append(o)
 
     for sid, events in sessions.items():
@@ -638,11 +717,11 @@ def detect_file_conventions(observations):
     """
     instincts = []
 
-    # Collect file paths from all observations
+    # Collect file paths from tool events (one per call; B1 fix)
     dir_counts = Counter()
     ext_dir = defaultdict(Counter)
 
-    for o in observations:
+    for o in tool_events(observations):
         ext = o.get("file_ext", "")
         if not ext:
             continue
@@ -686,16 +765,17 @@ def detect_rule_consultation(observations):
     """
     instincts = []
 
-    # Count consultations per instruction file
+    # Count consultations and edits from tool events (one per call; B1 fix)
+    events = tool_events(observations)
     rule_consult_counts = Counter()
-    for o in observations:
+    for o in events:
         rule = o.get("rule_consulted")
         if rule:
             rule_consult_counts[rule] += 1
 
     # Count edits per file extension
     ext_edit_counts = Counter()
-    for o in observations:
+    for o in events:
         if o.get("tool") in ("Edit", "Write") and o.get("file_ext"):
             ext_edit_counts[o["file_ext"]] += 1
 
@@ -787,7 +867,7 @@ def detect_guide_consultation(observations):
     instincts = []
 
     sessions = defaultdict(lambda: {"rules": set(), "guides": set()})
-    for o in observations:
+    for o in tool_events(observations):
         sid = o.get("session_id", "")
         if not sid:
             continue
@@ -829,6 +909,34 @@ def detect_guide_consultation(observations):
             })
 
     return instincts
+
+
+# --- Analysis marker ---
+
+def write_analysis_marker():
+    """Append the analysis marker under the observation-log lock.
+
+    The marker is a log record like any other; a plain append could
+    interleave bytes with a concurrent session's locked writer, and a
+    SessionStart rotation could discard it mid-swap (B5). observe.py's
+    locked_append and the in-place rotation share one lock, so the marker
+    lands whole, before or after a rotation but never inside one. Falls
+    back to a plain append if the sibling import fails; degraded
+    serialization beats a lost marker."""
+    os.makedirs(LEARNING_DIR, exist_ok=True)
+    marker = json.dumps({
+        "event": "_analysis_marker",
+        "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    }, separators=(",", ":")) + "\n"
+    try:
+        import observe
+        observe.locked_append(OBS_FILE, marker)
+    except (ImportError, OSError):
+        try:
+            with open(OBS_FILE, "a", encoding="utf-8") as f:
+                f.write(marker)
+        except OSError:
+            pass  # fail closed: never block analysis on the marker
 
 
 # --- Main ---
@@ -928,13 +1036,7 @@ def main():
         sys.exit(0)
 
     # Write analysis marker so observe.py can reset its count
-    os.makedirs(LEARNING_DIR, exist_ok=True)
-    with open(OBS_FILE, "a", encoding="utf-8") as f:
-        marker = json.dumps({
-            "event": "_analysis_marker",
-            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        }, separators=(",", ":"))
-        f.write(marker + "\n")
+    write_analysis_marker()
 
     # Invoke propose.py only if instincts were created or updated.
     # Skipping when no new patterns were found avoids redundant scans.

@@ -2,7 +2,6 @@
 paths: ["**"]
 ---
 
-
 # Pattern Fidelity
 Match the project. Before introducing any pattern, abstraction, coding standard, library, or architectural approach, ground it in what this project already does. Prefer the project's established way over a generic best-practice from memory. `code-standards` governs how code is written; this file governs whether a pattern belongs here at all.
 

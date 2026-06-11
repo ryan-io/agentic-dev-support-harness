@@ -2,7 +2,6 @@
 paths: ["**/*.xaml", "**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.html", "**/*.css", "**/*.razor"]
 ---
 
-
 # User Interface Standards
 Extends `code-standards.instructions.md` with UI-specific rules. Both files apply when working in UI layers.
 

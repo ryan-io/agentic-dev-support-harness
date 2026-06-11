@@ -2,7 +2,6 @@
 paths: ["**/*.cs"]
 ---
 
-
 # C# Code Standards
 
 Extends `code-standards.instructions.md`. Draws from [ktaranov/naming-convention](https://github.com/ktaranov/naming-convention) and the [.NET runtime coding style](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/coding-style.md).

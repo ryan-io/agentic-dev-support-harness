@@ -2,7 +2,6 @@
 paths: ["docs/adr/**"]
 ---
 
-
 # ADR Creation Policy
 When creating a new ADR, copy `.github/docs/adr-template.md` and fill in all sections. See `adr-pr-review.instructions.md` for validation rules, required sections, and file naming conventions.
 
