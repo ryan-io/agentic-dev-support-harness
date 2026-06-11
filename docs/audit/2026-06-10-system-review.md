@@ -47,6 +47,8 @@ The eject manifest covers all 12 ADRs (Category B: 2, Category C: 10). The "two 
 | G5 | Low | `detect_error_recovery` embeds `input_summary[:80]` in the action text, and the action is the instinct ID. Every distinct recovery mints a new instinct file that never merges with its siblings. Detector 1's own docstring states the no-volatile-label rule; detector 3 violates it. Template the action ("Recover failed {tool} with {tool}") and move the command detail to evidence. |
 | G6 | Low | `.claude/sync_log.txt` grows without bound (append per sync run). Local and gitignored, but a long-lived clone accumulates indefinitely. Cap or rotate it. |
 
+Closeout 2026-06-11: all six gaps fixed per `docs/process/2026-06-11-audit-gap-fix-plan.md`. G1: `bootstrap-update.py`, applied to unity-greenfield the same day (anchor 9bb830c). G2: sentinel excluded from both copy paths. G3: `archive_resolved_proposals` in `propose.py`, three resolved files migrated. G4: pre-commit hash covers mirrors, `CLAUDE.md`, and the sync script. G5: detector-3 action templated. G6: sync-log rotation at 256 KB.
+
 ## Missing features
 
 Already tracked in the backlog, listed for completeness: the `agent-feature-planning` and `agent-refactor-planning` skills (`docs/process/backlog/2026-05-30-skill-backlog.md`), and the semantic-validation tier (contradiction detection, rule efficacy, template-instance validity) from `docs/process/backlog/2026-05-30-validation-hallucination-optimization.md`.

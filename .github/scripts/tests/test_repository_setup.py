@@ -51,6 +51,9 @@ class TestCopyTemplate(unittest.TestCase):
             # The local sync log is excluded from the .github copy.
             self.assertFalse(
                 os.path.exists(os.path.join(tmp, ".github", "sync_log.txt")))
+            # The upstream-protection sentinel never ships downstream (G2).
+            self.assertFalse(
+                os.path.exists(os.path.join(tmp, ".github", "TEMPLATE_SOURCE")))
             # Source-clone bytecode never ships.
             for root, dirs, _ in os.walk(tmp):
                 self.assertNotIn("__pycache__", dirs,
@@ -157,6 +160,17 @@ class TestAdopt(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(tmp, "CLAUDE.md")))
             with open(os.path.join(tmp, "README.md"), encoding="utf-8") as fh:
                 self.assertEqual(fh.read(), "MY PROJECT\n")
+
+    def test_overlay_never_delivers_template_sentinel(self):
+        """The adopt path must not ship .github/TEMPLATE_SOURCE (G2): a
+        consumer that never finishes project-setup would be permanently
+        refused by both eject and update."""
+        with tempfile.TemporaryDirectory() as tmp:
+            self._make_target(tmp)
+            with redirect_stdout(io.StringIO()):
+                rs.overlay_template(tmp, dry_run=False)
+            self.assertFalse(
+                os.path.exists(os.path.join(tmp, ".github", "TEMPLATE_SOURCE")))
 
     def test_gitignore_merge_appends_and_negates_packages(self):
         with tempfile.TemporaryDirectory() as tmp:

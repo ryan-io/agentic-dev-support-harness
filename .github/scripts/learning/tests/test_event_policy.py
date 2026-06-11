@@ -283,5 +283,33 @@ class TestSelfObservationFilter(unittest.TestCase):
         self.assertFalse(observe.is_self_observation({}))
 
 
+class TestErrorRecoveryDedup(unittest.TestCase):
+    """G5: detector 3 templates the action (the instinct ID), so recoveries
+    of the same tool pair merge instead of minting a sibling file per
+    distinct command. The command detail lives in evidence."""
+
+    def _recovery(self, cmd, session="s1"):
+        return [tool_obs("PostToolUse", "Bash", cmd, session,
+                         outcome="failure"),
+                tool_obs("PostToolUse", "Read", f"after {cmd}", session,
+                         outcome="success")]
+
+    def test_same_tool_pair_yields_one_instinct_id(self):
+        obs = self._recovery("cmd-one", "s1") + self._recovery("cmd-two", "s2")
+        instincts = analyze.detect_error_recovery(obs)
+        self.assertEqual(len(instincts), 2)
+        ids = {analyze.instinct_id(i["action"]) for i in instincts}
+        self.assertEqual(len(ids), 1, "distinct commands minted distinct IDs")
+
+    def test_action_carries_no_command_detail(self):
+        (inst,) = analyze.detect_error_recovery(self._recovery("rm -rf tmp"))
+        self.assertNotIn("rm -rf", inst["action"])
+        self.assertEqual(inst["action"], "Recover failed Bash with Read")
+
+    def test_evidence_keeps_the_command_detail(self):
+        (inst,) = analyze.detect_error_recovery(self._recovery("cmd-one"))
+        self.assertIn("after cmd-one", inst["evidence"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

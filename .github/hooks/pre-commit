@@ -40,18 +40,30 @@ echo "===================================================="
 echo " [pre-commit] sync + validate"
 echo "===================================================="
 
-# --- 1. Sync (skipped when instruction sources are unchanged) ---
+# --- 1. Sync (skipped when sources, mirrors, and sync script are unchanged) ---
+# The hash covers the instruction sources and hub, the generated mirrors
+# (.claude/rules/, CLAUDE.md), and the sync script itself (audit G4). A
+# hand-edited mirror or a changed sync script invalidates the hash, sync
+# reruns, and the regeneration overwrites the drift.
 HASH_FILE=".claude/.sync-hash"
-CURRENT_HASH=""
-if command -v md5sum >/dev/null 2>&1; then
-    CURRENT_HASH=$(find .github/instructions -name "*.instructions.md" -exec md5sum {} + 2>/dev/null | sort | md5sum | cut -d' ' -f1)
-    HUB_HASH=$(md5sum .github/copilot-instructions.md 2>/dev/null | cut -d' ' -f1)
-    CURRENT_HASH="${CURRENT_HASH}-${HUB_HASH}"
-elif command -v md5 >/dev/null 2>&1; then
-    CURRENT_HASH=$(find .github/instructions -name "*.instructions.md" -exec md5 -q {} + 2>/dev/null | sort | md5 -q)
-    HUB_HASH=$(md5 -q .github/copilot-instructions.md 2>/dev/null)
-    CURRENT_HASH="${CURRENT_HASH}-${HUB_HASH}"
-fi
+
+compute_sync_hash() {
+    if command -v md5sum >/dev/null 2>&1; then
+        SRC_HASH=$(find .github/instructions -name "*.instructions.md" -exec md5sum {} + 2>/dev/null | sort | md5sum | cut -d' ' -f1)
+        HUB_HASH=$(md5sum .github/copilot-instructions.md 2>/dev/null | cut -d' ' -f1)
+        MIRROR_HASH=$(find .claude/rules -name "*.md" -exec md5sum {} + 2>/dev/null | sort | md5sum | cut -d' ' -f1)
+        EXTRA_HASH=$(md5sum CLAUDE.md .github/scripts/sync-claude-rules.py 2>/dev/null | sort | md5sum | cut -d' ' -f1)
+        echo "${SRC_HASH}-${HUB_HASH}-${MIRROR_HASH}-${EXTRA_HASH}"
+    elif command -v md5 >/dev/null 2>&1; then
+        SRC_HASH=$(find .github/instructions -name "*.instructions.md" -exec md5 -q {} + 2>/dev/null | sort | md5 -q)
+        HUB_HASH=$(md5 -q .github/copilot-instructions.md 2>/dev/null)
+        MIRROR_HASH=$(find .claude/rules -name "*.md" -exec md5 -q {} + 2>/dev/null | sort | md5 -q)
+        EXTRA_HASH=$( (md5 -q CLAUDE.md .github/scripts/sync-claude-rules.py 2>/dev/null) | sort | md5 -q)
+        echo "${SRC_HASH}-${HUB_HASH}-${MIRROR_HASH}-${EXTRA_HASH}"
+    fi
+}
+
+CURRENT_HASH=$(compute_sync_hash)
 
 STORED_HASH=""
 if [ -f "$HASH_FILE" ]; then
@@ -60,7 +72,7 @@ fi
 
 if [ -n "$CURRENT_HASH" ] && [ "$CURRENT_HASH" = "$STORED_HASH" ]; then
     echo ""
-    echo "[1/2] Sync skipped (instruction sources unchanged)"
+    echo "[1/2] Sync skipped (sources, mirrors, and sync script unchanged)"
 else
     echo ""
     echo "[1/2] Syncing copilot-instructions.md and .github/instructions/ -> CLAUDE.md and .claude/rules/"
@@ -74,7 +86,8 @@ else
     # Stage any files the sync just regenerated so the commit captures them.
     git add CLAUDE.md .claude/rules/ 2>/dev/null || true
 
-    # Store hash for next run
+    # Store the post-sync hash (mirrors may have just changed) for next run.
+    CURRENT_HASH=$(compute_sync_hash)
     if [ -n "$CURRENT_HASH" ]; then
         mkdir -p "$(dirname "$HASH_FILE")"
         echo "$CURRENT_HASH" > "$HASH_FILE"

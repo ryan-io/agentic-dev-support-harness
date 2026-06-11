@@ -346,6 +346,57 @@ class TestProposalStaleness(TempLearningDirMixin, unittest.TestCase):
         self.assertFalse(propose.proposal_exists("other"))
 
 
+class TestResolvedArchive(TempLearningDirMixin, unittest.TestCase):
+    """G3: applied and rejected proposals leave the tracked directory."""
+
+    def read(self, directory, name):
+        with open(os.path.join(directory, f"{name}.md"),
+                  encoding="utf-8") as f:
+            return f.read()
+
+    def test_applied_moves_with_reason(self):
+        write(os.path.join(self.proposals, "p.md"),
+              proposal_md("p", status="applied", created_session=0))
+        propose.archive_resolved_proposals(7)
+        self.assertFalse(os.path.isfile(os.path.join(self.proposals, "p.md")))
+        archived = self.read(propose.ARCHIVE_DIR, "p")
+        self.assertIn("archived_reason: applied", archived)
+        self.assertIn("archived_session: 7", archived)
+
+    def test_rejected_moves_with_reason(self):
+        write(os.path.join(self.proposals, "p.md"),
+              proposal_md("p", status="rejected", created_session=0))
+        propose.archive_resolved_proposals(7)
+        self.assertFalse(os.path.isfile(os.path.join(self.proposals, "p.md")))
+        self.assertIn("archived_reason: rejected",
+                      self.read(propose.ARCHIVE_DIR, "p"))
+
+    def test_pending_and_stale_stay(self):
+        write(os.path.join(self.proposals, "p.md"),
+              proposal_md("p", status="pending", created_session=0))
+        write(os.path.join(self.proposals, "s.md"),
+              proposal_md("s", status="stale", created_session=0))
+        propose.archive_resolved_proposals(7)
+        self.assertTrue(os.path.isfile(os.path.join(self.proposals, "p.md")))
+        self.assertTrue(os.path.isfile(os.path.join(self.proposals, "s.md")))
+
+    def test_dry_run_moves_nothing(self):
+        write(os.path.join(self.proposals, "p.md"),
+              proposal_md("p", status="applied", created_session=0))
+        propose.archive_resolved_proposals(7, dry_run=True)
+        self.assertTrue(os.path.isfile(os.path.join(self.proposals, "p.md")))
+        self.assertNotIn("archived_reason",
+                         self.read(self.proposals, "p"))
+
+    def test_idempotent_second_run_is_a_no_op(self):
+        write(os.path.join(self.proposals, "p.md"),
+              proposal_md("p", status="rejected", created_session=0))
+        propose.archive_resolved_proposals(7)
+        archived_first = self.read(propose.ARCHIVE_DIR, "p")
+        propose.archive_resolved_proposals(9)
+        self.assertEqual(archived_first, self.read(propose.ARCHIVE_DIR, "p"))
+
+
 class TestRelevancePass(TempLearningDirMixin, unittest.TestCase):
 
     def test_unmatched_scope_archived_as_irrelevant(self):

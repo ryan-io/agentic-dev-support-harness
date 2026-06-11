@@ -60,10 +60,13 @@ ROOT_FILES = [
 
 # Directory trees copied in scaffold mode. .github carries everything under it
 # (instructions, scripts, skills, docs, hooks); exclude .git and the sync log.
-# Banner art is template-repo branding; no copy path ships it (eject removes
-# it on the template-clone path).
+# TEMPLATE_SOURCE is the upstream-protection sentinel; shipping it downstream
+# locks eject and update behind an agent-executed deletion (audit G2), so no
+# copy path carries it. Only template clones (GitHub template, activate mode)
+# still hold it. Banner art is template-repo branding; no copy path ships it
+# (eject removes it on the template-clone path).
 TREE_COPIES = [
-    (".github", {".git", "sync_log.txt"}),
+    (".github", {".git", "sync_log.txt", "TEMPLATE_SOURCE"}),
     (os.path.join(".claude", "rules"), None),
     ("docs", {"banner.*"}),
     ("templates", None),
@@ -567,8 +570,9 @@ def run_setup(target, dry_run=False, mode=None):
             "Open the project in your editor.",
             "Run the project-setup skill (adopt path) to tailor instruction "
             "files and merge stack-specific ignores and attributes.",
-            "project-setup's final step writes .claude/setup-complete and "
-            "removes .github/TEMPLATE_SOURCE.",
+            "project-setup's final step writes .claude/setup-complete "
+            "(the overlay does not copy .github/TEMPLATE_SOURCE, so there "
+            "is nothing to remove).",
             "Run the harness-eject skill to remove template-only machinery "
             "(adopt chains into eject).",
         ]

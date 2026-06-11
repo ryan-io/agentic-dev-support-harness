@@ -134,9 +134,11 @@ not the template source.
    commit from the template clone's history or ask the developer. Unlike the
    marker, the anchor is committed; it is the base revision the `harness-update`
    skill merges from. See `docs/adr/adr-setup-add-harness-update-mechanism.md`.
-3. Remove `.github/TEMPLATE_SOURCE`. This committed sentinel ships in the template
-   to protect the upstream source; deleting it here marks this clone as a consuming
-   project. Removing it is a tracked change, so it appears in the next commit.
+3. Remove `.github/TEMPLATE_SOURCE` if present. This committed sentinel protects
+   the upstream source; deleting it marks this clone as a consuming project, and
+   the removal is a tracked change. Only template clones (GitHub template feature,
+   activate-in-place) still carry it: the scaffold and adopt copy paths exclude it
+   (audit G2), so on those paths this step is a no-op.
 
 Do not run this step in the template source repository itself. The source never
 completes `project-setup`; both guards must stay in place there.

@@ -24,7 +24,10 @@ record: `docs/adr/adr-setup-add-harness-update-mechanism.md`.
    the harness source URL, then run
    `python .github/scripts/update.py --anchor <sha> --source <url>` and commit the
    anchor. An approximate anchor means the first update may surface extra conflicts;
-   say so.
+   say so. If `update.py` itself is missing too, the whole mechanism predates this
+   project: run `python .github/scripts/bootstrap-update.py --target <path>` from a
+   harness clone, which installs the engine, manifest, and both lifecycle skills and
+   writes the anchor in one pass.
 3. The working tree is clean. The update lands as a single revertable commit; ask the
    developer to commit or stash first if `git status` shows changes.
 

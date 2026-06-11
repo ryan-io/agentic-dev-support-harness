@@ -666,15 +666,21 @@ def detect_error_recovery(observations):
                     break
 
             if resolution:
+                # The action is the instinct ID, so it carries no volatile
+                # label (G5, detector 1's rule): template the tool pair and
+                # keep the command detail in evidence, or every distinct
+                # recovery mints a sibling file that never merges.
                 instincts.append({
                     "trigger": f"when {failed_tool} fails",
-                    "action": f"Recover with {resolution.get('tool', 'unknown')}: "
-                              f"{resolution.get('input_summary', '')[:80]}",
+                    "action": f"Recover failed {failed_tool} with "
+                              f"{resolution.get('tool', 'unknown')}",
                     "confidence": 0.3,
                     "domain": "error-handling",
                     "file_scope": "**",
                     "evidence": f"- Recovery pattern in session {sid[:8]}: "
-                                f"{failed_tool} failure -> {resolution.get('tool')} success",
+                                f"{failed_tool} failure -> "
+                                f"{resolution.get('tool')} success "
+                                f"({resolution.get('input_summary', '')[:80]})",
                     "evidence_count": 1,
                 })
 

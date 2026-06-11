@@ -354,7 +354,7 @@ def record_archive_reason(content, reason, current_session):
 
     Every archived file must carry a reason a developer can read; a proposal
     never disappears without one (ADR enforcement clause). Valid reasons:
-    decayed, irrelevant, rejected."""
+    decayed, irrelevant, rejected, applied."""
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     parts = content.split("---", 2)
     if len(parts) < 3:
@@ -368,6 +368,43 @@ def record_archive_reason(content, reason, current_session):
         f'archived: "{today}"'
     )
     return f"---{parts[1].rstrip()}\n{meta}\n---{parts[2]}"
+
+
+def archive_resolved_proposals(current_session, dry_run=False):
+    """Move applied and rejected proposals to the archive (G3).
+
+    The continuous-learning skill sets the status and stops; without this
+    pass, resolved proposals sit in the tracked proposals/ directory forever
+    and ride along into every consumer's adoption copy. The archive is
+    gitignored, so the move lands as a tracked deletion while the file stays
+    readable locally. proposal_exists scans the archive (B4), so a rejected
+    instinct does not immediately re-promote."""
+    if not os.path.isdir(PROPOSALS_DIR):
+        return
+
+    for fname in sorted(os.listdir(PROPOSALS_DIR)):
+        if not fname.endswith(".md"):
+            continue
+        path = os.path.join(PROPOSALS_DIR, fname)
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        status_match = re.search(r'status:\s*(\w+)', content)
+        status = status_match.group(1) if status_match else "pending"
+        if status not in ("applied", "rejected"):
+            continue
+
+        tag = "[dry-run][archive]" if dry_run else "[archive]"
+        if not dry_run:
+            os.makedirs(ARCHIVE_DIR, exist_ok=True)
+            updated = record_archive_reason(content, status, current_session)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(updated)
+            shutil.move(path, os.path.join(ARCHIVE_DIR, fname))
+        print(
+            f"  {tag} {fname}, resolved ({status}), moved to archive",
+            file=sys.stderr
+        )
 
 
 def process_existing_proposals(config, current_session, dry_run=False):
@@ -466,6 +503,11 @@ def main():
     # Stamp pre-clock artifacts so nothing decays retroactively.
     if not dry_run:
         session_clock.backfill_session_fields(LEARNING_DIR, current_session)
+
+    # Move resolved (applied/rejected) proposals to the archive (G3). Runs
+    # before the instinct gate below: cleanup must happen even when there
+    # are no instincts to evaluate.
+    archive_resolved_proposals(current_session, dry_run=dry_run)
 
     # Load all instincts
     instincts = []

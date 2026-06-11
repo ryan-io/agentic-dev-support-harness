@@ -28,7 +28,9 @@
       "optional": false,
       "paths": [
         {"path": ".github/scripts/setup/repository-setup.py", "type": "file"},
-        {"path": ".github/scripts/tests/test_repository_setup.py", "type": "file"}
+        {"path": ".github/scripts/tests/test_repository_setup.py", "type": "file"},
+        {"path": ".github/scripts/bootstrap-update.py", "type": "file"},
+        {"path": ".github/scripts/tests/test_bootstrap_update.py", "type": "file"}
       ]
     },
     "B": {

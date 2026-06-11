@@ -31,6 +31,8 @@
     ".github/scripts/setup/",
     ".github/scripts/scaffold.py",
     ".github/scripts/tests/test_repository_setup.py",
+    ".github/scripts/bootstrap-update.py",
+    ".github/scripts/tests/test_bootstrap_update.py",
     ".github/workflows/scaffold-matrix.yml"
   ],
   "out_of_scope": [

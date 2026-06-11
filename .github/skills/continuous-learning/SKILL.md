@@ -34,7 +34,7 @@ Correction-derived proposals (`provenance: user-correction` or `developer-flagge
 
 Actions:
 - **Accept**: Mark `status: accepted` in the proposal. Proceed to Step 3 for this proposal.
-- **Reject**: Mark `status: rejected`. Optionally reduce the source instinct's confidence by 0.15.
+- **Reject**: Mark `status: rejected`. Optionally reduce the source instinct's confidence by 0.15. The next pipeline run moves the file to `proposals.archive/` with the reason stamped (G3); rejected proposals do not re-promote while archived.
 - **Defer**: Leave as `status: pending`. Update `last_reviewed` to today.
 
 ## Step 3: Apply Accepted Proposals
@@ -43,7 +43,7 @@ For each accepted proposal:
 2. Determine the appropriate section for the new rule.
 3. Add the rule text in the file's existing style and format.
 4. Verify the file stays under 4,000 characters. If it would exceed the limit, warn and ask the developer how to proceed.
-5. Mark the proposal `status: applied`.
+5. Mark the proposal `status: applied`. The next pipeline run moves the file to `proposals.archive/` with the reason stamped (G3).
 6. Run the sync script: `python .github/scripts/sync-claude-rules.py`.
 
 ## Step 4: Manual Analysis (Optional)
@@ -65,7 +65,7 @@ Promote durable facts from the local session log into committed project memory s
 
 ## Step 6: Cleanup
 1. List any instincts with confidence below 0.2, suggest removal.
-2. List any archived proposals in `.claude/learning/proposals.archive/`, summarize count.
+2. List any archived proposals in `.claude/learning/proposals.archive/`, summarize count by reason (decayed, rejected, applied). Resolved proposals are moved there automatically by `propose.py`; if any applied or rejected file still sits in `proposals/`, run `python .github/scripts/learning/propose.py` to archive it now.
 3. Confirm the developer is satisfied with the current state.
 
 <!-- REAL-WORLD WORKFLOW

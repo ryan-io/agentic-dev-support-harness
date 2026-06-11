@@ -17,6 +17,9 @@ from datetime import datetime
 SRC_DIR = os.path.join(".github", "instructions")
 DEST_DIR = os.path.join(".claude", "rules")
 LOG_FILE = os.path.join(".claude", "sync_log.txt")
+# Local log cap (G6): the log is append-per-run and gitignored, so a
+# long-lived clone accumulates indefinitely without this.
+MAX_LOG_BYTES = 256 * 1024
 HUB_SRC = os.path.join(".github", "copilot-instructions.md")
 HUB_DEST = "CLAUDE.md"
 MAX_CHARS = 4000
@@ -166,8 +169,29 @@ log(f"\nDone. Hub synced. Rules synced: {synced}, Errors: {errors}")
 if errors > 0:
     log("Fix errors above and re-run.")
 
-# Append to sync log
+# Append to sync log, rotating first when it exceeds the cap (G6):
+# keep the newest whole runs up to half the cap, note the truncation.
+# Rotation failure never blocks a sync; the log is best-effort.
 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+try:
+    if os.path.isfile(LOG_FILE) and os.path.getsize(LOG_FILE) > MAX_LOG_BYTES:
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
+            runs = [b for b in f.read().split("\n\n") if b.strip()]
+        kept, size = [], 0
+        for block in reversed(runs):
+            size += len(block) + 2
+            if size > MAX_LOG_BYTES // 2:
+                break
+            kept.append(block)
+        kept.reverse()
+        with open(LOG_FILE, "w", encoding="utf-8", newline="\n") as f:
+            f.write(f"[{timestamp}] log rotated: "
+                    f"{len(runs) - len(kept)} older run(s) dropped\n\n")
+            for block in kept:
+                f.write(block + "\n\n")
+except OSError:
+    pass
+
 with open(LOG_FILE, "a", encoding="utf-8", newline="\n") as f:
     f.write(f"[{timestamp}]\n")
     for line in log_lines:
