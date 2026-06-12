@@ -63,8 +63,25 @@ If the merge set produced conflict markers, the engine stops before the commit (
 code 2) and lists the conflicted files. Walk the developer through each conflict:
 show both sides, explain what the harness changed and what the project customized,
 and apply the developer's resolution. Never auto-resolve instruction-file conflicts.
+
+Two rules make doc conflicts (`system-index.md`, the hub) resolve cleanly:
+
+1. Keep "ours" for rows describing machinery this project ejected or excluded
+   (scaffolder, setup engine, their tests and workflows). Upstream rows about
+   files the project deliberately lacks must not survive the merge.
+2. When you accept a "theirs" row that references a file new to the harness,
+   satisfy the reference: create or backfill that file in the project. The
+   update only delivers governance paths; referenced content under project-owned
+   paths (for example `docs/adr/adr-index.md`) must be created by hand.
+
+Before invoking the engine again, run `python .github/scripts/validate-system.py`
+yourself. The `--finish` closing gate is exactly sync plus this validator; a local
+run surfaces dangling references (cross-reference check) without burning a gate
+cycle. Leave the resolutions uncommitted.
+
 Then run `python .github/scripts/update.py --finish`, which verifies no markers
-remain, runs the gate, bumps the anchor, and commits.
+remain, runs the gate, bumps the anchor, and commits. A failed gate keeps your
+resolutions in place; fix the reported issue and run `--finish` again.
 
 ### Step 5: Verify and hand back
 
