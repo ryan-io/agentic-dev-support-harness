@@ -16,6 +16,8 @@ When uncertain about intent, scope, approach, or the correct answer, ask the dev
 
 Conventional commit prefixes: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `style`, `perf`, `build`. Subject: imperative, present tense, max 72 chars. Body wraps at 80 chars. Scope optional but encouraged for single-module changes.
 
+Agents never commit on their own. The developer runs every commit; at most, suggest a single commit subject (and a body if the change warrants one) and stop.
+
 ## Architecture Preservation
 
 The following paths are load-bearing; do not reorganize without an ADR:
