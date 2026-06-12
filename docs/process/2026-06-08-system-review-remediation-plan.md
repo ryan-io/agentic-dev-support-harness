@@ -10,7 +10,7 @@ Scope: a deep review of the whole harness found no active breakage. The mirror i
 
 Instruction sources under `.github/instructions/` and the `.claude/rules/` mirror are not hand-edited. `.claude/rules/memory.md` changes only through the `continuous-learning` skill. ADR edits follow `adr-pr-review`. Run `validate-system.py` and the test suites after every change. Pipeline Python stays stdlib-only and fails closed.
 
-## Phase 1: Documentation reconciliation — DONE 2026-06-08
+## Phase 1: Documentation reconciliation (DONE 2026-06-08)
 
 Completed. The capture-corrections ADR Decision body now reads SessionEnd throughout; the only remaining Stop mention is the amendment's explanatory "SessionEnd, not Stop" line. A related stale line that claimed "the status is Proposed" while the metadata reads Active was corrected in the same pass. The ADR README prefix list gained `setup`. The scripts README "byte-for-byte" claim now reads "line-ending and BOM normalization." The system-index gained the two test files and the templates README; their Purpose cells avoid slash-paths so the validator does not read them as references. The memory date claim was reworded to "implemented and amended 2026-06-05" via the instruction source, then re-synced. Validator passes 512/0/0 and all five test suites pass.
 
@@ -56,7 +56,7 @@ This folds into the existing `2026-06-08-pytest-test-suite-plan.md`; do not dupl
 
 Only `detect_user_corrections` is exercised. Untested: the other six detectors (`detect_corrections`, `detect_repeated_sequences`, `detect_error_recovery`, `detect_file_conventions`, `detect_rule_consultation`, `detect_guide_consultation`), most of `propose.py` (`map_target_file`, `compute_priority`, `generate_proposal`, `proposal_exists`, `record_archive_reason`), and the `observe.py` builders (`build_observation`, `summarize_tool_input`, `classify_domain`, `rotate_observations_if_needed`, plus `correction_contradicts_scope`, the subject of the Phase 3 cross-directory bug). Add fixture tests for each detector and for `map_target_file` and `compute_priority`. Write the `correction_contradicts_scope` test first; it pins the Phase 3 fix.
 
-## Phase 5: Replace unmeasurable confidence thresholds in decision rules — DONE 2026-06-08
+## Phase 5: Replace unmeasurable confidence thresholds in decision rules (DONE 2026-06-08)
 
 Completed. `pr-review.instructions.md` line 35 now requires naming the concrete failure (triggering input or code path and the wrong result) or using `Question/`, replacing the ">90%" rule. Both `volatility-decomposition/SKILL.md` lines gate on "clearly variable rather than volatile (bounded change, no system-wide ripple)" instead of "90%+ confidence." The lookalikes were left as the plan specified. The pr-review source was re-synced to its mirror; validator passes 512/0/0.
 

@@ -4,7 +4,7 @@ applyTo: "**/*.cs"
 
 # C# Code Standards
 
-Extends `code-standards.instructions.md`. Draws from [ktaranov/naming-convention](https://github.com/ktaranov/naming-convention) and the [.NET runtime coding style](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/coding-style.md).
+Extends `code-standards.instructions.md`. Draws from ktaranov/naming-convention and the .NET runtime coding style guide.
 
 ## Language Version
 
@@ -47,7 +47,7 @@ Throw specific exception types, not bare `Exception`. Custom exceptions use the 
 
 ## Type Usage
 
-Use C# aliases (`int`, `string`, `bool`) for declarations. Use framework names (`Int32.TryParse`, `String.Join`) for static member access. Use `var` for locals when the type is obvious from the right side; use explicit types for primitives.
+Use C# aliases (`int`, `string`, `bool`) for declarations. Use framework names (`Int32.TryParse`) for static member access. Use `var` for locals when the type is obvious from the right side; use explicit types for primitives.
 
 ## LINQ
 
@@ -55,7 +55,7 @@ Method syntax for simple queries, query syntax for multiple `from`, `let`, or `j
 
 ## Collections
 
-Use `IReadOnlyList<T>`, `IReadOnlyCollection<T>`, or `IEnumerable<T>` for return types when mutation is not intended. Concrete types internally. Prefer collection expressions (`[1, 2, 3]`) where supported.
+Use `IReadOnlyList<T>`, `IReadOnlyCollection<T>`, or `IEnumerable<T>` for return types when mutation is not intended. Concrete types internally. Prefer collection expressions where supported.
 
 ## Enums
 
@@ -67,7 +67,7 @@ Event args suffix with `EventArgs`, delegate types with `EventHandler`. Handlers
 
 ## Code Organization
 
-One type per file, name matches type. Allman braces. Members top-down: static fields, instance fields, constructors, properties, public methods, private methods. Namespaces follow `Company.Product.Module`.
+One type per file, name matches type. Allman braces. Members top-down: static fields, instance fields, constructors, properties, public methods, private methods.
 
 ## Testing
 

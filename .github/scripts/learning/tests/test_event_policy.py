@@ -311,5 +311,50 @@ class TestErrorRecoveryDedup(unittest.TestCase):
         self.assertIn("after cmd-one", inst["evidence"])
 
 
+class TestRuleConsultationNormalization(TempAnalyzeDirMixin, unittest.TestCase):
+    """I7: mirror reads credit the instruction source, so a rule read only
+    via .claude/rules/ is not flagged rarely consulted, and the source and
+    mirror files yield one tracked rule, not two."""
+
+    def _rule_files(self):
+        for d, name in ((analyze.INSTRUCTIONS_DIR,
+                         "csharp-code-standards.instructions.md"),
+                        (analyze.RULES_DIR, "csharp-code-standards.md")):
+            os.makedirs(d, exist_ok=True)
+            with open(os.path.join(d, name), "w", encoding="utf-8") as f:
+                f.write("# rule\n")
+
+    def _consult(self, name):
+        return {"event": "PostToolUse", "tool": "Read", "outcome": "success",
+                "session_id": "s1", "rule_consulted": name,
+                "input_summary": name}
+
+    def test_canonical_rule_name(self):
+        self.assertEqual(analyze.canonical_rule_name("code-standards.md"),
+                         "code-standards.instructions.md")
+        self.assertEqual(
+            analyze.canonical_rule_name("code-standards.instructions.md"),
+            "code-standards.instructions.md")
+
+    def test_mirror_only_read_is_not_flagged(self):
+        self._rule_files()
+        obs = [self._consult("csharp-code-standards.md")]
+        obs += [tool_obs("PostToolUse", "Edit", f"src/f{i}.cs")
+                for i in range(3)]
+        instincts = analyze.detect_rule_consultation(obs)
+        self.assertEqual([i for i in instincts
+                          if "csharp" in i["action"]], [])
+
+    def test_unconsulted_rule_flagged_once_not_per_variant(self):
+        self._rule_files()
+        obs = [tool_obs("PostToolUse", "Edit", f"src/f{i}.cs")
+               for i in range(3)]
+        flagged = [i for i in analyze.detect_rule_consultation(obs)
+                   if "csharp" in i["action"]]
+        self.assertEqual(len(flagged), 1)
+        self.assertIn("csharp-code-standards.instructions.md",
+                      flagged[0]["action"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -85,21 +85,21 @@ For each language identified, create the following in `.github/instructions/`:
 
 ### Step 3: Populate Agnostic Template Files
 
-Review all files with `CUSTOMIZE` comments and fill in stack-appropriate content:
+Populate the agnostic files with stack-appropriate content. Only `patterns.instructions.md`, `research.instructions.md`, and `.gitignore` still carry `<!-- CUSTOMIZE -->` markers; the others are edited by section name:
 - `patterns.instructions.md`: Replace the example pattern with the project's adopted patterns and code examples. Optionally narrow `applyTo` scope.
-- `user-interface.instructions.md`: If the project has a UI layer, narrow `applyTo` to the framework's file extensions (e.g., `**/*.xaml`, `**/*.tsx`) and fill in the CUSTOMIZE sections. If no UI layer, mark the file `<!-- DEPRECATED -->` so the sync script skips it.
+- `user-interface.instructions.md`: If the project has a UI layer, narrow `applyTo` to the framework's file extensions (e.g., `**/*.xaml`, `**/*.tsx`) and fill in the framework-specific sections. If no UI layer, mark the file `<!-- DEPRECATED -->` so the sync script skips it.
 - `user-experience.instructions.md`: Same rule as user-interface: scope to UI extensions or mark deprecated.
 - `research.instructions.md`: Fill in the Repo Signals section (primary language, framework, build/test commands for each test framework chosen in Step 1).
-- `code-standards.instructions.md`: Replace any customize markers with language-specific conventions.
+- `code-standards.instructions.md`: Confirm the universal rules fit the stack; language-specific conventions belong in the `{language}-code-standards` file from Step 2, not here.
 - `copilot-instructions.md`: Fill in the Project Overview section.
 - `.gitignore`: Replace `# CUSTOMIZE` sections with stack-specific build outputs, packages, test results, and config patterns.
 
 ### Step 4: Update Hub and Index Files
 
-After creating instruction files, update these files, look for `<!-- CUSTOMIZE -->` markers:
+After creating instruction files, register them in both maps. Neither file carries markers; the insertion points are:
 
-1. **`.github/copilot-instructions.md`**: Add stack-specific files to the Instruction Files section. (`CLAUDE.md` is synced automatically by the sync script.)
-2. **`.github/docs/system-index.md`**: Add rows to the Instruction Files table between the CUSTOMIZE markers.
+1. **`.github/copilot-instructions.md`**: In the `## Instruction Files` section, extend the `**Stack-specific:**` line with each new file and its glob, following the existing form, e.g. `csharp-code-standards (\`*.cs\`)`. (`CLAUDE.md` is synced automatically by the sync script.)
+2. **`.github/docs/system-index.md`**: In the `### Instruction Files` section, add a `| Source | Scope |` row to the matching subsection table (usually `#### Domain-specific`), e.g. `| \`{language}-code-standards.instructions.md\` | \`**/*.{ext}\` |`.
 
 ### Step 5: Run Sync and Validate
 

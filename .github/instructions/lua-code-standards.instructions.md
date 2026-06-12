@@ -4,7 +4,7 @@ applyTo: "**/*.lua"
 
 # Lua Code Standards
 
-Extends `code-standards.instructions.md`. Draws from the [LuaRocks](https://github.com/luarocks/lua-style-guide) and [lua-users](http://lua-users.org/wiki/LuaStyleGuide) style guides.
+Extends `code-standards.instructions.md`. Draws from the LuaRocks and lua-users style guides.
 
 ## Language Version
 
@@ -16,7 +16,7 @@ Indent with 3 spaces, no tabs. LF line endings. One statement per line, no semic
 
 ## Naming
 
-`snake_case` for locals, parameters, and functions. `PascalCase` for class tables and constructors (acronyms capitalize first letter only: `XmlParser`). `UPPER_SNAKE_CASE` sparingly for constants. `_` for ignored variables. Do not use uppercase names starting with `_` (reserved by Lua). Prefix boolean functions with `is_` or `has_`. Names with larger scope should be more descriptive; one-letter names are fine in small loops.
+`snake_case` for locals, parameters, and functions. `PascalCase` for class tables and constructors (acronyms capitalize first letter only: `XmlParser`). `UPPER_SNAKE_CASE` sparingly for constants. `_` for ignored variables. Do not use uppercase names starting with `_` (reserved by Lua). Prefix boolean functions with `is_` or `has_`.
 
 ## Nil and Truthiness
 

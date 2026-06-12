@@ -1,6 +1,6 @@
 # Audit Inconsistency-Fix Plan
 
-Status: Planned
+Status: Implemented 2026-06-11, all six phases. I5 trims approved by the developer (csharp 3,785 ch, lua 3,777 ch, both under the 3,800 threshold). New suite: `.github/scripts/tests/test_scaffold.py` (9 tests); I7 normalization tests in `test_event_policy.py`. Verification: validate-system.py 569 PASS / 0 FAIL / 0 WARN; 180 tests across ten suites pass.
 
 Date: 2026-06-11
 

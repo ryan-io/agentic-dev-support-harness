@@ -17,7 +17,7 @@ A relevance pass archives instincts whose file_scope matches no real file
 (reason: irrelevant), per the evidence-based staleness ADR.
 
 Run from repo root: python .github/scripts/learning/analyze.py
-Called automatically by observe.py on Stop when threshold met.
+Called automatically by observe.py on SessionEnd when threshold met.
 
 Flags:
   --dry-run   Run detectors and print results without writing files or
@@ -763,6 +763,20 @@ def detect_file_conventions(observations):
 
 # --- Detector 5: Rule Consultation Patterns ---
 
+def canonical_rule_name(name):
+    """Map a consulted rule filename to its instruction-source name (I7).
+
+    The .claude/rules/ mirror drops the .instructions segment, so source and
+    mirror were counted as distinct rules: a rule read only via the mirror
+    never credited the source and was falsely flagged rarely consulted.
+    observe.py records rule_consulted only for reads under the two rule
+    directories, so any plain .md name here is a mirror name."""
+    base = os.path.basename(name)
+    if base.endswith(".instructions.md") or not base.endswith(".md"):
+        return base
+    return base[:-3] + ".instructions.md"
+
+
 def detect_rule_consultation(observations):
     """
     Find instruction files that are in scope for edited file types but were
@@ -771,13 +785,14 @@ def detect_rule_consultation(observations):
     """
     instincts = []
 
-    # Count consultations and edits from tool events (one per call; B1 fix)
+    # Count consultations and edits from tool events (one per call; B1 fix),
+    # normalized so mirror reads credit the source (I7).
     events = tool_events(observations)
     rule_consult_counts = Counter()
     for o in events:
         rule = o.get("rule_consulted")
         if rule:
-            rule_consult_counts[rule] += 1
+            rule_consult_counts[canonical_rule_name(rule)] += 1
 
     # Count edits per file extension
     ext_edit_counts = Counter()
@@ -813,17 +828,19 @@ def detect_rule_consultation(observations):
                 rule_ext_scope[rule_file] = ext
                 break
 
-    # Discover rule files from the filesystem (both source and mirror)
+    # Discover rule files from the filesystem (both source and mirror),
+    # normalized to the source name so the pair yields one entry (I7).
     all_rule_files = set(rule_consult_counts.keys())
     for search_dir in (INSTRUCTIONS_DIR, RULES_DIR):
         if os.path.isdir(search_dir):
             for fname in os.listdir(search_dir):
                 if fname.endswith((".instructions.md", ".md")):
-                    all_rule_files.add(fname)
-                    basename = fname.lower()
+                    canonical = canonical_rule_name(fname)
+                    all_rule_files.add(canonical)
+                    basename = canonical.lower()
                     for lang, ext in ext_map.items():
                         if basename.startswith(f"{lang}-"):
-                            rule_ext_scope[fname] = ext
+                            rule_ext_scope[canonical] = ext
                             break
 
     for rule_file in all_rule_files:

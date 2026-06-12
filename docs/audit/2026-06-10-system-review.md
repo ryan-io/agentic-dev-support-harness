@@ -36,6 +36,8 @@ The eject manifest covers all 12 ADRs (Category B: 2, Category C: 10). The "two 
 | I7 | Low | `analyze.py` `detect_rule_consultation` | Source and mirror filenames are tracked as distinct rules (`code-standards.instructions.md` vs `code-standards.md`). Consultations of the mirror do not credit the source, so a rule read only via `.claude/rules/` can be falsely flagged "rarely consulted". |
 | I8 | Low | `scaffold.py` vs testing policy | `testing.instructions.md` requires tests for new logic. The other three engines have suites; `scaffold.py` (541 lines) has none, only the `scaffold-matrix.yml` CI exercise. |
 
+Closeout 2026-06-11: all eight inconsistencies fixed per `docs/process/2026-06-11-audit-inconsistency-fix-plan.md`. I1: project-setup names the real insertion points. I2/I3: docstrings match the registered hooks. I4: em dashes out of the remediation-plan headers. I5: both standards files trimmed under 3,800 with developer approval. I6: system-review runs the validator first. I7: mirror reads credit the source via `canonical_rule_name`. I8: `test_scaffold.py`.
+
 ## Gaps
 
 | ID | Severity | Finding |
