@@ -59,6 +59,7 @@ Everything is a reviewable file in git, not hidden state: designs, ADRs, rules, 
 | Git hooks | Pre-commit sync and validation | [`.github/hooks/README.md`](.github/hooks/README.md) |
 | Scaffolding templates | The `ah-ide` CLI and its stack templates | [`templates/README.md`](templates/README.md) |
 | Teardown | What a finished project sheds from the template, via harness-eject | [`.github/scripts/README.md`](.github/scripts/README.md) |
+| Updates | Pulling harness improvements into adopted projects | [`.github/scripts/README.md`](.github/scripts/README.md) |
 | Claude runtime | The synced mirror and local learning data | [`.claude/README.md`](.claude/README.md) |
 
 ## System overviews
@@ -73,7 +74,7 @@ Instruction files in `.github/instructions/` are the single source of truth. Cop
 
 ### Skills: on-demand procedures
 
-Skills cost zero context until invoked. The catalog covers the design pipeline (the three stages plus the orchestrator), `adr-creation` and `create-business-rule`, `project-setup`, `convention-discovery`, `system-review`, `continuous-learning`, and `sequence-diagram`. The agent matches the skill's description against your request and runs it. Detail: [`.github/skills/README.md`](.github/skills/README.md).
+Skills cost zero context until invoked. The catalog covers the design pipeline (three stages, an orchestrator, and the `implementation` pairing stage), `write-unit-tests`, `adr-creation` and `create-business-rule`, `project-setup`, `convention-discovery`, `system-review`, `continuous-learning`, `sequence-diagram`, and the two lifecycle skills, `harness-eject` and `harness-update`. The agent matches the skill's description against your request and runs it. A fresh template starts with an empty patterns registry; once the project has real history, run `convention-discovery` to mine it into rules. Detail: [`.github/skills/README.md`](.github/skills/README.md).
 
 ### Scaffolding: the ah-ide CLI
 
@@ -81,7 +82,11 @@ The `ah-ide` scaffolder builds a base solution next to the agent assets so the c
 
 ### Teardown: harness-eject
 
-Once your project has run `project-setup`, the template still carries machinery that exists only to instantiate it: the one-time setup engine, the scaffolder and its templates, and the harness's own decision and process history. `harness-eject` reads a manifest that sorts every removable path into three groups: setup (removed), the scaffolder (removed unless you keep it), and template-authored content (reset to your project). Two guards keep it safe: it refuses to run in the template source, and it never touches the governance layer. Today it runs read-only (`python .github/scripts/eject.py --list` and `--check`); the destructive run is staged for a later phase. Detail: [`.github/scripts/README.md`](.github/scripts/README.md), decision: [`docs/adr/adr-setup-introduce-harness-eject.md`](docs/adr/adr-setup-introduce-harness-eject.md).
+Once your project has run `project-setup`, the template still carries machinery that exists only to instantiate it: the one-time setup engine, the scaffolder and its templates, and the harness's own decision and process history. `harness-eject` reads a manifest that sorts every removable path into three groups: setup (removed), the scaffolder (removed unless you keep it), and template-authored content (reset to your project). Two guards keep it safe: it refuses to run in the template source, and it never touches the governance layer. Preview with `python .github/scripts/eject.py --list` and `--check`; `--run` performs the teardown (`--keep-scaffolder` retains the scaffolder) and scrubs references to the removed paths. Detail: [`.github/scripts/README.md`](.github/scripts/README.md), decision: [`docs/adr/adr-setup-introduce-harness-eject.md`](docs/adr/adr-setup-introduce-harness-eject.md).
+
+### Updates: harness-update
+
+An adopted project pulls harness improvements instead of re-copying the template. A committed anchor records the last-applied harness commit; `harness-update` diffs anchor to target and applies each file per a manifest: governance files overwrite, customized docs three-way merge, setup-only machinery is skipped, and locally deleted files are never resurrected. Everything lands as one revertable commit; conflicts stop the run until you resolve them and `--finish`. Projects adopted before the mechanism existed install it once with `bootstrap-update.py`, run from a harness clone. Detail: [`.github/scripts/README.md`](.github/scripts/README.md), decision: [`docs/adr/adr-setup-add-harness-update-mechanism.md`](docs/adr/adr-setup-add-harness-update-mechanism.md).
 
 ### Review: a fixed comment format
 
@@ -89,7 +94,7 @@ Ask the agent to review a diff and it works in priority order: ADR compliance fi
 
 ### Learning: corrections become rules
 
-The harness watches how the agent works and turns repeated corrections into proposed rules you approve once. Hooks observe each session, the pipeline aggregates recurring shapes into instincts, and high-confidence instincts become proposals naming a specific instruction file and edit. You review them with the `continuous-learning` skill. This is the only sanctioned way instruction files change: agents never edit them directly, and staleness is evidence-based, not wall-clock. Observations are local per developer; only the curated proposals and memory digest are committed. Detail: [`.github/scripts/learning/README.md`](.github/scripts/learning/README.md), depth in [`.github/docs/learning-system-guide.md`](.github/docs/learning-system-guide.md).
+The harness watches how the agent works and turns repeated corrections into proposed rules you approve once. Hooks observe each session, the pipeline aggregates recurring shapes into instincts, and high-confidence instincts become proposals naming a specific instruction file and edit. You review them with the `continuous-learning` skill; applied and rejected proposals archive automatically with a recorded reason, so the tracked queue holds only what awaits review. This is the only sanctioned way instruction files change: agents never edit them directly, and staleness is evidence-based, not wall-clock. Observations are local per developer; only the curated proposals and memory digest are committed. Detail: [`.github/scripts/learning/README.md`](.github/scripts/learning/README.md), depth in [`.github/docs/learning-system-guide.md`](.github/docs/learning-system-guide.md).
 
 ```mermaid
 flowchart LR
@@ -124,7 +129,7 @@ python .github/scripts/scaffold.py csharp --type wpf-ef --name MyApp   # see tem
 git add -A && git commit -m "chore: initialize from harness template"
 ```
 
-Setup also scaffolds into a bare empty directory: `python .github/scripts/setup/repository-setup.py /path/to/new-project` inits git there and copies the template. After setup, the `project-setup` skill walks the `<!-- CUSTOMIZE -->` markers and generates a `{language}-code-standards.instructions.md` for your stack. Re-run validation any time with `python .github/scripts/validate-system.py`.
+Setup also scaffolds into a bare empty directory: `python .github/scripts/setup/repository-setup.py /path/to/new-project` inits git there and copies the template. After setup, the `project-setup` skill walks the remaining customization points and generates a `{language}-code-standards.instructions.md` for your stack. Re-run validation any time with `python .github/scripts/validate-system.py`.
 
 ## Layout
 

@@ -10,13 +10,13 @@ If you need to change a rule, edit the file in `../.github/instructions/` and le
 
 ## learning/
 
-Data from the continuous-learning pipeline. `config.json` (thresholds and staleness settings) and `proposals/` (curated instruction-file change suggestions) are tracked. The rest (`observations.jsonl` and its archive, `instincts/` and `instincts.archive/`, `proposals.archive/`, `.session-notices/`, `session-delta.md`, `last-modified.json`, `session-counter.json`) is gitignored and lives only on the developer's machine.
+Data from the continuous-learning pipeline. `config.json` (thresholds and staleness settings) and `proposals/` (curated instruction-file change suggestions) are tracked. The rest (`observations.jsonl` and its archive, `instincts/` and `instincts.archive/`, `proposals.archive/`, `.session-notices/`, `session-delta.md`, `last-modified.json`, `session-counter.json`) is gitignored and lives only on the developer's machine. Applied and rejected proposals move from `proposals/` to `proposals.archive/` automatically, each stamped with the reason.
 
 See `../.github/scripts/learning/README.md` for the pipeline detail.
 
 ## sync_log.txt
 
-Append-only log of every sync run. Gitignored. Useful when diagnosing why the mirror looks wrong.
+Log of every sync run. Gitignored, and it rotates itself at 256 KB, keeping the newest runs. Useful when diagnosing why the mirror looks wrong.
 
 ## Related
 

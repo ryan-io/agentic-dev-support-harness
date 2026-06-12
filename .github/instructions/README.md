@@ -8,7 +8,7 @@ Every file declares its scope with `applyTo: "<glob>"`. The sync script transfor
 
 ## What's here
 
-Core universal rules apply to all files: `code-standards`, `writing-voice`, `research`, `agent-guardrails`, `pattern-fidelity`, `memory`. Extended rules are scoped by file type: `testing` and `pr-review` to code files, `user-interface` and `user-experience` to UI files. Domain rules attach to specific directories: `adr-template` and `adr-pr-review` to `docs/adr/**`, `br-review` to `docs/business-rules/**`. Stack-specific code standards (`csharp-code-standards`, `lua-code-standards`, `unity-code-standards`) extend the universal one; `unity-code-standards` also supersedes named C# rules within `Assets/**`. `patterns` is a deprecated placeholder, not synced until patterns are documented.
+Core universal rules apply to all files: `code-standards`, `writing-voice`, `research`, `agent-guardrails`, `pattern-fidelity`, `memory`. Extended rules are scoped by file type: `testing` and `pr-review` to code files, `user-interface` and `user-experience` to UI files. Domain rules attach to specific directories: `adr-template` and `adr-pr-review` to `docs/adr/**`, `br-review` to `docs/business-rules/**`. Stack-specific code standards (`csharp-code-standards`, `lua-code-standards`, `unity-code-standards`) extend the universal one; `unity-code-standards` also supersedes named C# rules within `Assets/**`. `patterns` is a deprecated placeholder, not synced until patterns are documented; run the `convention-discovery` skill to mine the first entries from git history.
 
 ## When to add a file
 

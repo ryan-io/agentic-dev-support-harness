@@ -4,11 +4,11 @@ On-demand procedures the agent runs when invoked by name. Unlike instruction fil
 
 ## Catalog
 
-`project-setup` tailors the template to a specific stack: offers scaffolding (`python .github/scripts/scaffold.py`) as step zero when no solution exists, fills in the CUSTOMIZE markers, generates a `{language}-code-standards` file, and removes anything not relevant. Run this once, right after setup (`python .github/scripts/setup/repository-setup.py`).
+`project-setup` tailors the template to a specific stack: offers scaffolding (`python .github/scripts/scaffold.py`) as step zero when no solution exists, walks the customization points, generates a `{language}-code-standards` file, and removes anything not relevant. Run this once, right after setup (`python .github/scripts/setup/repository-setup.py`).
 
 `harness-eject` runs the one-time, reversible teardown after `project-setup`: previews the removal plan, confirms the scaffolder opt-out, runs `../scripts/eject.py`, and verifies the validator stays green. The eject lands as a single revertable commit.
 
-`harness-update` pulls harness improvements from the template into an adopted project: checks the committed version anchor, previews overwrites and three-way merges, and lands one revertable commit. Conflicted merges stop before the commit; `--finish` completes after resolution. Decision record: `docs/adr/adr-setup-add-harness-update-mechanism.md`.
+`harness-update` pulls harness improvements from the template into an adopted project: checks the committed version anchor, previews overwrites and three-way merges, and lands one revertable commit. Conflicted merges stop before the commit; `--finish` completes after resolution, and the skill codifies the two resolution rules (keep project rows for ejected machinery; create any file a newly accepted reference points at). Projects adopted before the mechanism existed install it once with `../scripts/bootstrap-update.py`, run from a harness clone. Decision record: `docs/adr/adr-setup-add-harness-update-mechanism.md`.
 
 `adr-creation` walks the user through writing an Architecture Decision Record using the template in `../docs/adr-template.md`, validating against the rules in `../instructions/adr-pr-review.instructions.md`, and saving to `docs/adr/`.
 
