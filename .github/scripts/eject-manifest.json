@@ -41,6 +41,7 @@
       "paths": [
         {"path": "templates/", "type": "dir"},
         {"path": ".github/scripts/scaffold.py", "type": "file"},
+        {"path": ".github/scripts/tests/test_scaffold.py", "type": "file"},
         {"path": ".github/workflows/scaffold-matrix.yml", "type": "file"},
         {"path": "docs/adr/adr-scaffold-introduce-ah-ide-cli.md", "type": "file"},
         {"path": "docs/adr/adr-scaffold-add-test-framework-dimension.md", "type": "file"}
